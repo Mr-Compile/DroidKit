@@ -51,8 +51,8 @@ Convention plugins so each module build file stays minimal:
 
 | Module               | Contents |
 |----------------------|----------|
-| `:core:common`       | `Tool` model (id, title, category, safetyLevel, requiredCapabilities, requiredPermissions, phase), `ToolCategory`, `SafetyLevel` (SAFE/MINOR/SYSTEM_CHANGE/HIGH_IMPACT/ADVANCED), `ToolRegistry`, `FeatureContribution` interface, shared result/sealed types |
-| `:core:privileges`   | `Capability` enum, `CapabilityProvider` SPI, `ProviderStatus` (Ready/NeedsSetup/Unavailable), `BlockedReason` (MissingPermission, MissingHardware, NeedsProvider, RequiresApi), `CapabilityManager` (resolves a tool's requirements against the injected provider set + hardware/permission checks) |
+| `:core:common`       | `Tool` model (id, title, category, safetyLevel, requiredCapabilities, requiredPermissions, phase), `Capability` enum, `ToolCategory`, `SafetyLevel` (SAFE/MINOR/SYSTEM_CHANGE/HIGH_IMPACT/ADVANCED), `ToolRegistry`, `FeatureContribution` interface, `TestResultState`, shared result/sealed types |
+| `:core:privileges`   | `CapabilityProvider` SPI, `ProviderKind`, `ProviderStatus` (Ready/NeedsSetup/Unavailable), `BlockedReason` (MissingPermission, MissingHardware, NeedsProvider, RequiresApi), `ToolResolution`, `CapabilityManager` (resolves a tool's requirements against the injected provider set + hardware/permission checks) |
 | `:core:permissions`  | `PermissionManager` — runtime permission state + request flow helpers |
 | `:core:system`       | `DeviceSystemProbe` — manufacturer/model, SDK, ABI, RAM/storage summary, sensor list, camera count, package-feature flags |
 | `:core:database`     | Room `DroidKitDatabase`; entities: `DiagnosticSession`, `DiagnosticResult` (PASS/FAIL/NOT_TESTED/NOT_SUPPORTED/PERMISSION_REQUIRED/UNKNOWN), `TechnicianNote`; DAOs |
@@ -68,15 +68,18 @@ Convention plugins so each module build file stays minimal:
 | `:privilege:adb`     | `WirelessAdbProvider` stub — always `Unavailable("Coming in Phase 9")` |
 | `:privilege:root`    | `RootProvider` stub — always `Unavailable("Postponed — future provider")` |
 
-Each privilege module contributes its provider via Hilt `@Provides @IntoSet`.
+Each privilege module exposes a plain provider class; `:app` assembles
+`Set<CapabilityProvider>` in its DI module (keeps privilege modules free of
+Hilt/KSP).
 
 ### feature (library + compose + hilt)
 
 Each feature module exposes:
 
 - a `NavGraphBuilder` extension registering its Compose screens
-- a Hilt `@Provides @IntoSet FeatureContribution` contributing its `Tool`
-  descriptors to the registry
+- an `object XFeature : FeatureContribution` exposing its `Tool` descriptors;
+  `:app` assembles `Set<FeatureContribution>` manually in its DI module (no
+  annotation processing needed in leaf feature modules)
 
 | Module                 | Role |
 |------------------------|------|
