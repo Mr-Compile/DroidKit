@@ -4052,16 +4052,22 @@ dependencies {
 </vector>
 ```
 
-- [ ] **Step 4: `DroidKitApp.kt`**
+- [ ] **Step 4: `DroidKitApp.kt`** (includes `DLog` wiring — `DLog` is defined in Task 20 Step 3; create that file before compiling, or add the two lines then)
 
 ```kotlin
 package io.github.droidkit
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import io.github.droidkit.core.common.DLog
 
 @HiltAndroidApp
-class DroidKitApp : Application()
+class DroidKitApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        DLog.enabled = BuildConfig.DEBUG
+    }
+}
 ```
 
 - [ ] **Step 5: `di/AppModule.kt`**
@@ -4370,7 +4376,164 @@ git commit -m "feat(app): application wiring, nav host, bottom navigation"
 
 ---
 
-### Task 20: Verification pass
+### Task 20: Repo hygiene, logging, instrumented-test foundation
+
+Per the Journey Checklist (Journey 5): README, CHANGELOG, logging strategy, instrumented-test foundation. LICENSE is a user decision — leave a TODO placeholder in README, do not create LICENSE.
+
+- [ ] **Step 1: `README.md`** (root)
+
+```markdown
+# DroidKit
+
+Android technician & power toolkit — device inspection, guided hardware
+diagnostics, app inspection, USB/NFC utilities and reporting. Useful without
+elevated access; Shizuku / wireless ADB / (future) root are optional capability
+providers that unlock extra tools.
+
+## Status
+
+v0.1.0 Foundation — multi-module skeleton. All feature areas are registered in
+the ToolRegistry and render capability-gated states; foundation services
+(registry, capability resolution, permissions, system probes, Room, DataStore,
+design system, navigation) are functional.
+
+## Build
+
+Requirements: Android Studio (bundled JBR is the JDK), Android SDK 36.
+
+```bash
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # Windows/git-bash
+./gradlew :app:assembleDebug
+./gradlew testDebugUnitTest
+```
+
+## Structure
+
+- `app/` — application wiring, NavHost, bottom navigation
+- `core/` — common (tool model/registry), privileges (capability contracts +
+  resolver), permissions, system probes, database, datastore, ui (design system)
+- `privilege/` — capability providers: standard (working), shizuku/adb/root (stubs)
+- `feature/` — one module per feature area; each exposes a `FeatureContribution`
+  and a `NavGraphBuilder` extension
+- `build-logic/` — Gradle convention plugins
+
+License: TBD.
+```
+
+- [ ] **Step 2: `CHANGELOG.md`** (root)
+
+```markdown
+# Changelog
+
+## [0.1.0] - Unreleased
+
+### Added
+- Multi-module project skeleton (app, 7 core, 4 privilege, 21 feature modules)
+- Design system (Material3, dynamic color, shared components)
+- ToolRegistry with search/category/favorites foundations
+- CapabilityManager + provider chain (Standard ready; Shizuku/ADB/Root stubs)
+- PermissionManager, DeviceSystemProbe (hardware/API detection)
+- Room schema v1 (diagnostic sessions, results, technician notes)
+- DataStore settings (theme, favorites, recents)
+- Home / Tools / Diagnose / Settings navigation shells
+- Device Inspector screen with live system probes
+```
+
+- [ ] **Step 3: Basic logging — `core/common/src/main/java/io/github/droidkit/core/common/DLog.kt`**
+
+```kotlin
+package io.github.droidkit.core.common
+
+import android.util.Log
+
+/** Thin log facade — swap internals for Timber later without touching call sites. */
+object DLog {
+    var enabled: Boolean = true
+
+    fun d(tag: String, message: String) {
+        if (enabled) Log.d(tag, message)
+    }
+
+    fun i(tag: String, message: String) {
+        if (enabled) Log.i(tag, message)
+    }
+
+    fun w(tag: String, message: String, t: Throwable? = null) {
+        if (enabled) Log.w(tag, message, t)
+    }
+
+    fun e(tag: String, message: String, t: Throwable? = null) {
+        if (enabled) Log.e(tag, message, t)
+    }
+}
+```
+
+Wire `DLog.enabled = BuildConfig.DEBUG` in `DroidKitApp.onCreate` — update Task 19's `DroidKitApp.kt`:
+
+```kotlin
+package io.github.droidkit
+
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
+import io.github.droidkit.core.common.DLog
+
+@HiltAndroidApp
+class DroidKitApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        DLog.enabled = BuildConfig.DEBUG
+    }
+}
+```
+
+- [ ] **Step 4: Instrumented-test foundation**
+
+In the `droidkit.android.application` convention plugin (Task 2, Step 5), add to `defaultConfig`:
+
+```kotlin
+testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+```
+
+Add to `app/build.gradle.kts` dependencies:
+
+```kotlin
+androidTestImplementation("androidx.test.ext:junit:1.2.1")
+androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+```
+
+Create `app/src/androidTest/java/io/github/droidkit/AppSmokeTest.kt`:
+
+```kotlin
+package io.github.droidkit
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class AppSmokeTest {
+    @Test
+    fun appContextHasPackageName() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("io.github.droidkit", context.packageName)
+    }
+}
+```
+
+(Runs only when a device/emulator is attached — foundation in place, not executed in this plan.)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add README.md CHANGELOG.md core/common/src/main/java/io/github/droidkit/core/common/DLog.kt app build-logic
+git commit -m "chore: readme, changelog, logging facade, androidTest foundation"
+```
+
+---
+
+### Task 21: Verification pass
 
 - [ ] **Step 1: Run all unit tests**
 
