@@ -1,0 +1,10 @@
+*.class
+*.log
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.cxx/
+.kotlin/
+_extracted_plan.txt
