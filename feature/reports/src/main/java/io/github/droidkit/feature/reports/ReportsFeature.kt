@@ -1,5 +1,6 @@
 package io.github.droidkit.feature.reports
 
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -26,5 +27,18 @@ object ReportsFeature : FeatureContribution {
 }
 
 fun NavGraphBuilder.reportsGraph(nav: NavHostController) {
-    composable(ReportsFeature.ROUTE) { ReportsScreen() }
+    composable(ReportsFeature.ROUTE) {
+        ReportsScreen(
+            onOpenDetail = { id -> nav.navigate("reports/detail/$id") },
+        )
+    }
+    composable("reports/detail/{sessionId}") { backStackEntry ->
+        val sessionId = backStackEntry.arguments?.getString("sessionId").orEmpty()
+        val parentEntry = nav.getBackStackEntry(ReportsFeature.ROUTE)
+        ReportDetailScreen(
+            sessionId = sessionId,
+            onDeleted = { nav.popBackStack() },
+            viewModel = hiltViewModel(parentEntry),
+        )
+    }
 }
