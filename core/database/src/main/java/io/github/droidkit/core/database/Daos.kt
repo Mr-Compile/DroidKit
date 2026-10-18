@@ -15,6 +15,15 @@ interface DiagnosticSessionDao {
 
     @Query("SELECT * FROM diagnostic_sessions ORDER BY startedAtEpochMs DESC")
     fun observeAll(): Flow<List<DiagnosticSessionEntity>>
+
+    @Query("SELECT * FROM diagnostic_sessions WHERE id = :sessionId")
+    suspend fun getById(sessionId: String): DiagnosticSessionEntity?
+
+    @Query("DELETE FROM diagnostic_sessions WHERE id = :sessionId")
+    suspend fun deleteById(sessionId: String)
+
+    @Query("DELETE FROM diagnostic_sessions")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -25,8 +34,17 @@ interface DiagnosticResultDao {
     @Query("SELECT * FROM diagnostic_results WHERE sessionId = :sessionId")
     fun observeBySession(sessionId: String): Flow<List<DiagnosticResultEntity>>
 
+    @Query("SELECT * FROM diagnostic_results WHERE sessionId = :sessionId")
+    suspend fun getBySession(sessionId: String): List<DiagnosticResultEntity>
+
     @Query("SELECT * FROM diagnostic_results")
     fun observeAll(): Flow<List<DiagnosticResultEntity>>
+
+    @Query("DELETE FROM diagnostic_results WHERE sessionId = :sessionId")
+    suspend fun deleteBySession(sessionId: String)
+
+    @Query("DELETE FROM diagnostic_results")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -36,6 +54,9 @@ interface DeviceSnapshotDao {
 
     @Query("SELECT * FROM device_snapshots ORDER BY capturedAtEpochMs DESC")
     fun observeAll(): Flow<List<DeviceSnapshotEntity>>
+
+    @Query("SELECT * FROM device_snapshots WHERE id = :snapshotId")
+    suspend fun getById(snapshotId: String): DeviceSnapshotEntity?
 }
 
 @Dao
@@ -45,4 +66,7 @@ interface SavedReportDao {
 
     @Query("SELECT * FROM saved_reports ORDER BY generatedAtEpochMs DESC")
     fun observeAll(): Flow<List<SavedReportEntity>>
+
+    @Query("DELETE FROM saved_reports")
+    suspend fun deleteAll()
 }
