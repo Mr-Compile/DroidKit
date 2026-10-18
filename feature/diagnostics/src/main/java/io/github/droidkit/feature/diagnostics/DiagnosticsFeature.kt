@@ -1,5 +1,6 @@
 package io.github.droidkit.feature.diagnostics
 
+import androidx.compose.material3.Text
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -38,5 +39,16 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
             onOpenTool = { route -> nav.navigate(route) },
             onOpenReports = { nav.navigate("reports") },
         )
+    }
+    composable("${DiagnosticsFeature.ROUTE}/test/{testId}") { backStackEntry ->
+        val testId = backStackEntry.arguments?.getString("testId").orEmpty()
+        val test = PhoneDoctorTests.findById(testId)
+        if (test == null) {
+            Text("Unknown test: $testId")
+        } else {
+            PhoneDoctorTestScreen(test = test) { _, _ ->
+                nav.popBackStack()
+            }
+        }
     }
 }
