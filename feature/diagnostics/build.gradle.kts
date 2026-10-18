@@ -13,4 +13,6 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.system)
     implementation(projects.core.ui)
+
+    testImplementation(libs.androidx.junit)
 }
