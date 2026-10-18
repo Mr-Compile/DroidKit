@@ -638,6 +638,73 @@ Before `v2.0.0`:
 
 ---
 
+# Journey 21 - DroidKit Intelligence (AI add-on)
+
+Post-V1 add-on journey (`specs/ai_security_addon/` + `plans/2026-10-19-ai-security-addon.md` Part B). **Not part of the frozen V1 scope** — starts only after owner approval, likely as a minor post-v1 release.
+
+## AI-0 Research
+- [ ] Verify current Groq API documentation (auth, endpoints, models, limits, terms)
+- [ ] Decide BYOK vs hosted-backend mode
+- [ ] Threat-model credentials and context
+- [ ] Define AIProvider contract
+- [ ] Define privacy UX
+- [ ] Define structured output schemas
+
+## AI-1 Core
+- [ ] AIProvider
+- [ ] GroqProvider
+- [ ] AIContextBuilder
+- [ ] PrivacyFilter
+- [ ] PromptRegistry
+- [ ] Model/config registry
+- [ ] Typed errors
+- [ ] Timeout/retry policy
+- [ ] Secret redaction
+
+## AI-2 Setup
+- [ ] AI settings screen
+- [ ] BYOK key entry
+- [ ] Reviewed runtime credential storage
+- [ ] Test connection
+- [ ] Clear/Disconnect
+- [ ] Offline/no-key states
+
+## AI-3 Assistants
+- [ ] Device Explainer
+- [ ] Diagnostic Analyzer
+- [ ] Repair Assistant
+- [ ] Report Assistant
+- [ ] USB Assistant
+- [ ] NFC Assistant
+- [ ] App Inspector Assistant
+- [ ] Network Troubleshooter
+- [ ] Tool Recommender
+- [ ] Contextual Chat
+
+## AI-4 Structured Actions
+- [ ] Allow-listed action schema
+- [ ] Validator
+- [ ] ToolRegistry mapping
+- [ ] Risk Engine integration
+- [ ] Explicit confirmation
+- [ ] Reject arbitrary model commands
+
+## AI-5 QA
+- [ ] No/invalid key
+- [ ] Offline/timeout
+- [ ] Rate limit/provider outage
+- [ ] Malformed response
+- [ ] Prompt injection in tool data
+- [ ] Secret-redaction tests
+- [ ] Context-minimization review
+- [ ] AI-disabled core regression
+
+Completion gate:
+- [ ] `11_AI_SECURITY_ACCEPTANCE_CHECKLIST.md` all green
+- [ ] Core app fully functional with AI disabled
+
+---
+
 # Versioning Checklist
 
 Use Semantic Versioning:

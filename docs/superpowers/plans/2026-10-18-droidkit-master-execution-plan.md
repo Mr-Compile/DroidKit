@@ -36,6 +36,7 @@ These documents restate the same plan. One canonical copy each; the rest are ref
 | `specs/10_DroidKit_Master_Journey_Checklist.md` | `DroidKit_Master_Journey_Checklist.docx` at `specs/planning_package/` (Word twin), journey table inside Playbook docx | DONE 2026-10-19: specs-root md is the tracker; docx kept as human-readable twin inside `planning_package/`; other copies deleted. |
 | `DroidKit_Master_Planning_Document.docx` | Planning package docs 00–09 condensed | DONE: one copy kept at `specs/planning_package/`; specs-root copy deleted; md files are canonical. |
 | `DroidKit_Complete_Development_Playbook.docx` | Playbook md files 00–29 + AGENTS.md | DONE: kept at `docs/superpowers/` root for easy reading + twin inside `specs/playbook/`; md files are canonical. |
+| `DroidKit_AI_Groq_Security_Addon_v3.zip` | — | DONE 2026-10-19: extracted to `specs/ai_security_addon/` (canonical); zip deleted as redundant copy. Plans: Q6b secrets hardening + Q23/J21 AI journey (`plans/2026-10-19-ai-security-addon.md`). |
 | PRD content | `01_DroidKit_PRD.md`, playbook `03`, Product Bible §7, Master Plan §6/§9 | Product Bible = "what"; playbook `03` = freeze gate. One approval task (Q3), not four. |
 | Architecture | `02_Architecture...md`, playbook `06`, Product Bible §25–26, skeleton design spec | Skeleton design spec is the concrete decision; playbook `06` is the gate. |
 | Roadmap | `07_Roadmap...md` (M0–M10), `02_MASTER_JOURNEY.md` (J01–J20), journey checklist, `25_VERSIONING`, Master Plan §9 | J-numbering + SemVer map in `25_VERSIONING` is canonical. M/DK IDs map onto journeys; do not create a second backlog. |
@@ -117,6 +118,11 @@ Queue order = dependency order. Each item lists canonical docs, deliverables, an
 - Evidence: `docs/ENGINEERING_FOUNDATION.md` ratifies module boundaries, dependency rules, contracts, package/git/branch/commit conventions, testing rules, DoD, logging strategy, report-format decision (deferred to J10/Q12), privacy/data behavior.
 - Gate: a fresh implementer needs no new architecture decisions for J05–J06.
 
+**Q6b. Secrets/GitHub hardening (add-on Part A, chore before code).**
+- Doc: `specs/ai_security_addon/` + `plans/2026-10-19-ai-security-addon.md` Part A.
+- Deliverables: `.gitignore` secret/signing entries, `.env.example` placeholders, AI+secrets rules merged into `AGENTS.md`, incident playbook referenced.
+- Gate: `git check-ignore` covers `.env`/keystores; `.env.example` placeholders only.
+
 ### Phase B — Build the skeleton (J05 + J06)
 
 **Q7. J05 repository bootstrap — folded into the existing plan.**
@@ -163,6 +169,8 @@ Queue order = dependency order. Each item lists canonical docs, deliverables, an
 **Q21. J19 Wireless ADB provider (later 1.x).** Docs: playbook `21` + checklist Journey 19 + v2 `23`. Research protocol/library/license, pairing UX, secure key storage, session manager, structured allow-listed actions (package/property/log/scoped reboot), terminal only if separately approved. Gate: injection review done; app useful without ADB.
 
 **Q22. J20 V2 / optional root / future.** Docs: playbook `22` + Product Bible §9 + POST-V1/EXPERIMENTAL sections across all v2 feature files (snapshot compare, repair-intake/used-phone presets, BLE inspector, sensor recording, USB VID/PID DB + serial helpers, NFC presets/history, port reachability, Developer Lab expansion, custom dashboard, shop workflow). Nothing committed: RootProvider evaluation, plugin architecture, multi-device history, encrypted sync, desktop companion. Requires V2 PRD + threat model + migration/deprecation plans before any build.
+
+**Q23. J21 DroidKit Intelligence — AI add-on (post-V1, e.g. v1.6.0).** Docs: `specs/ai_security_addon/` + `plans/2026-10-19-ai-security-addon.md` Part B. Journey AI-0..AI-5: Groq research + BYOK/backend mode decision + threat model → `AIProvider`/`GroqProvider`/`AIContextBuilder`/`PrivacyFilter` → settings UX → assistants → allow-listed structured actions → QA incl. prompt-injection + redaction. Detailed plan written at AI-0 (spec requires verifying current Groq docs first). Non-negotiable: core works with AI disabled; never a V1 scope change. Gate: owner approves scope + mode; acceptance checklist `11` green.
 
 ## 5. Decisions
 

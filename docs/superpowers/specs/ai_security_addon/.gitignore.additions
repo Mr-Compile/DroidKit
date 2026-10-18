@@ -1,0 +1,26 @@
+# DroidKit secret/config additions
+# Merge with the Android Studio generated .gitignore.
+
+.env
+.env.*
+!.env.example
+
+local.properties
+
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+
+keystore.properties
+signing.properties
+
+.secrets/
+secrets/
+
+# Build/IDE entries are normally already present:
+.gradle/
+build/
+**/build/
