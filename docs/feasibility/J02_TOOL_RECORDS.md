@@ -116,6 +116,21 @@ minSdk 28 assumed throughout; anything above API 28 is flagged in Minimum API.
 
 ## B. Phone Doctor / Human-Observation Tests
 
+### Display / dead-pixel test
+- User value: dead/stuck pixels, uniformity, backlight bleed observation
+- Android API/classes: full-screen `Activity`/Composable surface cycling solid colors (RGB/white/black/custom), `Window` flags for immersive
+- Minimum API: 28
+- Permissions: none
+- Hardware: display
+- Restrictions: no API detects dead pixels — human-observation test by design; result = user verdict only
+- OEM: none beyond panel variance
+- Offline: full
+- Unsupported: none expected
+- Privacy: none
+- Test devices: 1
+- Decision: V1 (manual Pass/Fail/Skip)
+- Confidence: Verified
+
 ### Touch / multitouch
 - User value: dead zones, digitizer faults, multi-finger tracking
 - Android API/classes: custom `View.onTouchEvent`, `MotionEvent.getPointerCount`, pointer history

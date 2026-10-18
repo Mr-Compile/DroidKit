@@ -69,6 +69,10 @@ Rule: **explicit migrations after the first shipped schema** — no destructive 
 - Unit tests where plans mark TDD (`core:common` registry, `core:privileges` resolution, pure formatters).
 - Real-device validation required for hardware-dependent features before `[x]`.
 
+## Logging strategy (ratified)
+
+Thin `object DLog` wrapper in `:core:common` over `android.util.Log` — `d`/`v` emitted only under `BuildConfig.DEBUG`; `w`/`e` always. No Timber (new dependency unjustified). Never log secrets, ADB key material, serials, or full report contents (`playbook/24`).
+
 ## Definition of Done (ratified)
 
 `playbook/27_DEFINITION_OF_DONE.md` adopted verbatim — Feature / Journey / Release tiers.

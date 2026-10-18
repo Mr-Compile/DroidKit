@@ -55,10 +55,14 @@ Basic connection/IP information permitted by Android, ping, DNS lookup, connecti
 
 ## Freeze procedure
 Before marking V1 frozen:
-- [ ] Every V1 tool has a feasibility record.
-- [ ] Every V1 tool has permission/hardware/API requirements.
-- [ ] Every V1 tool has unsupported/failure UX.
-- [ ] V1 UI screen inventory is complete.
-- [ ] V1 effort is accepted.
-- [ ] Post-V1 items are removed from V1 backlog.
-- [ ] `V1_SCOPE_FROZEN = TRUE` recorded by project owner.
+- [x] Every V1 tool has a feasibility record. — `docs/feasibility/J02_TOOL_RECORDS.md`
+- [x] Every V1 tool has permission/hardware/API requirements. — `docs/feasibility/J02_MATRICES.md`
+- [x] Every V1 tool has unsupported/failure UX. — feasibility records + `docs/design/J03_SCREEN_SPECS.md`
+- [x] V1 UI screen inventory is complete. — `docs/design/J03_SCREEN_SPECS.md`
+- [x] V1 effort is accepted. — `docs/PRD_APPROVAL.md` (owner-approved 2026-10-19)
+- [x] Post-V1 items are removed from V1 backlog. — `docs/PRD_APPROVAL.md` scope table
+- [x] `V1_SCOPE_FROZEN = TRUE` recorded by project owner.
+
+## Freeze record
+`V1_SCOPE_FROZEN = TRUE` — 2026-10-19, owner-approved via `docs/PRD_APPROVAL.md`.
+Scope changes after this date require a `docs/PLAN_MIGRATION_LOG.md` entry with owner approval.

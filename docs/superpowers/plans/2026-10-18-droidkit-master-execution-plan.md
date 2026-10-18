@@ -94,24 +94,27 @@ Queue order = dependency order. Each item lists canonical docs, deliverables, an
 - Also adopt v2 governance files: `00_README_START_HERE`, `01_PLAN_PRECEDENCE_AND_MIGRATION`, `02_IMPROVED_PRODUCT_MAP`, `30_FEATURE_SCOPE_MATRIX_V2`, and create empty `docs/PLAN_MIGRATION_LOG.md` from template `31`. Session prompt `32` stays as the per-feature kickoff template.
 - Gate: `AGENTS.md` exists at root; another AI can find rules cold.
 
-**Q3. Approve PRD + freeze V1 scope (J01 tail → J02 gate).**
+**Q3. Approve PRD + freeze V1 scope (J01 tail → J02 gate).** — DONE 2026-10-19
 - Docs: `01_DroidKit_PRD.md` (v2, as draft input), playbook `03`, Product Bible §7, `30_FEATURE_SCOPE_MATRIX_V2.md` for tier defaults.
 - Deliverables: PRD reviewed line-by-line; post-V1 items removed from V1 backlog; V1-OPTIONAL calls made (Bluetooth basic, Developer Lab safe tools, APK export); `V1_SCOPE_FROZEN = TRUE` recorded.
+- Evidence: `docs/PRD_APPROVAL.md` (all three V1-OPTIONAL calls approved as recommended); freeze recorded in playbook `03` freeze record + checklist.
 - Requires feasibility evidence → depends on Q4.
 
-**Q4. J02 feasibility + compatibility audit.**
+**Q4. J02 feasibility + compatibility audit.** — DONE 2026-10-19
 - Doc: playbook `04`. Per-tool research record (API, min API, permissions, hardware, OEM, offline, unsupported UX, decision, confidence) for all 22 V1 audit items, expanded to the v2 sub-tools (Tag Doctor, NDEF Writer, Component Explorer, Sensor Live Monitor, Network layer diagnostics, etc.).
 - Deliverables: API-level matrix, OEM risk matrix, permission matrix, hardware matrix, feature decision matrix, known-limitations list.
+- Evidence: `docs/feasibility/J02_TOOL_RECORDS.md` (~30 records) + `docs/feasibility/J02_MATRICES.md` (all six matrices).
 - Gate: every V1 tool classified Verified / Needs-device-test / Experimental; scope freezable.
 
-**Q5. J03 design foundation.**
+**Q5. J03 design foundation.** — DONE 2026-10-19
 - Doc: playbook `05`. Tokens (type/space/shape/elevation/semantic color/motion), light+dark themes, ~16 core components, screen specs + state models for the 24 wireframe targets in checklist §3.2.
-- Partially overlaps skeleton plan Task 9 (`:core:ui`) — skeleton builds the primitives; this journey still owes the per-feature screen specs before J07+ feature work.
+- Evidence: `docs/design/J03_DESIGN_TOKENS.md`, `J03_COMPONENTS.md`, `J03_SCREEN_SPECS.md` (all 24 wireframe targets + state models + a11y rules).
+- Partially overlaps skeleton plan Task 9 (`:core:ui`) — skeleton builds the primitives; screen specs are now written for J07+ feature work.
 - Gate: each feature screen has state model + low-fi spec before implementation.
 
-**Q6. J04 engineering foundation (mostly already decided).**
+**Q6. J04 engineering foundation (mostly already decided).** — DONE 2026-10-19
 - Doc: playbook `06` vs skeleton design spec. Already decided: module map (31 modules), `ToolDefinition`, `CapabilityProvider`, `CapabilityManager`, `ToolResolution`, result/diagnostic states, Room entities, DI assembly.
-- Remaining: ratify package naming, git/branch/commit convention, testing rules, DoD adoption (= playbook `27`), report format, privacy/data behavior.
+- Evidence: `docs/ENGINEERING_FOUNDATION.md` ratifies module boundaries, dependency rules, contracts, package/git/branch/commit conventions, testing rules, DoD, logging strategy, report-format decision (deferred to J10/Q12), privacy/data behavior.
 - Gate: a fresh implementer needs no new architecture decisions for J05–J06.
 
 ### Phase B — Build the skeleton (J05 + J06)

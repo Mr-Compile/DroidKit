@@ -12,8 +12,8 @@ This file is the project-wide progress tracker. Update `[ ]` to `[x]` only when 
 - [x] Initial PRD drafted
 - [x] Initial roadmap drafted
 - [x] Planning documents packaged
-- [ ] Pre-development specification completed
-- [ ] V1 scope frozen
+- [x] Pre-development specification completed
+- [x] V1 scope frozen
 - [ ] Development started
 
 ---
@@ -29,10 +29,10 @@ This file is the project-wide progress tracker. Update `[ ]` to `[x]` only when 
 - [x] Decide that Shizuku is optional
 - [x] Decide that Wireless ADB is optional
 - [x] Postpone root to a future phase
-- [ ] Finalize public product name
-- [ ] Finalize application/package ID
-- [ ] Decide initial distribution: GitHub, Play Store, direct APK, or combination
-- [ ] Write one-sentence product positioning statement
+- [x] Finalize public product name
+- [x] Finalize application/package ID
+- [x] Decide initial distribution: GitHub, Play Store, direct APK, or combination
+- [x] Write one-sentence product positioning statement
 
 ## 1.2 Product Requirements
 - [x] Draft PRD
@@ -40,59 +40,59 @@ This file is the project-wide progress tracker. Update `[ ]` to `[x]` only when 
 - [x] Draft V2/advanced feature groups
 - [x] Define non-goals
 - [x] Define safety philosophy
-- [ ] Review PRD line by line
-- [ ] Remove features that do not belong in V1
-- [ ] Add any missing must-have V1 requirements
-- [ ] Approve PRD
-- [ ] Freeze V1 scope
+- [x] Review PRD line by line
+- [x] Remove features that do not belong in V1
+- [x] Add any missing must-have V1 requirements
+- [x] Approve PRD
+- [x] Freeze V1 scope
 
 Completion gate:
-- [ ] V1 has a fixed feature list and no feature enters V1 without an explicit scope change.
+- [x] V1 has a fixed feature list and no feature enters V1 without an explicit scope change.
 
 ---
 
 # Journey 2 - Pre-Development Research
 
 ## 2.1 Android Compatibility
-- [ ] Verify minimum supported Android version
-- [ ] Verify current compileSdk
-- [ ] Verify current targetSdk
-- [ ] Define supported Android version matrix
-- [ ] Define representative OEM/device test matrix
-- [ ] Document Android-version-specific behavior
+- [x] Verify minimum supported Android version
+- [x] Verify current compileSdk
+- [x] Verify current targetSdk
+- [x] Define supported Android version matrix
+- [x] Define representative OEM/device test matrix
+- [x] Document Android-version-specific behavior
 
 ## 2.2 API Feasibility Spikes
 For every V1 tool verify API, permission, hardware, restrictions, OEM differences, and fallback behavior.
 
-- [ ] Device/build information
-- [ ] CPU/ABI information
-- [ ] RAM information
-- [ ] Storage information
-- [ ] Display information
-- [ ] Battery information
-- [ ] Sensor inventory
-- [ ] Display/dead-pixel diagnostic
-- [ ] Touch diagnostic
-- [ ] Multitouch diagnostic
-- [ ] Speaker diagnostic
-- [ ] Microphone diagnostic
-- [ ] Vibration/haptics diagnostic
-- [ ] Camera diagnostic
-- [ ] Flash diagnostic
-- [ ] Proximity sensor diagnostic
-- [ ] Light sensor diagnostic
-- [ ] Accelerometer diagnostic
-- [ ] Gyroscope diagnostic
-- [ ] Magnetometer diagnostic
-- [ ] Wi-Fi/network capability diagnostics
-- [ ] Bluetooth/BLE capability diagnostics
-- [ ] GPS/location capability diagnostics
-- [ ] USB Host / UsbManager inspection
-- [ ] NFC read/write behavior
-- [ ] PackageManager/package visibility
-- [ ] Application component inspection
-- [ ] Permission inspection
-- [ ] Diagnostic report/PDF/export behavior
+- [x] Device/build information
+- [x] CPU/ABI information
+- [x] RAM information
+- [x] Storage information
+- [x] Display information
+- [x] Battery information
+- [x] Sensor inventory
+- [x] Display/dead-pixel diagnostic
+- [x] Touch diagnostic
+- [x] Multitouch diagnostic
+- [x] Speaker diagnostic
+- [x] Microphone diagnostic
+- [x] Vibration/haptics diagnostic
+- [x] Camera diagnostic
+- [x] Flash diagnostic
+- [x] Proximity sensor diagnostic
+- [x] Light sensor diagnostic
+- [x] Accelerometer diagnostic
+- [x] Gyroscope diagnostic
+- [x] Magnetometer diagnostic
+- [x] Wi-Fi/network capability diagnostics
+- [x] Bluetooth/BLE capability diagnostics
+- [x] GPS/location capability diagnostics
+- [x] USB Host / UsbManager inspection
+- [x] NFC read/write behavior
+- [x] PackageManager/package visibility
+- [x] Application component inspection
+- [x] Permission inspection
+- [x] Diagnostic report/PDF/export behavior
 
 ## 2.3 Advanced Capability Research
 Not required to block V1 unless the V1 scope changes.
@@ -107,8 +107,8 @@ Not required to block V1 unless the V1 scope changes.
 - [ ] Research root provider only when future milestone begins
 
 Completion gate:
-- [ ] Every V1 feature has a verified feasibility note.
-- [ ] Unsupported/limited behavior is documented instead of guessed.
+- [x] Every V1 feature has a verified feasibility note.
+- [x] Unsupported/limited behavior is documented instead of guessed.
 
 ---
 
@@ -119,56 +119,56 @@ Completion gate:
 - [x] Define Tool Registry concept
 - [x] Define tool availability states
 - [x] Define diagnostic result states
-- [ ] Finalize navigation graph
-- [ ] Finalize categories
-- [ ] Finalize search behavior
-- [ ] Finalize favorites behavior
-- [ ] Finalize recent-tools behavior
+- [x] Finalize navigation graph
+- [x] Finalize categories
+- [x] Finalize search behavior
+- [x] Finalize favorites behavior
+- [x] Finalize recent-tools behavior
 
 ## 3.2 Wireframes
-- [ ] Onboarding
-- [ ] Home
-- [ ] Tools
-- [ ] Search results
-- [ ] Tool details
-- [ ] Device Inspector
-- [ ] Battery
-- [ ] Storage
-- [ ] Sensors
-- [ ] Diagnostic start
-- [ ] Diagnostic test template
-- [ ] Diagnostic summary
-- [ ] Diagnostic history
-- [ ] Report view
-- [ ] Apps list
-- [ ] App details
-- [ ] Permissions/components
-- [ ] USB Lab
-- [ ] USB device details
-- [ ] NFC Lab
-- [ ] NFC scan/result
-- [ ] Network tools
-- [ ] Settings
-- [ ] Advanced access setup
-- [ ] About
+- [x] Onboarding
+- [x] Home
+- [x] Tools
+- [x] Search results
+- [x] Tool details
+- [x] Device Inspector
+- [x] Battery
+- [x] Storage
+- [x] Sensors
+- [x] Diagnostic start
+- [x] Diagnostic test template
+- [x] Diagnostic summary
+- [x] Diagnostic history
+- [x] Report view
+- [x] Apps list
+- [x] App details
+- [x] Permissions/components
+- [x] USB Lab
+- [x] USB device details
+- [x] NFC Lab
+- [x] NFC scan/result
+- [x] Network tools
+- [x] Settings
+- [x] Advanced access setup
+- [x] About
 
 ## 3.3 Design System
-- [ ] Typography scale
-- [ ] Spacing scale
-- [ ] Shapes/radii
-- [ ] Light theme
-- [ ] Dark theme
-- [ ] Semantic status styles
-- [ ] Tool cards
-- [ ] Information rows
-- [ ] Confirmation dialogs
-- [ ] Empty/error/unsupported states
-- [ ] Diagnostic controls
-- [ ] Accessibility rules
+- [x] Typography scale
+- [x] Spacing scale
+- [x] Shapes/radii
+- [x] Light theme
+- [x] Dark theme
+- [x] Semantic status styles
+- [x] Tool cards
+- [x] Information rows
+- [x] Confirmation dialogs
+- [x] Empty/error/unsupported states
+- [x] Diagnostic controls
+- [x] Accessibility rules
 
 Completion gate:
-- [ ] Core screens have approved low-fidelity wireframes.
-- [ ] Reusable UI components are identified before implementation.
+- [x] Core screens have approved low-fidelity wireframes.
+- [x] Reusable UI components are identified before implementation.
 
 ---
 
@@ -183,38 +183,38 @@ Completion gate:
 - [x] Room selected
 - [x] DataStore selected
 - [x] Capability-provider architecture selected
-- [ ] Finalize Gradle module boundaries
-- [ ] Finalize dependency rules between modules
-- [ ] Finalize repository/use-case conventions
-- [ ] Finalize result/error model
-- [ ] Finalize logging strategy
-- [ ] Finalize permission architecture
-- [ ] Finalize capability-resolution contract
-- [ ] Finalize ToolDefinition contract
+- [x] Finalize Gradle module boundaries
+- [x] Finalize dependency rules between modules
+- [x] Finalize repository/use-case conventions
+- [x] Finalize result/error model
+- [x] Finalize logging strategy
+- [x] Finalize permission architecture
+- [x] Finalize capability-resolution contract
+- [x] Finalize ToolDefinition contract
 
 ## 4.2 Persistence
 - [x] Initial Room entities proposed
-- [ ] Finalize DiagnosticSession schema
-- [ ] Finalize DiagnosticResult schema
-- [ ] Finalize DeviceSnapshot schema
-- [ ] Finalize SavedReport schema
-- [ ] Define migrations strategy
-- [ ] Define retention/deletion behavior
-- [ ] Define export privacy rules
+- [x] Finalize DiagnosticSession schema
+- [x] Finalize DiagnosticResult schema
+- [x] Finalize DeviceSnapshot schema
+- [x] Finalize SavedReport schema
+- [x] Define migrations strategy
+- [x] Define retention/deletion behavior
+- [x] Define export privacy rules
 
 ## 4.3 Engineering Standards
-- [ ] Kotlin style/conventions
-- [ ] Compose conventions
-- [ ] Package naming conventions
-- [ ] Git commit convention
-- [ ] Branch naming convention
-- [ ] Pull request/review checklist
-- [ ] Definition of Done
-- [ ] Testing rules
-- [ ] Release checklist
+- [x] Kotlin style/conventions
+- [x] Compose conventions
+- [x] Package naming conventions
+- [x] Git commit convention
+- [x] Branch naming convention
+- [x] Pull request/review checklist
+- [x] Definition of Done
+- [x] Testing rules
+- [x] Release checklist
 
 Completion gate:
-- [ ] Another developer or coding AI can implement M0 using the specification without inventing major architecture decisions.
+- [x] Another developer or coding AI can implement M0 using the specification without inventing major architecture decisions.
 
 ---
 
