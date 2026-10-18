@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0] - Unreleased
+
+### Added
+- Phone Doctor: guided diagnostic session engine (ordered 10-test CORE
+  sequence, Pass/Fail/Skip judgment, retry of failed and skipped tests,
+  technician notes, Room-persisted results)
+- Display tests: fullscreen R/G/B/white/black color cycle and dead-pixel check
+- Touch tests: 8x12 grid coverage tracker (Pass gated at 90% coverage) and
+  multitouch point counter (per-pointer markers, max-count capture)
+- Sensor tests: accelerometer, gyroscope, proximity, light and magnetometer
+  screens with live readings; absent hardware reports NOT_SUPPORTED
+- Vibration test via VibratorManager (VIBRATE permission declared)
+- Session review screen with per-test result states and save flow
+
 ## [0.2.0] - Unreleased
 
 ### Added

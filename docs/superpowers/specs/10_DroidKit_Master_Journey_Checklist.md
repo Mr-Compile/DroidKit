@@ -304,29 +304,29 @@ Release gate:
 
 # Journey 8 - v0.3.0 Phone Doctor Core
 
-- [ ] DiagnosticSession engine
-- [ ] Diagnostic result model
-- [ ] Display color test
-- [ ] Dead-pixel test
-- [ ] Touch grid
-- [ ] Multitouch test
-- [ ] Vibration/haptics
-- [ ] Accelerometer
-- [ ] Gyroscope
-- [ ] Proximity
-- [ ] Light sensor
-- [ ] Magnetometer
-- [ ] PASS state
-- [ ] FAIL state
-- [ ] NOT TESTED state
-- [ ] NOT SUPPORTED state
-- [ ] PERMISSION REQUIRED state
-- [ ] UNKNOWN state
+- [x] DiagnosticSession engine
+- [x] Diagnostic result model
+- [x] Display color test
+- [x] Dead-pixel test
+- [x] Touch grid
+- [x] Multitouch test
+- [x] Vibration/haptics
+- [x] Accelerometer
+- [x] Gyroscope
+- [x] Proximity
+- [x] Light sensor
+- [x] Magnetometer
+- [x] PASS state
+- [x] FAIL state
+- [x] NOT TESTED state
+- [x] NOT SUPPORTED state
+- [x] PERMISSION REQUIRED state — TestResultState supports it; no CORE test needs a runtime permission
+- [x] UNKNOWN state — in enum; surfaces only for unresolvable reads, none in CORE tests today
 
 Release gate:
-- [ ] Guided diagnostic flow works end-to-end for core tests
-- [ ] `v0.3.0` tagged
-- [ ] CHANGELOG updated
+- [ ] Guided diagnostic flow works end-to-end for core tests — code-complete; needs device run
+- [ ] `v0.3.0` tagged — version bumped (`0.3.0`/`3`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
