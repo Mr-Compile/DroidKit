@@ -12,6 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.feature.diagnostics.tests.DisplayColorScreen
+import io.github.droidkit.feature.diagnostics.tests.MultitouchScreen
+import io.github.droidkit.feature.diagnostics.tests.SensorTestScreen
+import io.github.droidkit.feature.diagnostics.tests.TouchGridScreen
+import io.github.droidkit.feature.diagnostics.tests.VibrationScreen
 
 /**
  * Single dispatch point for every Phone Doctor test screen.
@@ -24,7 +28,10 @@ fun PhoneDoctorTestScreen(
 ) {
     when {
         test.id.startsWith("display.") -> DisplayColorScreen(test, onResult)
-        test.sensorType != null -> UnsupportedTestPlaceholder(test)
+        test.id == "touch.grid" -> TouchGridScreen(test, onResult)
+        test.id == "touch.multitouch" -> MultitouchScreen(test, onResult)
+        test.id == "haptics.vibration" -> VibrationScreen(test, onResult)
+        test.sensorType != null -> SensorTestScreen(test, onResult)
         else -> UnsupportedTestPlaceholder(test)
     }
 }
