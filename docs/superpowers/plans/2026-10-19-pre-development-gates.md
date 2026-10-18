@@ -183,7 +183,7 @@ git push origin main
 
 - [x] **Step 3: Tick tracker + queue** — checklist items actually completed; queue items Q3–Q6 marked done.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/specs/playbook/03_PRODUCT_SCOPE_AND_V1_FREEZE.md docs/superpowers/specs/10_DroidKit_Master_Journey_Checklist.md docs/superpowers/plans/2026-10-18-droidkit-master-execution-plan.md
