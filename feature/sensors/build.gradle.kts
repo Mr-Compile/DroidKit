@@ -1,5 +1,6 @@
 plugins {
     id("droidkit.android.library.compose")
+    id("droidkit.hilt")
 }
 
 android {
@@ -9,5 +10,6 @@ android {
 dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
+    implementation(projects.core.system)
     implementation(projects.core.ui)
 }

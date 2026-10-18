@@ -40,11 +40,11 @@ fun DroidKitNavHost(
         deviceInfoGraph(nav)
 
         val resolve = capabilityManager::resolve
-        batteryGraph(nav, resolve)
+        batteryGraph(nav)
         displayGraph(nav, resolve)
         audioGraph(nav, resolve)
         cameraGraph(nav, resolve)
-        sensorsGraph(nav, resolve)
+        sensorsGraph(nav)
         networkGraph(nav, resolve)
         bluetoothGraph(nav, resolve)
         usbGraph(nav, resolve)
