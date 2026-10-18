@@ -356,23 +356,23 @@ Release gate:
 
 # Journey 10 - v0.5.0 Diagnostic Reports
 
-- [ ] Persist sessions
-- [ ] Persist individual results
-- [ ] Capture DeviceSnapshot
-- [ ] Diagnostic history
-- [ ] Report detail screen
-- [ ] Technician/user notes
-- [ ] Report generation
-- [ ] PDF or selected export format
-- [ ] Share flow
-- [ ] Delete report/session
-- [ ] Privacy review
-- [ ] Export verification
+- [x] Persist sessions — Room `diagnostic_sessions` (built J08)
+- [x] Persist individual results — `diagnostic_results` rows per test
+- [x] Capture DeviceSnapshot — `device_snapshots` on session start
+- [x] Diagnostic history — reports tab lists sessions with result tallies
+- [x] Report detail screen — `reports/detail/{id}` reopenable without rerun
+- [x] Technician/user notes — captured at review, shown in detail + report
+- [x] Report generation — `ReportBuilder` canonical text (5 unit tests)
+- [x] PDF or selected export format — text + framework-PDF, no deps
+- [x] Share flow — FileProvider `content://` share with read grant
+- [x] Delete report/session — confirm dialog; results deleted with session
+- [x] Privacy review — export sheet lists every field class before share
+- [x] Export verification — file write + share intent verified in code; device share-sheet run pending
 
 Release gate:
-- [ ] A complete diagnostic can be saved and exported
-- [ ] `v0.5.0` tagged
-- [ ] CHANGELOG updated
+- [ ] A complete diagnostic can be saved and exported — pipeline complete; needs device run
+- [ ] `v0.5.0` tagged — version bumped (`0.5.0`/`5`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 

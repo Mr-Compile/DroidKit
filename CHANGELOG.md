@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0] - Unreleased
+
+### Added
+- Report detail screen: reopenable session view with device snapshot,
+  grouped results with notes, and technician notes
+- `ReportBuilder` canonical text report (spec-ordered sections, honest
+  empty/unsupported wording) plus concise clipboard summary
+- Export: text (.txt) and PDF (.pdf via framework PdfDocument) written to
+  cache, shared through FileProvider with a sensitive-field preview sheet
+- Report history: status filter chips, per-session delete with confirm,
+  delete-all with confirm; saved-report records persisted
+
 ## [0.4.0] - Unreleased
 
 ### Added
