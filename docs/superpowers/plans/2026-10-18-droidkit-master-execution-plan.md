@@ -118,7 +118,7 @@ Queue order = dependency order. Each item lists canonical docs, deliverables, an
 - Evidence: `docs/ENGINEERING_FOUNDATION.md` ratifies module boundaries, dependency rules, contracts, package/git/branch/commit conventions, testing rules, DoD, logging strategy, report-format decision (deferred to J10/Q12), privacy/data behavior.
 - Gate: a fresh implementer needs no new architecture decisions for J05–J06.
 
-**Q6b. Secrets/GitHub hardening (add-on Part A, chore before code).**
+**Q6b. Secrets/GitHub hardening (add-on Part A, chore before code).** — DONE 2026-10-19
 - Doc: `specs/ai_security_addon/` + `plans/2026-10-19-ai-security-addon.md` Part A.
 - Deliverables: `.gitignore` secret/signing entries, `.env.example` placeholders, AI+secrets rules merged into `AGENTS.md`, incident playbook referenced.
 - Gate: `git check-ignore` covers `.env`/keystores; `.env.example` placeholders only.

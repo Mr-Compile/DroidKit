@@ -17,37 +17,37 @@ Small doc/config chore on `main`, same workflow as Q2/AGENTS.md adoption.
 ### Task A1: `.gitignore` secrets entries
 
 - Modify: root `.gitignore`
-- [ ] **Step 1:** Merge `specs/ai_security_addon/.gitignore.additions` — `.env`, `.env.*` (except `!.env.example`), `local.properties`, `*.jks`/`*.keystore`/`*.p12`/`*.pfx`/`*.pem`/`*.key`, `keystore.properties`, `signing.properties`, `.secrets/`, `secrets/`. Skip entries already covered (`local.properties`, `.gradle/`, `build/`).
-- [ ] **Step 2: Verify** — `git check-ignore .env keystore.properties release.jks` exits 0 for each.
-- [ ] **Step 3: Commit** — `chore: ignore secrets and signing material`
+- [x] **Step 1:** Merge `specs/ai_security_addon/.gitignore.additions` — `.env`, `.env.*` (except `!.env.example`), `local.properties`, `*.jks`/`*.keystore`/`*.p12`/`*.pfx`/`*.pem`/`*.key`, `keystore.properties`, `signing.properties`, `.secrets/`, `secrets/`. Skip entries already covered (`local.properties`, `.gradle/`, `build/`).
+- [x] **Step 2: Verify** — `git check-ignore .env keystore.properties release.jks` exits 0 for each.
+- [x] **Step 3: Commit** — `chore: ignore secrets and signing material`
 
 ### Task A2: `.env.example` at root
 
 - Create: root `.env.example` from `specs/ai_security_addon/.env.example` verbatim — placeholders only (`GROQ_API_KEY=YOUR_GROQ_API_KEY_HERE`, `DROIDKIT_AI_PROVIDER=groq`, `DROIDKIT_AI_BASE_URL=...invalid`).
-- [ ] **Step 1:** Copy + commit `chore: add .env.example with placeholders`.
-- [ ] **Step 2: Self-check** — file contains zero real values (spec rule: `.env.example` never contains a valid key).
+- [x] **Step 1:** Copy + commit `chore: add .env.example with placeholders`.
+- [x] **Step 2: Self-check** — file contains zero real values (spec rule: `.env.example` never contains a valid key).
 
 ### Task A3: Merge AI/secrets rules into `AGENTS.md`
 
 - Modify: root `AGENTS.md`
 - Source: `specs/ai_security_addon/09_AGENTS_AI_SECURITY_ADDON.md`
-- [ ] **Step 1:** Add a `## AI and secrets` section — provider abstraction (features depend on `AIProvider`, never Groq), AI optional, secrets never created/pasted/logged/committed, `.env` ignored, no production secrets in client source/BuildConfig, BYOK storage requires platform-security review, **audit the diff for secrets before every commit/push**, committed credential → rotate/revoke + history remediation.
-- [ ] **Step 2:** Source-of-truth list: insert `specs/ai_security_addon/` for AI/secret topics per the addon's precedence.
-- [ ] **Step 3:** Add `10_SECRET_INCIDENT_PLAYBOOK.md` to the read-before-editing/security references (canonical copy stays at `specs/ai_security_addon/`).
-- [ ] **Step 4: Commit** — `docs: merge AI + secrets rules into AGENTS.md`
+- [x] **Step 1:** Add a `## AI and secrets` section — provider abstraction (features depend on `AIProvider`, never Groq), AI optional, secrets never created/pasted/logged/committed, `.env` ignored, no production secrets in client source/BuildConfig, BYOK storage requires platform-security review, **audit the diff for secrets before every commit/push**, committed credential → rotate/revoke + history remediation.
+- [x] **Step 2:** Source-of-truth list: insert `specs/ai_security_addon/` for AI/secret topics per the addon's precedence.
+- [x] **Step 3:** Add `10_SECRET_INCIDENT_PLAYBOOK.md` to the read-before-editing/security references (canonical copy stays at `specs/ai_security_addon/`).
+- [x] **Step 4: Commit** — `docs: merge AI + secrets rules into AGENTS.md`
 
 ### Task A4: Register in queue + tracker
 
 - Modify: `docs/superpowers/plans/2026-10-18-droidkit-master-execution-plan.md` — add **Q6b** (this Part A, chore) and **Q23** (Part B journey, Phase E).
 - Modify: `docs/superpowers/specs/10_DroidKit_Master_Journey_Checklist.md` — append "Journey 21 — DroidKit Intelligence (AI add-on)" after J20, with the AI-0..AI-5 items from `08_AI_IMPLEMENTATION_JOURNEY.md`, header noting: post-V1, not part of frozen scope.
-- [ ] **Step 1:** Edits + commit `docs: register AI security addon (Q6b + J21/Q23)`.
+- [x] **Step 1:** Edits + commit `docs: register AI security addon (Q6b + J21/Q23)`.
 
 ### Part A gate
 
-- [ ] `git check-ignore` covers `.env`, keystores, signing files
-- [ ] `.env.example` tracked with placeholders only
-- [ ] `AGENTS.md` carries the AI/secrets rules and the diff-scan-before-commit rule
-- [ ] Q6b + Q23 registered; J21 in tracker marked post-V1
+- [x] `git check-ignore` covers `.env`, keystores, signing files
+- [x] `.env.example` tracked with placeholders only
+- [x] `AGENTS.md` carries the AI/secrets rules and the diff-scan-before-commit rule
+- [x] Q6b + Q23 registered; J21 in tracker marked post-V1
 
 ---
 

@@ -8,3 +8,18 @@ local.properties
 .cxx/
 .kotlin/
 _extracted_plan.txt
+
+# Secrets and signing material (ai_security_addon)
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+keystore.properties
+signing.properties
+.secrets/
+secrets/

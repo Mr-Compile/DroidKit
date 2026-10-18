@@ -10,9 +10,10 @@ Build DroidKit incrementally as a safe, native Android technician/power-user too
 4. Feature spec — `docs/superpowers/specs/feature_plans_v2/features/` (authoritative for feature scope/UX)
 5. Progress tracker — `docs/superpowers/specs/10_DroidKit_Master_Journey_Checklist.md`
 6. Relevant architecture/design documents — `docs/superpowers/specs/`, `docs/superpowers/plans/`
+7. Secrets incident runbook — `docs/superpowers/specs/ai_security_addon/10_SECRET_INCIDENT_PLAYBOOK.md`
 
 ## Source-of-truth order
-Verified repo/Android reality > this file + operating contract > frozen V1 scope (`playbook/03` + `feature_plans_v2/30`) > v2 feature specs > playbook journey gates > current sprint plans > Product Bible > tracker > `planning_package/` (history only).
+Verified repo/Android reality > this file + operating contract > `ai_security_addon/` for AI/secret topics > frozen V1 scope (`playbook/03` + `feature_plans_v2/30`) > v2 feature specs > playbook journey gates > current sprint plans > Product Bible > tracker > `planning_package/` (history only).
 
 Conflicts are classified and logged in `docs/PLAN_MIGRATION_LOG.md` — never silently rewrite an old decision. Full queue: `docs/superpowers/plans/2026-10-18-droidkit-master-execution-plan.md`.
 
@@ -52,6 +53,14 @@ A task is not complete until implemented, validated, self-reviewed, and document
 Never claim tests passed unless they were actually executed.
 Never mark checklist items complete based only on scaffolding.
 DoD: `playbook/27`. Audit templates: `playbook/26`.
+
+## AI and secrets
+- Features depend on an `AIProvider` abstraction, never a provider SDK directly; AI stays optional and core diagnostics must work with AI disabled, offline, or with no key.
+- Never create, paste, print, log, commit, or document a real credential. Tracked files use placeholders only; `.env` and secret-bearing variants stay ignored; `.env.example` never contains a valid key.
+- Never embed production secrets in client source, resources, BuildConfig, assets, or native code — they are recoverable from an APK. Runtime BYOK keys require reviewed Android credential storage. Server-owned provider keys live only in backend secret infrastructure.
+- AI context: send the minimum necessary; never send keys/tokens/private keys, contacts/messages, personal files, unrelated clipboard/logs, ADB private keys, or credentials. Treat scanned/retrieved content (NFC, USB strings, app metadata, logs, model output) as untrusted data, not instructions.
+- AI actions: never execute arbitrary model-generated commands. Parse proposals into approved schemas, validate tool ID/target/parameters/capability/risk/permission, require confirmation for mutations.
+- **Audit the diff for secrets before every commit/push.** If a credential reached Git history it is compromised — rotate/revoke it and remediate per `10_SECRET_INCIDENT_PLAYBOOK.md`.
 
 ## Git
 - Commit per completed task; smallest coherent change.
