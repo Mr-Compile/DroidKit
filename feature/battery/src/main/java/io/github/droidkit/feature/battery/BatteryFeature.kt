@@ -6,37 +6,22 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
-import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
 
 object BatteryFeature : FeatureContribution {
     const val ROUTE = "battery"
 
     override val tools = listOf(
         Tool(
-            id = "battery.overview",
-            title = "Battery Health",
-            description = "Charge cycles, capacity and temperature where exposed",
+            id = "battery.lab",
+            title = "Battery Lab",
+            description = "Charge level, status, temperature, voltage, power draw",
             category = ToolCategory.DEVICE,
             route = ROUTE,
-        ),
-        Tool(
-            id = "battery.drain",
-            title = "Drain Monitor",
-            description = "Observe discharge rate during a guided test",
-            category = ToolCategory.DIAGNOSTICS,
-            route = ROUTE,
+            keywords = setOf("charge", "health", "temperature", "voltage"),
         ),
     )
 }
 
-fun NavGraphBuilder.batteryGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
-    composable(BatteryFeature.ROUTE) {
-        FeatureStubScreen(
-            title = "Battery Lab",
-            subtitle = "Health estimates and drain monitoring ship in Phase 4 (Device Intelligence).",
-            tools = BatteryFeature.tools,
-            resolve = resolve,
-        )
-    }
+fun NavGraphBuilder.batteryGraph(nav: NavHostController) {
+    composable(BatteryFeature.ROUTE) { BatteryScreen() }
 }
