@@ -3,11 +3,11 @@ plugins {
 }
 
 dependencies {
-    compileOnly("com.android.tools.build:gradle:9.0.1")
-    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.20")
-    compileOnly("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:2.3.20")
-    compileOnly("com.google.dagger:hilt-android-gradle-plugin:2.52")
-    compileOnly("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.3.20-2.0.3")
+    implementation("com.android.tools.build:gradle:9.0.1")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20")
+    implementation("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:2.2.20")
+    implementation("com.google.dagger:hilt-android-gradle-plugin:2.52")
+    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.2.20-2.0.3")
 }
 
 gradlePlugin {

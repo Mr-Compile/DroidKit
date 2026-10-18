@@ -10,7 +10,7 @@ import org.gradle.kotlin.dsl.dependencies
 class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("com.android.application")
-        pluginManager.apply("org.jetbrains.kotlin.android")
+        // AGP 9 has built-in Kotlin; org.jetbrains.kotlin.android is forbidden
         pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 
         extensions.configure<ApplicationExtension> {
