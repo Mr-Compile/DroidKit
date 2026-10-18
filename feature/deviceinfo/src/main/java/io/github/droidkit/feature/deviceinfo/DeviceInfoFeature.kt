@@ -14,13 +14,23 @@ object DeviceInfoFeature : FeatureContribution {
         Tool(
             id = "deviceinfo.overview",
             title = "Device Inspector",
-            description = "Build, CPU/ABI, memory, storage, display, battery, sensors, cameras",
+            description = "Identity, OS, hardware, memory, storage, display, battery, capabilities",
             category = ToolCategory.DEVICE,
             route = ROUTE,
+            keywords = setOf("phone info", "build", "hardware"),
+        ),
+        Tool(
+            id = "deviceinfo.storage",
+            title = "Storage Lab",
+            description = "Volumes, capacity, free space, storage warnings",
+            category = ToolCategory.DEVICE,
+            route = "$ROUTE/storage",
+            keywords = setOf("disk", "space", "memory"),
         ),
     )
 }
 
 fun NavGraphBuilder.deviceInfoGraph(nav: NavHostController) {
-    composable(DeviceInfoFeature.ROUTE) { DeviceInfoScreen() }
+    composable(DeviceInfoFeature.ROUTE) { DeviceInfoScreen(nav) }
+    composable("${DeviceInfoFeature.ROUTE}/storage") { StorageLabScreen() }
 }
