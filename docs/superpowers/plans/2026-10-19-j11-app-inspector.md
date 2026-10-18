@@ -1,5 +1,11 @@
 # J11 App Inspector (v0.6.0) Implementation Plan
 
+> **STATUS: IMPLEMENTED** — all 3 tasks executed on branch `feature/j11-app-inspector`
+> (2026-10-19). `:app:compileDebugKotlin` green. Open gate item: device run of the
+> inspector (visibility count, launch, components), `v0.6.0` tag at merge.
+> Deviations: component lists capped at 30 rows each with an overflow count;
+> app icon rendered via `toBitmap()`; APK export deferred POST-V1 per freeze.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the apps stub with a real App Inspector: visible-package list with search + user/system filters, and a per-app detail screen (version/SDK/installer/times, components, permissions, launch/settings actions). Tag `v0.6.0`.
@@ -26,9 +32,9 @@
 - Modify: `feature/apps/.../AppsViewModel.kt` (create) — `packages: StateFlow<List<InstalledApp>>`, `query`, `filter` (ALL/USER/SYSTEM); loads on init
 - Modify: `feature/apps/.../AppsScreen.kt` (create) — search field, filter chips, visibility-caveat header, list rows → detail
 
-- [ ] **Step 1: Implement model + VM (Dispatchers.IO load, loading state)**
-- [ ] **Step 2: List screen + route to `apps/detail/{packageName}`**
-- [ ] **Step 3: Compile + commit** `feat(apps): installed-app list with search and filters`
+- [x] **Step 1: Implement model + VM (Dispatchers.IO load, loading state)**
+- [x] **Step 2: List screen + route to `apps/detail/{packageName}`**
+- [x] **Step 3: Compile + commit** `feat(apps): installed-app list with search and filters`
 
 ---
 
@@ -39,19 +45,19 @@
 - Modify: `feature/apps/.../AppsViewModel.kt` — `packageInfo(pkg): PackageInfo?` suspend getter with COMPONENT+PERMISSION flags
 - Modify: `feature/apps/.../AppsFeature.kt` — detail route, drop `FeatureStubScreen`, update tools (App Inspector + Component Explorer + Permission Inspector sub-tools)
 
-- [ ] **Step 1: Detail sections** — identity (label, package, icon via `PackageManager.getApplicationIcon`→`Drawable`→`Image` bitmap), version name/code, target/min SDK (`minSdkVersion` null-safe), first install/update times, installer, APK source path; actions row: Launch / App settings / Copy package name
-- [ ] **Step 2: Components** — expandable lists: activities, services, receivers, providers with exported/enabled; empty groups say "None declared" or "Not exposed by this package" honestly (PM may return null arrays)
-- [ ] **Step 3: Permissions** — requested permissions grouped granted/denied via `requestedPermissionsFlags`; "Not requested" when null
-- [ ] **Step 4: Compile + commit** `feat(apps): package detail, components, permissions`
+- [x] **Step 1: Detail sections** — identity (label, package, icon via `PackageManager.getApplicationIcon`→`Drawable`→`Image` bitmap), version name/code, target/min SDK (`minSdkVersion` null-safe), first install/update times, installer, APK source path; actions row: Launch / App settings / Copy package name
+- [x] **Step 2: Components** — expandable lists: activities, services, receivers, providers with exported/enabled; empty groups say "None declared" or "Not exposed by this package" honestly (PM may return null arrays)
+- [x] **Step 3: Permissions** — requested permissions grouped granted/denied via `requestedPermissionsFlags`; "Not requested" when null
+- [x] **Step 4: Compile + commit** `feat(apps): package detail, components, permissions`
 
 ---
 
 ### Task 3: Release gate — 0.6.0, changelog, checklist, plan, queue
 
-- [ ] **Step 1: `0.6.0`/`6` + CHANGELOG**
-- [ ] **Step 2: J11 ticks + banner + Q13 DONE; APK export row → deferred note**
-- [ ] **Step 3: `testDebugUnitTest :app:assembleDebug` green**
-- [ ] **Step 4: Commit + push**
+- [x] **Step 1: `0.6.0`/`6` + CHANGELOG**
+- [x] **Step 2: J11 ticks + banner + Q13 DONE; APK export row → deferred note**
+- [x] **Step 3: `testDebugUnitTest :app:assembleDebug` green**
+- [x] **Step 4: Commit + push**
 
 ## Execution notes
 

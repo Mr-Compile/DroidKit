@@ -378,26 +378,26 @@ Release gate:
 
 # Journey 11 - v0.6.0 App Inspector
 
-- [ ] Package list
-- [ ] User/system filtering
-- [ ] Search
-- [ ] Package details
-- [ ] Version information
-- [ ] Min/target SDK where accessible
-- [ ] Activities
-- [ ] Services
-- [ ] Receivers
-- [ ] Providers
-- [ ] Permission inspection
-- [ ] APK metadata/path where accessible
-- [ ] Launch supported app
-- [ ] Supported APK export if approved/allowed
-- [ ] Package visibility compatibility handling
+- [x] Package list — visible apps via PackageManager
+- [x] User/system filtering — FLAG_SYSTEM chips
+- [x] Search — label + package name
+- [x] Package details — version/SDK/installer/times/path
+- [x] Version information — name + long code
+- [x] Min/target SDK where accessible — `minSdkVersion` null-safe, absent → Not exposed
+- [x] Activities — Component Explorer per app
+- [x] Services
+- [x] Receivers
+- [x] Providers
+- [x] Permission inspection — granted/not-granted groups + settings link
+- [x] APK metadata/path where accessible — sourceDir shown
+- [x] Launch supported app — `getLaunchIntentForPackage`, absent → honest error
+- [-] Supported APK export if approved/allowed — deferred POST-V1 (frozen decision)
+- [x] Package visibility compatibility handling — visible-only reads + caveat header
 
 Release gate:
-- [ ] Modern Android package-visibility behavior is handled correctly
-- [ ] `v0.6.0` tagged
-- [ ] CHANGELOG updated
+- [x] Modern Android package-visibility behavior is handled correctly — no QUERY_ALL_PACKAGES; visible-set counted and disclosed
+- [ ] `v0.6.0` tagged — version bumped (`0.6.0`/`6`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0] - Unreleased
+
+### Added
+- App Inspector: visible installed apps with search and user/system
+  filters, honest Android 11+ package-visibility caveat
+- App detail: icon, version name/code, target/min SDK, install/update
+  times, installer, APK source path, launch and app-settings actions
+- Permission Inspector: requested permissions grouped granted/not granted
+- Component Explorer: activities, services, receivers, providers with
+  exported flags per app
+
 ## [0.5.0] - Unreleased
 
 ### Added
