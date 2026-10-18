@@ -280,25 +280,25 @@ Release gate:
 
 # Journey 7 - v0.2.0 Device Inspector
 
-- [ ] Device/build information
-- [ ] Android/API/security patch information where exposed
-- [ ] CPU/ABI
-- [ ] RAM
-- [ ] Storage
-- [ ] Display
-- [ ] Battery
-- [ ] Sensor inventory
-- [ ] Camera capability summary
-- [ ] Connectivity/hardware summary
-- [ ] Copy/share useful device summary
-- [ ] Unsupported fields handled correctly
-- [ ] Real-device verification
+- [x] Device/build information
+- [x] Android/API/security patch information where exposed
+- [x] CPU/ABI
+- [x] RAM
+- [x] Storage — dashboard summary + Storage Lab volumes
+- [x] Display — resolution, density, refresh rate, supported modes
+- [x] Battery — Battery Lab (level, status, temp, voltage, tech, health-as-reported)
+- [x] Sensor inventory — Sensor Lab + live monitor for safe types
+- [x] Camera capability summary — count by facing via CameraManager
+- [x] Connectivity/hardware summary — NFC/BT/BLE/USB-host/telephony/location features
+- [x] Copy/share useful device summary — per-field copy, copy-section, share intent
+- [x] Unsupported fields handled correctly — `Not exposed` on null/−1 reads
+- [ ] Real-device verification — requires attached device/emulator
 
 Release gate:
-- [ ] Device Inspector works on supported Android versions
-- [ ] No unavailable values are fabricated
-- [ ] `v0.2.0` tagged
-- [ ] CHANGELOG updated
+- [ ] Device Inspector works on supported Android versions — requires device run
+- [x] No unavailable values are fabricated — all null/−1 fields render `Not exposed`
+- [ ] `v0.2.0` tagged — version bumped (`0.2.0`/`2`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 

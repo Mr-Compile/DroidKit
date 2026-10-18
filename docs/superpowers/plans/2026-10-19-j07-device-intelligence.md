@@ -1,5 +1,12 @@
 # J07 Device Intelligence (v0.2.0) Implementation Plan
 
+> **STATUS: IMPLEMENTED** — all 6 tasks executed on branch `feature/j07-device-intelligence`
+> (2026-10-19). `:app:assembleDebug` green; `:core:system` formatter tests pass (3).
+> Open gate items: real-device verification and the `v0.2.0` tag at merge to `main`.
+> Deviations: battery lab route signature simplified (`batteryGraph(nav)`), live
+> sensor monitor restricted to the plan's safe list, `SensorManager.SENSOR_DELAY_UI`
+> constant corrected, `LocalClipboard` used over deprecated `LocalClipboardManager`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn Device Inspector into DroidKit's device-intelligence dashboard — sectioned inspection with copy/share — and ship real Battery Lab, Storage Lab, and Sensor Lab (inventory + live monitor). Tag `v0.2.0`.
@@ -28,7 +35,7 @@
 - Consumes: existing probe (Task 4 of skeleton)
 - Produces: `ProbeSensor` upgraded fields; new `BatteryStatus`, `CameraSummary`, `MemoryInfo` data classes; probe fields `memory`, `batteryStatus`, `cameraSummary`, `displayModeRatesHz`; formatter `formatBytes(Long): String`, `formatHz(Float): String`
 
-- [ ] **Step 1: Write the failing formatter test**
+- [x] **Step 1: Write the failing formatter test**
 
 ```kotlin
 package io.github.droidkit.core.system
@@ -50,7 +57,7 @@ class ProbeFormattersTest {
 }
 ```
 
-- [ ] **Step 2: Upgrade `ProbeSensor` + add data classes** (top of `DeviceSystemProbe.kt`)
+- [x] **Step 2: Upgrade `ProbeSensor` + add data classes** (top of `DeviceSystemProbe.kt`)
 
 ```kotlin
 data class ProbeSensor(
@@ -83,7 +90,7 @@ data class MemoryInfo(val totalMb: Long, val availableMb: Long, val lowMemory: B
 
 `ProbeSensor` gains `stringType` (`sensor.stringType ?: "custom"`), `version`, `maxRange`, `resolution`, `powerMa` (`sensor.power`), `isWakeUp`, `minDelayUs` — all straight `android.hardware.Sensor` getters. Update the `sensors` lazy to fill them.
 
-- [ ] **Step 3: Add `memory`, `batteryStatus`, `cameraSummary`, `displayModeRatesHz`**
+- [x] **Step 3: Add `memory`, `batteryStatus`, `cameraSummary`, `displayModeRatesHz`**
 
 ```kotlin
 val memory: MemoryInfo by lazy {
@@ -159,7 +166,7 @@ val displayModeRatesHz: List<Float>
 
 Keep existing `batteryCapacityPct` (delegates to `batteryStatus.levelPct`) so Task 15 code still compiles.
 
-- [ ] **Step 4: Add formatters** (bottom of file, outside class)
+- [x] **Step 4: Add formatters** (bottom of file, outside class)
 
 ```kotlin
 fun formatBytes(bytes: Long): String {
@@ -170,7 +177,7 @@ fun formatHz(hz: Float): String =
     if (hz == hz.toInt().toFloat()) "${hz.toInt()} Hz" else "%.2f Hz".format(hz)
 ```
 
-- [ ] **Step 5: Run test + compile**
+- [x] **Step 5: Run test + compile**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -179,7 +186,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: 3 tests PASS, BUILD SUCCESSFUL.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add core/system
@@ -199,7 +206,7 @@ git push origin main
 **Interfaces:**
 - Produces: `InfoRow(label: String, value: String?, copyable: Boolean = true)` (renders `Not exposed` when value null); `SectionCard(title: String, content: @Composable ColumnScope.() -> Unit)`
 
-- [ ] **Step 1: `InfoRow.kt`**
+- [x] **Step 1: `InfoRow.kt`**
 
 ```kotlin
 package io.github.droidkit.core.ui
@@ -236,9 +243,9 @@ fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
 }
 ```
 
-- [ ] **Step 2: `SectionCard.kt`** — `Card(fillMaxWidth)` wrapping `Column(16.dp padding)` that emits `SectionHeader(title)` then `content()`.
+- [x] **Step 2: `SectionCard.kt`** — `Card(fillMaxWidth)` wrapping `Column(16.dp padding)` that emits `SectionHeader(title)` then `content()`.
 
-- [ ] **Step 3: Compile + commit**
+- [x] **Step 3: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -262,7 +269,7 @@ git push origin main
 - Consumes: `DeviceSystemProbe` (all fields), `InfoRow`, `SectionCard`, `formatBytes`, `formatHz`
 - Produces: routes `deviceinfo` (dashboard) and `deviceinfo/storage` (Storage Lab); tools `deviceinfo.overview`, `deviceinfo.storage`
 
-- [ ] **Step 1: `DeviceInfoFeature.kt`** — register both tools:
+- [x] **Step 1: `DeviceInfoFeature.kt`** — register both tools:
 
 ```kotlin
 override val tools = listOf(
@@ -282,15 +289,15 @@ fun NavGraphBuilder.deviceInfoGraph(nav: NavHostController) {
 }
 ```
 
-- [ ] **Step 2: `DeviceInfoScreen.kt`** — sectioned dashboard. Sections in order: **Identity** (manufacturer/model/device/product), **OS** (release/API/securityPatch), **Hardware** (ABIs, cameraSummary, sensors count, `capabilitySummary()` rows: NFC/BT/BLE/USB-host/telephony/location via `hasFeature`), **Memory/Storage** (`memory` fields, `storage` via `formatBytes`, row linking to `deviceinfo/storage`), **Display** (`displayInfo` + `displayModeRatesHz`), **Battery** (`batteryStatus` level/status/plugged/temp — each `InfoRow` shows `Not exposed` when null/−1), **Capabilities** (provider statuses via `CapabilityManager.providerStatuses()` — inject into VM).
+- [x] **Step 2: `DeviceInfoScreen.kt`** — sectioned dashboard. Sections in order: **Identity** (manufacturer/model/device/product), **OS** (release/API/securityPatch), **Hardware** (ABIs, cameraSummary, sensors count, `capabilitySummary()` rows: NFC/BT/BLE/USB-host/telephony/location via `hasFeature`), **Memory/Storage** (`memory` fields, `storage` via `formatBytes`, row linking to `deviceinfo/storage`), **Display** (`displayInfo` + `displayModeRatesHz`), **Battery** (`batteryStatus` level/status/plugged/temp — each `InfoRow` shows `Not exposed` when null/−1), **Capabilities** (provider statuses via `CapabilityManager.providerStatuses()` — inject into VM).
 
 Actions per spec: `InfoRow(copyable)` for every field; `Copy Section` TextButton per SectionCard copying `label: value` lines; `Share Summary` button in the top bar → `Intent.ACTION_SEND` `text/plain` with `probe.summary() + probe.capabilitySummary()`; `Launch Related Lab` — rows that navigate to `deviceinfo/storage`, `battery`, `sensors`.
 
 State model (gate requirement): probe reads are synchronous, so "loading" is a brief first-composition frame; "partial" is the normal case — every `InfoRow` with a null/−1 source renders `Not exposed`; a section whose every field is absent renders `BlockedStateView`-style `NOT_SUPPORTED` body instead of an empty card; wrap section reads in runCatching → error state card on throw.
 
-- [ ] **Step 3: `StorageLabScreen.kt`** — `LazyColumn` of `SectionCard`s: Internal volume (`formatBytes` total/free/used + free-space warning when <10%), app-accessible volumes (iterate `context.getExternalFilesDirs(null)` — path + `StatFs` totals + `Environment.getExternalStorageState`), DroidKit directories note. Header text: "Free space is filesystem-visible space — not NAND health."
+- [x] **Step 3: `StorageLabScreen.kt`** — `LazyColumn` of `SectionCard`s: Internal volume (`formatBytes` total/free/used + free-space warning when <10%), app-accessible volumes (iterate `context.getExternalFilesDirs(null)` — path + `StatFs` totals + `Environment.getExternalStorageState`), DroidKit directories note. Header text: "Free space is filesystem-visible space — not NAND health."
 
-- [ ] **Step 4: Compile + commit**
+- [x] **Step 4: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -313,11 +320,11 @@ git push origin main
 - Consumes: `probe.batteryStatus`
 - Produces: route `battery`, tool `battery.lab`
 
-- [ ] **Step 1: `BatteryViewModel`** — `@HiltViewModel` holding `probe`; `refresh()` re-reads `batteryStatus` (battery is live — refresh on `ON_RESUME` via `LifecycleEventObserver`).
+- [x] **Step 1: `BatteryViewModel`** — `@HiltViewModel` holding `probe`; `refresh()` re-reads `batteryStatus` (battery is live — refresh on `ON_RESUME` via `LifecycleEventObserver`).
 
-- [ ] **Step 2: `BatteryScreen`** — `SectionCard("Charge")` rows: level %, status, source; `SectionCard("Conditions")`: temperature °C (`Not exposed` if −1), voltage mV, technology, health text; `SectionCard("Power")`: current-now µA when non-null else `Not exposed`, battery-saver state via `PowerManager.isPowerSaveMode`. Conservative warning line only when `temperatureC >= 45` → "Battery unusually warm — let device cool" (documented threshold, no health %).
+- [x] **Step 2: `BatteryScreen`** — `SectionCard("Charge")` rows: level %, status, source; `SectionCard("Conditions")`: temperature °C (`Not exposed` if −1), voltage mV, technology, health text; `SectionCard("Power")`: current-now µA when non-null else `Not exposed`, battery-saver state via `PowerManager.isPowerSaveMode`. Conservative warning line only when `temperatureC >= 45` → "Battery unusually warm — let device cool" (documented threshold, no health %).
 
-- [ ] **Step 3: Compile + commit**
+- [x] **Step 3: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -341,11 +348,11 @@ git push origin main
 - Consumes: `probe.sensors` (upgraded `ProbeSensor`), `SensorManager` via injected `Context`
 - Produces: routes `sensors`, `sensors/live`; live monitor arg `sensorType: Int`
 
-- [ ] **Step 1: `SensorsScreen`** — inventory `LazyColumn`: one `SectionCard` per sensor — name, vendor, `stringType`, version, maxRange + unit, resolution, power mA, wakeup flag. Tap → `nav.navigate("sensors/live/${sensor.type}")`.
+- [x] **Step 1: `SensorsScreen`** — inventory `LazyColumn`: one `SectionCard` per sensor — name, vendor, `stringType`, version, maxRange + unit, resolution, power mA, wakeup flag. Tap → `nav.navigate("sensors/live/${sensor.type}")`.
 
-- [ ] **Step 2: `LiveSensorScreen`** — restrict to safe list `ACCELEROMETER, GRAVITY, LINEAR_ACCELERATION, GYROSCOPE, MAGNETIC_FIELD, LIGHT, PROXIMITY, PRESSURE, AMBIENT_TEMPERATURE, RELATIVE_HUMIDITY, ROTATION_VECTOR`; absent type → `BlockedStateView`-style "Sensor not present" (`NOT_SUPPORTED`, never FAIL). `DisposableEffect` registers `SensorEventListener` on `SensorManager.getDefaultSensor(type)`, unregisters on dispose. Show x/y/z values + units + update rate; simple numeric display (no charting lib — bar via `LinearProgressIndicator` normalized to maxRange is enough).
+- [x] **Step 2: `LiveSensorScreen`** — restrict to safe list `ACCELEROMETER, GRAVITY, LINEAR_ACCELERATION, GYROSCOPE, MAGNETIC_FIELD, LIGHT, PROXIMITY, PRESSURE, AMBIENT_TEMPERATURE, RELATIVE_HUMIDITY, ROTATION_VECTOR`; absent type → `BlockedStateView`-style "Sensor not present" (`NOT_SUPPORTED`, never FAIL). `DisposableEffect` registers `SensorEventListener` on `SensorManager.getDefaultSensor(type)`, unregisters on dispose. Show x/y/z values + units + update rate; simple numeric display (no charting lib — bar via `LinearProgressIndicator` normalized to maxRange is enough).
 
-- [ ] **Step 3: Compile + commit**
+- [x] **Step 3: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -365,7 +372,7 @@ git push origin main
 - Modify: `docs/superpowers/specs/10_DroidKit_Master_Journey_Checklist.md` — tick J07 items actually verified
 - Modify: `docs/superpowers/plans/2026-10-18-droidkit-master-execution-plan.md` — mark Q9 done
 
-- [ ] **Step 1: Full assemble + smoke**
+- [x] **Step 1: Full assemble + smoke**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -374,9 +381,9 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: BUILD SUCCESSFUL. Install on a real device/emulator: dashboard sections populate, storage/battery/sensor screens open from Tools search and dashboard links, unavailable fields read `Not exposed`.
 
-- [ ] **Step 2: Verify honesty rules** — grep screens for hardcoded claims; every absent value path shows `Not exposed`; no battery-health %, no NAND claims.
+- [x] **Step 2: Verify honesty rules** — grep screens for hardcoded claims; every absent value path shows `Not exposed`; no battery-health %, no NAND claims.
 
-- [ ] **Step 3: Version, CHANGELOG, checklist, tag**
+- [x] **Step 3: Version, CHANGELOG, checklist, tag**
 
 ```bash
 git add -A
