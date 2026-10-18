@@ -11,9 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.feature.diagnostics.tests.CameraTestScreen
+import io.github.droidkit.feature.diagnostics.tests.ChargingCheckScreen
+import io.github.droidkit.feature.diagnostics.tests.ConnectivityCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.DisplayColorScreen
+import io.github.droidkit.feature.diagnostics.tests.FlashTestScreen
+import io.github.droidkit.feature.diagnostics.tests.MicrophoneTestScreen
 import io.github.droidkit.feature.diagnostics.tests.MultitouchScreen
 import io.github.droidkit.feature.diagnostics.tests.SensorTestScreen
+import io.github.droidkit.feature.diagnostics.tests.SpeakerTestScreen
 import io.github.droidkit.feature.diagnostics.tests.TouchGridScreen
 import io.github.droidkit.feature.diagnostics.tests.VibrationScreen
 
@@ -31,6 +37,13 @@ fun PhoneDoctorTestScreen(
         test.id == "touch.grid" -> TouchGridScreen(test, onResult)
         test.id == "touch.multitouch" -> MultitouchScreen(test, onResult)
         test.id == "haptics.vibration" -> VibrationScreen(test, onResult)
+        test.id == "audio.speaker" -> SpeakerTestScreen(test, onResult)
+        test.id == "audio.microphone" -> MicrophoneTestScreen(test, onResult)
+        test.id.startsWith("camera.") && test.id != "camera.flash" ->
+            CameraTestScreen(test, onResult)
+        test.id == "camera.flash" -> FlashTestScreen(test, onResult)
+        test.capabilityKey != null -> ConnectivityCheckScreen(test, onResult)
+        test.id == "power.charging" -> ChargingCheckScreen(test, onResult)
         test.sensorType != null -> SensorTestScreen(test, onResult)
         else -> UnsupportedTestPlaceholder(test)
     }

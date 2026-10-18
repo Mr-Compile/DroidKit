@@ -9,23 +9,30 @@ import org.junit.Test
 
 class SessionEngineTest {
 
-    private fun engine() = SessionEngine(PhoneDoctorTests.CORE)
+    private fun engine() = SessionEngine(PhoneDoctorTests.ALL)
+
+    @Test fun `registry contains core and hardware tests`() {
+        assertEquals(21, PhoneDoctorTests.ALL.size)
+        assertEquals(10, PhoneDoctorTests.CORE.size)
+        assertEquals(11, PhoneDoctorTests.HARDWARE.size)
+        assertEquals(PhoneDoctorTests.CORE.last().id, PhoneDoctorTests.ALL[9].id)
+    }
 
     @Test fun `engine walks tests in registry order`() {
         val e = engine()
         e.start()
-        assertEquals(PhoneDoctorTests.CORE.first().id, e.state.value.current?.id)
-        assertEquals(PhoneDoctorTests.CORE.size, e.state.value.total)
+        assertEquals(PhoneDoctorTests.ALL.first().id, e.state.value.current?.id)
+        assertEquals(PhoneDoctorTests.ALL.size, e.state.value.total)
         e.record(TestResultState.PASS, null)
-        assertEquals(PhoneDoctorTests.CORE[1].id, e.state.value.current?.id)
+        assertEquals(PhoneDoctorTests.ALL[1].id, e.state.value.current?.id)
         assertEquals(1, e.state.value.index)
     }
 
     @Test fun `record stores result and skip stores NOT_TESTED`() {
         val e = engine()
         e.start()
-        val first = PhoneDoctorTests.CORE[0].id
-        val second = PhoneDoctorTests.CORE[1].id
+        val first = PhoneDoctorTests.ALL[0].id
+        val second = PhoneDoctorTests.ALL[1].id
         e.record(TestResultState.FAIL, "dead pixel top-left")
         e.skip()
         assertEquals(TestResultState.FAIL, e.state.value.results[first])
@@ -35,7 +42,7 @@ class SessionEngineTest {
     @Test fun `finish marks engine done after all tests`() {
         val e = engine()
         e.start()
-        repeat(PhoneDoctorTests.CORE.size) { e.skip() }
+        repeat(PhoneDoctorTests.ALL.size) { e.skip() }
         assertTrue(e.state.value.done)
         assertNull(e.state.value.current)
     }
@@ -47,8 +54,8 @@ class SessionEngineTest {
         e.finish()
         val s = e.state.value
         assertTrue(s.done)
-        assertEquals(PhoneDoctorTests.CORE.size, s.results.size)
-        assertEquals(TestResultState.NOT_TESTED, s.results[PhoneDoctorTests.CORE.last().id])
+        assertEquals(PhoneDoctorTests.ALL.size, s.results.size)
+        assertEquals(TestResultState.NOT_TESTED, s.results[PhoneDoctorTests.ALL.last().id])
     }
 
     @Test fun `restart requeues selected tests`() {
@@ -57,7 +64,7 @@ class SessionEngineTest {
         e.record(TestResultState.FAIL, "x")
         e.skip()
         e.finish()
-        val failed = PhoneDoctorTests.CORE[0].id
+        val failed = PhoneDoctorTests.ALL[0].id
         e.restart(listOf(failed))
         assertFalse(e.state.value.done)
         assertEquals(failed, e.state.value.current?.id)

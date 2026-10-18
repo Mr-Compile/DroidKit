@@ -60,13 +60,23 @@ fun DiagnosticsScreen(
             }
 
             item { SectionHeader("Quick tests") }
-            items(PhoneDoctorTests.CORE, key = { it.id }) { test ->
-                Card(
-                    onClick = { onOpenTool(DiagnosticsFeature.testRoute(test.id)) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(modifier = Modifier.padding(16.dp)) {
-                        Text(test.title, style = MaterialTheme.typography.bodyLarge)
+            PhoneDoctorTests.ALL.groupBy { it.category }.forEach { (category, tests) ->
+                item {
+                    Text(
+                        category,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                items(tests, key = { it.id }) { test ->
+                    Card(
+                        onClick = { onOpenTool(DiagnosticsFeature.testRoute(test.id)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            Text(test.title, style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
                 }
             }

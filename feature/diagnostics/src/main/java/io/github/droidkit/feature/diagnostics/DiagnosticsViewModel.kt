@@ -32,7 +32,7 @@ class DiagnosticsViewModel @Inject constructor(
         sessionDao.observeAll()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val engine = SessionEngine(PhoneDoctorTests.CORE)
+    val engine = SessionEngine(PhoneDoctorTests.ALL)
 
     private val _activeSessionId = MutableStateFlow<String?>(null)
     val activeSessionId = _activeSessionId.asStateFlow()

@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.core.ui.components.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +43,19 @@ fun SessionReviewScreen(
         .keys
         .toList()
 
+    val counts = engineState.results.values.groupingBy { it }.eachCount()
+    val summary = buildList {
+        counts[TestResultState.PASS]?.let { add("PASS $it") }
+        counts[TestResultState.FAIL]?.let { add("FAIL $it") }
+        counts[TestResultState.NOT_TESTED]?.let { add("SKIPPED $it") }
+        counts[TestResultState.NOT_SUPPORTED]?.let { add("NOT SUPPORTED $it") }
+        counts[TestResultState.PERMISSION_REQUIRED]?.let { add("PERMISSION $it") }
+        counts[TestResultState.UNKNOWN]?.let { add("UNKNOWN $it") }
+    }.joinToString(" · ")
+
+    val grouped = engineState.results.entries
+        .groupBy { PhoneDoctorTests.findById(it.key)?.category ?: "Other" }
+
     Scaffold(topBar = { TopAppBar(title = { Text("Diagnostic review") }) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -52,23 +66,36 @@ fun SessionReviewScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(engineState.results.entries.toList(), key = { it.key }) { (testId, state) ->
+            item {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            PhoneDoctorTests.findById(testId)?.title ?: testId,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Text(
-                            state.name.replace('_', ' '),
-                            color = when (state) {
-                                TestResultState.PASS -> MaterialTheme.colorScheme.primary
-                                TestResultState.FAIL -> MaterialTheme.colorScheme.error
-                                else -> MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                            style = MaterialTheme.typography.labelLarge,
-                        )
+                    Text(
+                        summary.ifBlank { "No results recorded" },
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+
+            grouped.forEach { (category, results) ->
+                item { SectionHeader(category) }
+                items(results, key = { it.key }) { (testId, state) ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                PhoneDoctorTests.findById(testId)?.title ?: testId,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                state.name.replace('_', ' '),
+                                color = when (state) {
+                                    TestResultState.PASS -> MaterialTheme.colorScheme.primary
+                                    TestResultState.FAIL -> MaterialTheme.colorScheme.error
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
                     }
                 }
             }
