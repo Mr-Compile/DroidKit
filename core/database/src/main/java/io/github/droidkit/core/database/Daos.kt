@@ -10,8 +10,8 @@ interface DiagnosticSessionDao {
     @Insert
     suspend fun insert(session: DiagnosticSessionEntity)
 
-    @Query("UPDATE diagnostic_sessions SET completedAtEpochMs = :ts, overallStatus = :status WHERE id = :sessionId")
-    suspend fun complete(sessionId: String, ts: Long, status: String)
+    @Query("UPDATE diagnostic_sessions SET completedAtEpochMs = :ts, overallStatus = :status, notes = :notes WHERE id = :sessionId")
+    suspend fun complete(sessionId: String, ts: Long, status: String, notes: String?)
 
     @Query("SELECT * FROM diagnostic_sessions ORDER BY startedAtEpochMs DESC")
     fun observeAll(): Flow<List<DiagnosticSessionEntity>>

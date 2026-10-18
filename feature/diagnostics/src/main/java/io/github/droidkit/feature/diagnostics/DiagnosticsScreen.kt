@@ -28,21 +28,10 @@ import io.github.droidkit.core.ui.components.SectionHeader
 import java.text.DateFormat
 import java.util.Date
 
-private val quickTests = listOf(
-    "Display & touch" to "display",
-    "Audio" to "audio",
-    "Camera & flash" to "camera",
-    "Sensors" to "sensors",
-    "Battery & charging" to "battery",
-    "Network" to "network",
-    "Bluetooth" to "bluetooth",
-    "USB" to "usb",
-    "NFC" to "nfc",
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiagnosticsScreen(
+    onStartGuided: () -> Unit,
     onOpenTool: (String) -> Unit,
     onOpenReports: () -> Unit,
     viewModel: DiagnosticsViewModel = hiltViewModel(),
@@ -60,7 +49,7 @@ fun DiagnosticsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                Button(onClick = { viewModel.startSession() }, modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = onStartGuided, modifier = Modifier.fillMaxWidth()) {
                     Text("Start Full Diagnostic")
                 }
             }
@@ -71,10 +60,13 @@ fun DiagnosticsScreen(
             }
 
             item { SectionHeader("Quick tests") }
-            items(quickTests, key = { it.second }) { (label, route) ->
-                Card(onClick = { onOpenTool(route) }, modifier = Modifier.fillMaxWidth()) {
+            items(PhoneDoctorTests.CORE, key = { it.id }) { test ->
+                Card(
+                    onClick = { onOpenTool(DiagnosticsFeature.testRoute(test.id)) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Row(modifier = Modifier.padding(16.dp)) {
-                        Text(label, style = MaterialTheme.typography.bodyLarge)
+                        Text(test.title, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
