@@ -125,16 +125,15 @@ Queue order = dependency order. Each item lists canonical docs, deliverables, an
 
 ### Phase B — Build the skeleton (J05 + J06)
 
-**Q7. J05 repository bootstrap — folded into the existing plan.**
+**Q7. J05 repository bootstrap — DONE (2026-10-19, `feature/j05-j06-skeleton`).**
 - The 21-task plan's Tasks 1–2, 20 cover: repo files, Gradle Kotlin DSL, version catalog, SDK pins (min 28 / compile+target 36), Compose/Hilt/Room/DataStore/Nav, test foundations, README/CHANGELOG/.gitignore, LICENSE decision.
-- Open decision inside it: LICENSE choice + signing strategy note.
-- Gate: clean checkout builds; `AGENTS.md` present.
+- LICENSE resolved: Apache-2.0 at repo root (D3). Signing strategy note remains open for release.
+- Gate: clean checkout builds; `AGENTS.md` present. — PASS
 
-**Q8. Execute `plans/2026-10-18-droidkit-app-skeleton.md` (J06, v0.1.0).**
-- 21 tasks, in order, commit per task. Covers `:core:*` (registry, capabilities, permissions, system probe, Room, DataStore, design system), `:privilege:*` (Standard real; Shizuku/ADB/Root as `Unavailable` stubs), all `:feature:*` shells wired to bottom nav, `:app` DI assembly, unit tests (ToolRegistry, CapabilityManager), `assembleDebug` green.
-- Do not re-plan this — the plan exists and is internally consistent.
-- v2 alignment: platform surfaces from `24_TOOL_REGISTRY_SEARCH_SETTINGS_V2` (registry/search/home/settings), `23_CAPABILITY_ADVANCED_ACCESS_V2` (Capability Center screen — V1 shows providers as future/not-configured), and `25_SECURITY_PRIVACY_REPORTING_V2` (Safety Center, data controls) are skeleton-era registrations; depth lands in later journeys.
-- Release gate (both journeys): build passes, no feature touches Shizuku/ADB/root directly, app launches + navigates, CHANGELOG entry, `versionName 0.1.0`, `versionCode` incremented, tag `v0.1.0`, checklist items ticked.
+**Q8. Execute `plans/2026-10-18-droidkit-app-skeleton.md` (J06, v0.1.0) — DONE (2026-10-19, `feature/j05-j06-skeleton`).**
+- All 21 tasks executed, commit per task group. `:core:*` (registry, capabilities, permissions, system probe, Room, DataStore, design system), `:privilege:*` (Standard real; Shizuku/ADB/Root `Unavailable` stubs), all `:feature:*` shells wired to bottom nav, `:app` DI assembly, unit tests (ToolRegistry 4, CapabilityManager 8 — all pass), `assembleDebug` green.
+- Plan deviations documented at top of the plan file (Kotlin 2.2.20 fallback, Hilt 2.59.2, AGP 9 source-set workaround, manifest theme fix, empty-test-source fix).
+- Release gate status: build passes ✓, no feature touches Shizuku/ADB/root directly ✓ (audited), CHANGELOG entry ✓, `versionName 0.1.0`/`versionCode 1` ✓, checklist items ticked ✓. Remaining before gate closes: app launch + navigation on a device/emulator, tag `v0.1.0` (at merge to `main`).
 
 ### Phase C — V1 feature journeys (one queue item per journey; plan each when reached)
 

@@ -222,59 +222,59 @@ Completion gate:
 
 Target release: `v0.1.0`
 
-- [ ] Create repository
-- [ ] Add README
-- [ ] Add LICENSE decision/file
-- [ ] Add `.gitignore`
-- [ ] Create Android project
-- [ ] Configure Gradle Kotlin DSL
-- [ ] Configure version catalog if used
-- [ ] Configure Compose
-- [ ] Configure Hilt
-- [ ] Configure Coroutines
-- [ ] Configure Navigation Compose
-- [ ] Configure Room
-- [ ] Configure DataStore
-- [ ] Add unit-test foundation
-- [ ] Add instrumented-test foundation
-- [ ] Add CI only if useful at this stage
-- [ ] Add CHANGELOG.md
-- [ ] Establish versionName/versionCode scheme
-- [ ] Tag first project baseline if desired
+- [x] Create repository
+- [x] Add README
+- [x] Add LICENSE decision/file — Apache-2.0 (decision D3)
+- [x] Add `.gitignore`
+- [x] Create Android project
+- [x] Configure Gradle Kotlin DSL
+- [x] Configure version catalog if used
+- [x] Configure Compose
+- [x] Configure Hilt
+- [x] Configure Coroutines
+- [x] Configure Navigation Compose
+- [x] Configure Room
+- [x] Configure DataStore
+- [x] Add unit-test foundation
+- [x] Add instrumented-test foundation — runner + AppSmokeTest; device run pending hardware
+- [ ] Add CI only if useful at this stage — deferred
+- [x] Add CHANGELOG.md
+- [x] Establish versionName/versionCode scheme — `0.1.0` / `1` in convention plugin
+- [ ] Tag first project baseline if desired — pending merge to `main`
 
 ---
 
 # Journey 6 - v0.1.0 Foundation
 
-- [ ] Core theme/design tokens
-- [ ] Reusable Compose components
-- [ ] Navigation shell
-- [ ] Home shell
-- [ ] Tools shell
-- [ ] Diagnose shell
-- [ ] Settings shell
-- [ ] ToolRegistry
-- [ ] Tool categories
-- [ ] Tool search foundation
-- [ ] Capability model
-- [ ] CapabilityManager
-- [ ] StandardAndroidProvider
-- [ ] PermissionManager
-- [ ] Hardware/API detector
-- [ ] Room database foundation
-- [ ] DataStore foundation
-- [ ] Error/result model
-- [ ] Basic logging
-- [ ] Unit tests for ToolRegistry
-- [ ] Unit tests for capability resolution
-- [ ] Focused UI/navigation validation
+- [x] Core theme/design tokens
+- [x] Reusable Compose components
+- [x] Navigation shell
+- [x] Home shell
+- [x] Tools shell
+- [x] Diagnose shell
+- [x] Settings shell
+- [x] ToolRegistry
+- [x] Tool categories
+- [x] Tool search foundation
+- [x] Capability model
+- [x] CapabilityManager
+- [x] StandardAndroidProvider
+- [x] PermissionManager
+- [x] Hardware/API detector — `DeviceSystemProbe`
+- [x] Room database foundation
+- [x] DataStore foundation
+- [x] Error/result model — `ToolResolution` / `TestResultState`
+- [x] Basic logging — `DLog` facade
+- [x] Unit tests for ToolRegistry — 4 tests pass
+- [x] Unit tests for capability resolution — 8 tests pass
+- [ ] Focused UI/navigation validation — requires attached device/emulator
 
 Release gate:
-- [ ] Foundation architecture reviewed
-- [ ] No feature directly depends on Shizuku/ADB/root
-- [ ] App launches and core navigation works
-- [ ] `v0.1.0` tagged
-- [ ] CHANGELOG updated
+- [x] Foundation architecture reviewed — 31-module graph, DI verified via Hilt compile
+- [x] No feature directly depends on Shizuku/ADB/root — audited: zero `privilege.*` imports in `feature/`
+- [ ] App launches and core navigation works — `assembleDebug` passes; launch needs device
+- [ ] `v0.1.0` tagged — pending merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
