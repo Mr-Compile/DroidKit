@@ -332,25 +332,25 @@ Release gate:
 
 # Journey 9 - v0.4.0 Phone Doctor Hardware
 
-- [ ] Speaker test
-- [ ] Microphone test
-- [ ] Front camera
-- [ ] Rear camera
-- [ ] Flash
-- [ ] Wi-Fi capability check
-- [ ] Bluetooth capability check
-- [ ] Location/GPS capability check
-- [ ] NFC capability check
-- [ ] USB capability check
-- [ ] Charging/battery diagnostic
-- [ ] Full Diagnostic sequencing
-- [ ] Skip/retry behavior
-- [ ] Diagnostic summary
+- [x] Speaker test
+- [x] Microphone test — behind RECORD_AUDIO permission gate; denial → PERMISSION_REQUIRED
+- [x] Front camera — CameraX preview; absent lens → NOT_SUPPORTED
+- [x] Rear camera
+- [x] Flash — torch toggle; no flash unit → NOT_SUPPORTED
+- [x] Wi-Fi capability check — auto-recorded (capability + enabled state in note)
+- [x] Bluetooth capability check
+- [x] Location/GPS capability check
+- [x] NFC capability check
+- [x] USB capability check
+- [x] Charging/battery diagnostic — live level/status/plug readings
+- [x] Full Diagnostic sequencing — engine runs all 21 tests (CORE + HARDWARE)
+- [x] Skip/retry behavior — built J08; retry re-queues failed/skipped
+- [x] Diagnostic summary — state counts + category grouping on review screen
 
 Release gate:
-- [ ] Full diagnostic completes without crashes when hardware is missing
-- [ ] `v0.4.0` tagged
-- [ ] CHANGELOG updated
+- [ ] Full diagnostic completes without crashes when hardware is missing — designed-in (NOT_SUPPORTED auto-results, no crashes by construction); needs device run
+- [ ] `v0.4.0` tagged — version bumped (`0.4.0`/`4`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 

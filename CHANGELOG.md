@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0] - Unreleased
+
+### Added
+- Phone Doctor hardware set (full sequence now 21 tests): speaker 440 Hz
+  tone, microphone record/playback with RECORD_AUDIO permission gate,
+  front/rear camera preview (CameraX), torch flash test, five auto-recorded
+  connectivity capability checks (Wi-Fi, Bluetooth, GNSS, NFC, USB host/
+  accessory), charging/battery check with live readings
+- `PermissionGate`: runtime-permission wrapper reporting PERMISSION_REQUIRED
+  on denial; CAMERA and RECORD_AUDIO declared with optional uses-features
+- Session review: state-count summary header and per-category grouping;
+  quick tests grouped by category on the Diagnose tab
+
 ## [0.3.0] - Unreleased
 
 ### Added
