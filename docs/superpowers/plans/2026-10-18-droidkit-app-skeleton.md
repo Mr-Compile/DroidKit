@@ -535,6 +535,7 @@ data class Tool(
     val requiredFeatures: Set<String> = emptySet(),
     val minSdk: Int? = null,
     val phase: ToolPhase = ToolPhase.V1,
+    val keywords: Set<String> = emptySet(),
 )
 
 interface FeatureContribution {
@@ -562,7 +563,9 @@ class ToolRegistry @Inject constructor(
         val q = query.trim().lowercase()
         if (q.isEmpty()) return tools
         return tools.filter {
-            it.title.lowercase().contains(q) || it.description.lowercase().contains(q)
+            it.title.lowercase().contains(q) ||
+                it.description.lowercase().contains(q) ||
+                it.keywords.any { k -> k.lowercase().contains(q) }
         }
     }
 
@@ -651,7 +654,16 @@ class DeviceSystemProbe @Inject constructor(
     val device: String = Build.DEVICE
     val product: String = Build.PRODUCT
     val androidRelease: String = Build.VERSION.RELEASE
+    val securityPatch: String? = Build.VERSION.SECURITY_PATCH
     val supportedAbis: List<String> = Build.SUPPORTED_ABIS.toList()
+
+    val appVersionName: String by lazy {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "unknown"
+        } catch (e: PackageManager.NameNotFoundException) {
+            "unknown"
+        }
+    }
 
     val totalRamMb: Long by lazy {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -703,6 +715,15 @@ class DeviceSystemProbe @Inject constructor(
 
     fun hasFeature(feature: String): Boolean =
         context.packageManager.hasSystemFeature(feature)
+
+    fun capabilitySummary(): String = buildString {
+        append("nfc=").append(hasFeature("android.hardware.nfc"))
+        append(" bt=").append(hasFeature("android.hardware.bluetooth"))
+        append(" usbHost=").append(hasFeature("android.hardware.usb.host"))
+        append(" telephony=").append(hasFeature("android.hardware.telephony"))
+        append(" cameras=").append(cameraIds.size)
+        append(" sensors=").append(sensors.size)
+    }
 
     fun summary(): String = buildString {
         append("$manufacturer $model")
@@ -1095,7 +1116,7 @@ git commit -m "feat(core): capability resolution engine"
 - Create: `core/database/src/main/java/io/github/droidkit/core/database/DatabaseModule.kt`
 
 **Interfaces:**
-- Produces: `DiagnosticSessionEntity`, `DiagnosticResultEntity`, `TechnicianNoteEntity`, `DiagnosticSessionDao` (`insert`, `finish(sessionId, ts)`, `observeAll(): Flow<List>`), `DiagnosticResultDao` (`insert`, `observeBySession(id)`, `observeAll()`), `TechnicianNoteDao` (`insert`, `observeAll()`), `DroidKitDatabase`, `DatabaseModule` providing DB + DAOs
+- Produces (schema matches `06_DroidKit_Data_Model_and_Registry.md`): `DiagnosticSessionEntity`, `DiagnosticResultEntity`, `DeviceSnapshotEntity`, `SavedReportEntity`; `DiagnosticSessionDao` (`insert`, `complete(sessionId, ts, status)`, `observeAll(): Flow<List>`), `DiagnosticResultDao` (`insert`, `observeBySession(id)`, `observeAll()`), `DeviceSnapshotDao` (`insert`, `observeAll()`), `SavedReportDao` (`insert`, `observeAll()`), `DroidKitDatabase`, `DatabaseModule` providing DB + DAOs
 
 - [ ] **Step 1: build file** (needs ksp for Room compiler)
 
@@ -1127,33 +1148,55 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "diagnostic_sessions")
+@Entity(tableName = "device_snapshots")
+data class DeviceSnapshotEntity(
+    @PrimaryKey val id: String,
+    val capturedAtEpochMs: Long,
+    val manufacturer: String,
+    val model: String,
+    val device: String,
+    val product: String,
+    val androidRelease: String,
+    val apiLevel: Int,
+    val securityPatch: String?,
+    val primaryAbi: String,
+    val totalRamMb: Long,
+    val storageTotalBytes: Long,
+    val storageFreeBytes: Long,
+    val displaySummary: String,
+    val capabilitySummary: String,
+)
+
+@Entity(tableName = "diagnostic_sessions", indices = [Index("deviceSnapshotId")])
 data class DiagnosticSessionEntity(
     @PrimaryKey val id: String,
     val startedAtEpochMs: Long,
-    val finishedAtEpochMs: Long?,
-    val deviceSummary: String,
-    val status: String, // IN_PROGRESS | COMPLETED
+    val completedAtEpochMs: Long?,
+    val deviceSnapshotId: String?,
+    val overallStatus: String, // IN_PROGRESS | COMPLETED | ABANDONED
+    val notes: String?,
+    val appVersion: String,
 )
 
-@Entity(
-    tableName = "diagnostic_results",
-    indices = [Index("sessionId")],
-)
+@Entity(tableName = "diagnostic_results", indices = [Index("sessionId")])
 data class DiagnosticResultEntity(
     @PrimaryKey val id: String,
     val sessionId: String,
     val testId: String,
+    val category: String,
     val state: String, // io.github.droidkit.core.common.TestResultState name
-    val detail: String?,
+    val measuredDataJson: String?,
+    val userNote: String?,
+    val timestampEpochMs: Long,
 )
 
-@Entity(tableName = "technician_notes", indices = [Index("sessionId")])
-data class TechnicianNoteEntity(
+@Entity(tableName = "saved_reports", indices = [Index("sessionId")])
+data class SavedReportEntity(
     @PrimaryKey val id: String,
-    val sessionId: String?,
-    val createdAtEpochMs: Long,
-    val body: String,
+    val sessionId: String,
+    val generatedAtEpochMs: Long,
+    val format: String, // TEXT | PDF | ...
+    val localUri: String,
 )
 ```
 
@@ -1172,8 +1215,8 @@ interface DiagnosticSessionDao {
     @Insert
     suspend fun insert(session: DiagnosticSessionEntity)
 
-    @Query("UPDATE diagnostic_sessions SET finishedAtEpochMs = :ts, status = 'COMPLETED' WHERE id = :sessionId")
-    suspend fun finish(sessionId: String, ts: Long)
+    @Query("UPDATE diagnostic_sessions SET completedAtEpochMs = :ts, overallStatus = :status WHERE id = :sessionId")
+    suspend fun complete(sessionId: String, ts: Long, status: String)
 
     @Query("SELECT * FROM diagnostic_sessions ORDER BY startedAtEpochMs DESC")
     fun observeAll(): Flow<List<DiagnosticSessionEntity>>
@@ -1192,12 +1235,21 @@ interface DiagnosticResultDao {
 }
 
 @Dao
-interface TechnicianNoteDao {
+interface DeviceSnapshotDao {
     @Insert
-    suspend fun insert(note: TechnicianNoteEntity)
+    suspend fun insert(snapshot: DeviceSnapshotEntity)
 
-    @Query("SELECT * FROM technician_notes ORDER BY createdAtEpochMs DESC")
-    fun observeAll(): Flow<List<TechnicianNoteEntity>>
+    @Query("SELECT * FROM device_snapshots ORDER BY capturedAtEpochMs DESC")
+    fun observeAll(): Flow<List<DeviceSnapshotEntity>>
+}
+
+@Dao
+interface SavedReportDao {
+    @Insert
+    suspend fun insert(report: SavedReportEntity)
+
+    @Query("SELECT * FROM saved_reports ORDER BY generatedAtEpochMs DESC")
+    fun observeAll(): Flow<List<SavedReportEntity>>
 }
 ```
 
@@ -1211,9 +1263,10 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [
+        DeviceSnapshotEntity::class,
         DiagnosticSessionEntity::class,
         DiagnosticResultEntity::class,
-        TechnicianNoteEntity::class,
+        SavedReportEntity::class,
     ],
     version = 1,
     exportSchema = false,
@@ -1221,7 +1274,8 @@ import androidx.room.RoomDatabase
 abstract class DroidKitDatabase : RoomDatabase() {
     abstract fun sessionDao(): DiagnosticSessionDao
     abstract fun resultDao(): DiagnosticResultDao
-    abstract fun noteDao(): TechnicianNoteDao
+    abstract fun snapshotDao(): DeviceSnapshotDao
+    abstract fun reportDao(): SavedReportDao
 }
 ```
 
@@ -1250,7 +1304,8 @@ object DatabaseModule {
 
     @Provides fun sessionDao(db: DroidKitDatabase) = db.sessionDao()
     @Provides fun resultDao(db: DroidKitDatabase) = db.resultDao()
-    @Provides fun noteDao(db: DroidKitDatabase) = db.noteDao()
+    @Provides fun snapshotDao(db: DroidKitDatabase) = db.snapshotDao()
+    @Provides fun reportDao(db: DroidKitDatabase) = db.reportDao()
 }
 ```
 
@@ -1317,6 +1372,14 @@ class SettingsRepository @Inject constructor(
     private val themeKey = stringPreferencesKey("theme_mode")
     private val favoritesKey = stringSetPreferencesKey("favorite_tools")
     private val recentsKey = stringPreferencesKey("recent_tools")
+    private val onboardingKey = androidx.datastore.preferences.core.booleanPreferencesKey("onboarding_completed")
+
+    val onboardingCompleted: Flow<Boolean> =
+        context.settingsStore.data.map { it[onboardingKey] ?: false }
+
+    suspend fun setOnboardingCompleted() {
+        context.settingsStore.edit { it[onboardingKey] = true }
+    }
 
     val themeMode: Flow<ThemeMode> = context.settingsStore.data.map {
         runCatching { ThemeMode.valueOf(it[themeKey] ?: "SYSTEM") }.getOrDefault(ThemeMode.SYSTEM)
@@ -2301,6 +2364,8 @@ package io.github.droidkit.feature.diagnostics
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.droidkit.core.database.DeviceSnapshotDao
+import io.github.droidkit.core.database.DeviceSnapshotEntity
 import io.github.droidkit.core.database.DiagnosticResultDao
 import io.github.droidkit.core.database.DiagnosticSessionDao
 import io.github.droidkit.core.database.DiagnosticSessionEntity
@@ -2316,6 +2381,7 @@ import kotlinx.coroutines.launch
 class DiagnosticsViewModel @Inject constructor(
     private val sessionDao: DiagnosticSessionDao,
     private val resultDao: DiagnosticResultDao,
+    private val snapshotDao: DeviceSnapshotDao,
     private val probe: DeviceSystemProbe,
 ) : ViewModel() {
 
@@ -2323,15 +2389,37 @@ class DiagnosticsViewModel @Inject constructor(
         sessionDao.observeAll()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Creates a session + captures a device snapshot (doc flow 4). Guided tests land in Phase 3. */
     fun startSession() {
         viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            val snapshot = DeviceSnapshotEntity(
+                id = UUID.randomUUID().toString(),
+                capturedAtEpochMs = now,
+                manufacturer = probe.manufacturer,
+                model = probe.model,
+                device = probe.device,
+                product = probe.product,
+                androidRelease = probe.androidRelease,
+                apiLevel = probe.sdkInt,
+                securityPatch = probe.securityPatch,
+                primaryAbi = probe.supportedAbis.firstOrNull().orEmpty(),
+                totalRamMb = probe.totalRamMb,
+                storageTotalBytes = probe.storage.totalBytes,
+                storageFreeBytes = probe.storage.freeBytes,
+                displaySummary = with(probe.displayInfo) { "${widthPx}x${heightPx} ${densityDpi}dpi ${refreshHz}Hz" },
+                capabilitySummary = probe.capabilitySummary(),
+            )
+            snapshotDao.insert(snapshot)
             sessionDao.insert(
                 DiagnosticSessionEntity(
                     id = UUID.randomUUID().toString(),
-                    startedAtEpochMs = System.currentTimeMillis(),
-                    finishedAtEpochMs = null,
-                    deviceSummary = probe.summary(),
-                    status = "IN_PROGRESS",
+                    startedAtEpochMs = now,
+                    completedAtEpochMs = null,
+                    deviceSnapshotId = snapshot.id,
+                    overallStatus = "IN_PROGRESS",
+                    notes = null,
+                    appVersion = probe.appVersionName,
                 ),
             )
         }
@@ -2434,8 +2522,8 @@ fun DiagnosticsScreen(
                                 DateFormat.getDateTimeInstance().format(Date(session.startedAtEpochMs)),
                                 style = MaterialTheme.typography.titleSmall,
                             )
-                            Text(session.status, style = MaterialTheme.typography.bodySmall)
-                            Text(session.deviceSummary, style = MaterialTheme.typography.bodySmall)
+                            Text(session.overallStatus, style = MaterialTheme.typography.bodySmall)
+                            Text("v${session.appVersion}", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -2589,7 +2677,10 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
                             DateFormat.getDateTimeInstance().format(Date(row.session.startedAtEpochMs)),
                             style = MaterialTheme.typography.titleSmall,
                         )
-                        Text(row.session.deviceSummary, style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "${row.session.overallStatus} — app v${row.session.appVersion}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                         val counts = row.results.groupingBy { it.state }.eachCount()
                         Text(
                             if (counts.isEmpty()) "No test results recorded"

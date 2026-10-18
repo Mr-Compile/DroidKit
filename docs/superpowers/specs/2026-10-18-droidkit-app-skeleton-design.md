@@ -55,7 +55,7 @@ Convention plugins so each module build file stays minimal:
 | `:core:privileges`   | `CapabilityProvider` SPI, `ProviderKind`, `ProviderStatus` (Ready/NeedsSetup/Unavailable), `BlockedReason` (MissingPermission, MissingHardware, NeedsProvider, RequiresApi), `ToolResolution`, `CapabilityManager` (resolves a tool's requirements against the injected provider set + hardware/permission checks) |
 | `:core:permissions`  | `PermissionManager` — runtime permission state + request flow helpers |
 | `:core:system`       | `DeviceSystemProbe` — manufacturer/model, SDK, ABI, RAM/storage summary, sensor list, camera count, package-feature flags |
-| `:core:database`     | Room `DroidKitDatabase`; entities: `DiagnosticSession`, `DiagnosticResult` (PASS/FAIL/NOT_TESTED/NOT_SUPPORTED/PERMISSION_REQUIRED/UNKNOWN), `TechnicianNote`; DAOs |
+| `:core:database`     | Room `DroidKitDatabase`; entities per `06_DroidKit_Data_Model`: `DeviceSnapshot`, `DiagnosticSession`, `DiagnosticResult` (PASS/FAIL/NOT_TESTED/NOT_SUPPORTED/PERMISSION_REQUIRED/UNKNOWN), `SavedReport`; DAOs |
 | `:core:datastore`    | `SettingsRepository` — theme mode, favorite tool ids, recent tool ids |
 | `:core:ui`           | Compose design system: Material3 theme (dynamic color opt-in), color, typography; shared `ToolCard`, `StatusBadge`, `BlockedStateView`, `EmptyState`, `SectionHeader` |
 
