@@ -32,6 +32,10 @@ data class DiagnosticSessionEntity(
     val overallStatus: String, // IN_PROGRESS | COMPLETED | ABANDONED
     val notes: String?,
     val appVersion: String,
+    val preset: String = "FULL", // FULL | USED_PHONE | subset label
+    val customerLabel: String? = null,
+    val deviceLabel: String? = null,
+    val technicianName: String? = null,
 )
 
 @Entity(tableName = "diagnostic_results", indices = [Index("sessionId")])
@@ -53,6 +57,28 @@ data class SavedReportEntity(
     val generatedAtEpochMs: Long,
     val format: String, // TEXT | PDF | ...
     val localUri: String,
+)
+
+/**
+ * A user-captured storage snapshot. [volumesData] is a line-delimited encoding
+ * of `name|path|state|totalBytes|freeBytes` — decoded by StorageSnapshotCodec.
+ */
+@Entity(tableName = "storage_snapshots")
+data class StorageSnapshotEntity(
+    @PrimaryKey val id: String,
+    val capturedAtEpochMs: Long,
+    val label: String?,
+    val volumesData: String,
+)
+
+/** Local-only history of scanned NFC tags; tag IDs truncated to last 4 bytes. */
+@Entity(tableName = "nfc_tag_scans")
+data class NfcTagScanEntity(
+    @PrimaryKey val id: String,
+    val scannedAtEpochMs: Long,
+    val tagIdTail: String?,
+    val techList: String,
+    val recordSummary: String?,
 )
 
 @Entity(tableName = "elevated_action_log")

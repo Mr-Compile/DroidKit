@@ -10,8 +10,10 @@ import androidx.room.RoomDatabase
         DiagnosticResultEntity::class,
         SavedReportEntity::class,
         ElevatedActionLogEntity::class,
+        StorageSnapshotEntity::class,
+        NfcTagScanEntity::class,
     ],
-    version = 2,
+    version = 5,
     exportSchema = false,
 )
 abstract class DroidKitDatabase : RoomDatabase() {
@@ -20,4 +22,6 @@ abstract class DroidKitDatabase : RoomDatabase() {
     abstract fun snapshotDao(): DeviceSnapshotDao
     abstract fun reportDao(): SavedReportDao
     abstract fun elevatedLogDao(): ElevatedActionLogDao
+    abstract fun storageSnapshotDao(): StorageSnapshotDao
+    abstract fun nfcTagScanDao(): NfcTagScanDao
 }

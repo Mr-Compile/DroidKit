@@ -22,6 +22,7 @@ class SettingsRepository @Inject constructor(
     private val favoritesKey = stringSetPreferencesKey("favorite_tools")
     private val recentsKey = stringPreferencesKey("recent_tools")
     private val onboardingKey = androidx.datastore.preferences.core.booleanPreferencesKey("onboarding_completed")
+    private val technicianKey = stringPreferencesKey("technician_name")
 
     val onboardingCompleted: Flow<Boolean> =
         context.settingsStore.data.map { it[onboardingKey] ?: false }
@@ -51,6 +52,14 @@ class SettingsRepository @Inject constructor(
             prefs[favoritesKey] =
                 if (toolId in current) current - toolId else current + toolId
         }
+    }
+
+    /** Technician name/signature stamped on diagnostic sessions and reports. */
+    val technicianName: Flow<String> =
+        context.settingsStore.data.map { it[technicianKey].orEmpty() }
+
+    suspend fun setTechnicianName(name: String) {
+        context.settingsStore.edit { it[technicianKey] = name.trim() }
     }
 
     suspend fun recordRecent(toolId: String) {

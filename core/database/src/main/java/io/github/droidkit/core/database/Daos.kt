@@ -72,6 +72,33 @@ interface SavedReportDao {
 }
 
 @Dao
+interface StorageSnapshotDao {
+    @Insert
+    suspend fun insert(snapshot: StorageSnapshotEntity)
+
+    @Query("SELECT * FROM storage_snapshots ORDER BY capturedAtEpochMs DESC")
+    fun observeAll(): Flow<List<StorageSnapshotEntity>>
+
+    @Query("SELECT * FROM storage_snapshots WHERE id = :id")
+    suspend fun getById(id: String): StorageSnapshotEntity?
+
+    @Query("DELETE FROM storage_snapshots WHERE id = :id")
+    suspend fun deleteById(id: String)
+}
+
+@Dao
+interface NfcTagScanDao {
+    @Insert
+    suspend fun insert(scan: NfcTagScanEntity)
+
+    @Query("SELECT * FROM nfc_tag_scans ORDER BY scannedAtEpochMs DESC LIMIT :limit")
+    fun observeRecent(limit: Int = 50): Flow<List<NfcTagScanEntity>>
+
+    @Query("DELETE FROM nfc_tag_scans")
+    suspend fun deleteAll()
+}
+
+@Dao
 interface ElevatedActionLogDao {
     @Insert
     suspend fun insert(entry: ElevatedActionLogEntity)

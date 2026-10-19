@@ -31,6 +31,40 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
 }
 
 /** Persists every elevated execution for the Settings audit card. */
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `diagnostic_sessions` ADD COLUMN `preset` TEXT NOT NULL DEFAULT 'FULL'")
+        db.execSQL("ALTER TABLE `diagnostic_sessions` ADD COLUMN `customerLabel` TEXT")
+        db.execSQL("ALTER TABLE `diagnostic_sessions` ADD COLUMN `deviceLabel` TEXT")
+        db.execSQL("ALTER TABLE `diagnostic_sessions` ADD COLUMN `technicianName` TEXT")
+    }
+}
+
+private val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `storage_snapshots` (" +
+                "`id` TEXT PRIMARY KEY NOT NULL, " +
+                "`capturedAtEpochMs` INTEGER NOT NULL, " +
+                "`label` TEXT, " +
+                "`volumesData` TEXT NOT NULL)",
+        )
+    }
+}
+
+private val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `nfc_tag_scans` (" +
+                "`id` TEXT PRIMARY KEY NOT NULL, " +
+                "`scannedAtEpochMs` INTEGER NOT NULL, " +
+                "`tagIdTail` TEXT, " +
+                "`techList` TEXT NOT NULL, " +
+                "`recordSummary` TEXT)",
+        )
+    }
+}
+
 @Singleton
 class RoomElevatedAudit @Inject constructor(
     private val dao: ElevatedActionLogDao,
@@ -56,7 +90,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): DroidKitDatabase =
         Room.databaseBuilder(context, DroidKitDatabase::class.java, "droidkit.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
 
     @Provides fun sessionDao(db: DroidKitDatabase) = db.sessionDao()
@@ -64,6 +98,8 @@ object DatabaseModule {
     @Provides fun snapshotDao(db: DroidKitDatabase) = db.snapshotDao()
     @Provides fun reportDao(db: DroidKitDatabase) = db.reportDao()
     @Provides fun elevatedLogDao(db: DroidKitDatabase) = db.elevatedLogDao()
+    @Provides fun storageSnapshotDao(db: DroidKitDatabase) = db.storageSnapshotDao()
+    @Provides fun nfcTagScanDao(db: DroidKitDatabase) = db.nfcTagScanDao()
 
     @Provides
     @IntoSet
