@@ -32,7 +32,7 @@
 **Interfaces:**
 - Produces: version catalog accessors used by every later module; `includeBuild("build-logic")` so convention plugin ids resolve; `projects.core.common`-style typed project accessors (`TYPESAFE_PROJECT_ACCESSORS`)
 
-- [ ] **Step 1: Write `settings.gradle.kts`**
+- [x] **Step 1: Write `settings.gradle.kts`**
 
 ```kotlin
 pluginManagement {
@@ -92,7 +92,7 @@ include(":feature:deviceinfo")
 include(":feature:settings")
 ```
 
-- [ ] **Step 2: Write root `build.gradle.kts`**
+- [x] **Step 2: Write root `build.gradle.kts`**
 
 ```kotlin
 // Root build file. All build behavior lives in build-logic convention plugins.
@@ -103,7 +103,7 @@ tasks.register("moduleCount") {
 }
 ```
 
-- [ ] **Step 3: Write `gradle.properties`**
+- [x] **Step 3: Write `gradle.properties`**
 
 ```properties
 org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8
@@ -114,7 +114,7 @@ android.nonTransitiveRClass=true
 kotlin.code.style=official
 ```
 
-- [ ] **Step 4: Write `gradle/libs.versions.toml`**
+- [x] **Step 4: Write `gradle/libs.versions.toml`**
 
 ```toml
 [versions]
@@ -164,13 +164,13 @@ androidx-junit = { group = "junit", name = "junit", version.ref = "junit" }
 # convention plugins are applied by literal id; no catalog entries needed for them
 ```
 
-- [ ] **Step 5: Write `local.properties`**
+- [x] **Step 5: Write `local.properties`**
 
 ```properties
 sdk.dir=C:\\Users\\myrus\\AppData\\Local\\Android\\Sdk
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add settings.gradle.kts build.gradle.kts gradle.properties gradle/libs.versions.toml
