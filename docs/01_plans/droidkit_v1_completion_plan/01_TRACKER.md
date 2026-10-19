@@ -30,7 +30,7 @@ Statuses: NOT STARTED / IN PROGRESS / BLOCKED / CODE COMPLETE / DEVICE VERIFIED 
 | DK-070 | API-level compatibility matrix | P1 | MATRIX READY | API 28–36 matrix template added to runbook §7 — fills on device(s) |
 | DK-071 | OEM compatibility matrix | P1 | MATRIX READY | OEM findings table added to runbook §7 — fills per device |
 | DK-072 | Performance/lifecycle hardening | P2 | NOT STARTED | profiling needs device/emulator — could partially run on emulator if enabled |
-| DK-073 | Security/privacy review | P1 | IN PROGRESS | secret-scan clean on all commits so far; AI privacy filter + BYOK already architecturally enforced; full checklist review pending |
+| DK-073 | Security/privacy review | P1 | STATIC COMPLETE | `docs/04_audits/2026-10-20-security-privacy-review.md` — secrets scan clean, manifest/components audited, allowBackup disabled, BYOK Keystore-GCM verified, provider/AI privacy confirmed; open items are device-side |
 | DK-080 | Release build/R8 config | P0 | CODE COMPLETE | release buildType: minify+shrinkResources+proguard-rules.pro; `assembleRelease` green end-to-end → app-release.apk 5.68MB (vs 75MB debug); apksigner v2 verified; runtime verification needs device |
 | DK-081 | Secure signing strategy | P0 | CODE COMPLETE | env-driven signingConfig (DROIDKIT_KEYSTORE/_PASSWORD/_ALIAS) — nothing committed; falls back to debug signing so CI artifacts stay installable; CI reads secrets.* only; custody remains with owner |
 | DK-082 | APK/AAB + upgrade verification | P1 | DEVICE GATE | install + upgrade-install checks need a device; runbook §1+§6 cover the path |
