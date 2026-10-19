@@ -9,4 +9,6 @@ android {
 dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation("dev.rikka.shizuku:api:13.1.5")
 }

@@ -9,4 +9,5 @@ android {
 dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
+    implementation(libs.kotlinx.coroutines.android)
 }
