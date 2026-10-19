@@ -27,6 +27,13 @@ object DisplayFeature : FeatureContribution {
             category = ToolCategory.DIAGNOSTICS,
             route = ROUTE,
         ),
+        Tool(
+            id = "display.modes",
+            title = "Display Modes",
+            description = "Current and supported display modes, refresh rates, HDR",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/modes",
+        ),
     )
 }
 
@@ -60,5 +67,8 @@ fun NavGraphBuilder.displayGraph(nav: NavHostController) {
             ),
             onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
         )
+    }
+    composable("${DisplayFeature.ROUTE}/modes") {
+        DisplayModesScreen()
     }
 }

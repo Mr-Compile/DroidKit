@@ -40,8 +40,11 @@ fun NetworkScreen(
     val layers by viewModel.layers.collectAsState()
     val ping by viewModel.ping.collectAsState()
     val dns by viewModel.dns.collectAsState()
+    val ports by viewModel.ports.collectAsState()
     var pingHost by remember { mutableStateOf("") }
     var dnsHost by remember { mutableStateOf("") }
+    var portHost by remember { mutableStateOf("") }
+    var portList by remember { mutableStateOf("80, 443") }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Network Lab") }) }) { padding ->
         LazyColumn(
@@ -136,6 +139,51 @@ fun NetworkScreen(
                         is ToolState.Done -> Column(modifier = Modifier.padding(top = 8.dp)) {
                             d.result.addresses.forEach { InfoRow("Address", it) }
                             InfoRow("Elapsed", "${d.result.elapsedMs} ms", copyable = false)
+                        }
+                        else -> {}
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "Port reachability") {
+                    OutlinedTextField(
+                        value = portHost,
+                        onValueChange = { portHost = it },
+                        label = { Text("Host or IP") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = portList,
+                        onValueChange = { portList = it },
+                        label = { Text("Ports (comma or space separated)") },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.probePorts(portHost, portList) },
+                        enabled = portHost.isNotBlank() && portList.isNotBlank(),
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) { Text("Probe") }
+                    when (val p = ports) {
+                        is ToolState.Running -> Text("Probing…", modifier = Modifier.padding(top = 8.dp))
+                        is ToolState.Failed -> Text(
+                            "Failed: ${p.message}",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        is ToolState.Done -> Column(modifier = Modifier.padding(top = 8.dp)) {
+                            p.result.forEach { r ->
+                                InfoRow(
+                                    "Port ${r.port}",
+                                    (if (r.open) "open" else "closed/filtered") +
+                                        " · ${NetTools.formatMs(r.elapsedMs)}",
+                                    copyable = false,
+                                )
+                            }
                         }
                         else -> {}
                     }

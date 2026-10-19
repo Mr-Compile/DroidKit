@@ -30,6 +30,14 @@ object CameraFeature : FeatureContribution {
             route = ROUTE,
             requiredFeatures = setOf("android.hardware.camera.flash"),
         ),
+        Tool(
+            id = "camera.details",
+            title = "Camera Capabilities",
+            description = "Camera2 inventory: sensors, lenses, levels, capabilities",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/details",
+            requiredFeatures = setOf("android.hardware.camera.any"),
+        ),
     )
 }
 
@@ -61,5 +69,8 @@ fun NavGraphBuilder.cameraGraph(nav: NavHostController) {
             ),
             onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
         )
+    }
+    composable("${CameraFeature.ROUTE}/details") {
+        CameraDetailsScreen()
     }
 }

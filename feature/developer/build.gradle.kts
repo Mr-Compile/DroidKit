@@ -1,5 +1,6 @@
 plugins {
     id("droidkit.android.library.compose")
+    id("droidkit.hilt")
 }
 
 android {

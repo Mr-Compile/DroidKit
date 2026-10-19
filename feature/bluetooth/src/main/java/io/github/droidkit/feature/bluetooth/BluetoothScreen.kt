@@ -39,8 +39,13 @@ fun BluetoothScreen(
     val enabled by viewModel.enabled.collectAsState()
     val permissionVersion by viewModel.permissionVersion.collectAsState()
     val bonded by viewModel.bonded.collectAsState()
+    val scanning by viewModel.scanning.collectAsState()
+    val scanResults by viewModel.scanResults.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { viewModel.onPermissionResult() }
+    val scanPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { viewModel.onPermissionResult() }
     val enableLauncher = rememberLauncherForActivityResult(
@@ -48,6 +53,7 @@ fun BluetoothScreen(
     ) { viewModel.refresh() }
 
     val hasPermission = permissionVersion.let { viewModel.hasConnectPermission() }
+    val hasScanPermission = permissionVersion.let { viewModel.hasScanPermission() }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Bluetooth Lab") }) }) { padding ->
         LazyColumn(
@@ -125,12 +131,67 @@ fun BluetoothScreen(
 
             item {
                 SectionCard(title = "BLE scan") {
-                    Text(
-                        "BLE scanning is a POST-V1 feature. Nearby-device scans are " +
-                            "privacy-sensitive and will require explicit, time-bounded, " +
-                            "user-initiated scans when shipped.",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    when {
+                        !viewModel.leSupported -> Text(
+                            "No Bluetooth LE hardware (NOT_SUPPORTED).",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        !enabled -> Text(
+                            "Enable Bluetooth to scan.",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        !hasScanPermission -> {
+                            Text(
+                                "${viewModel.requiredScanPermission().substringAfterLast('.')} " +
+                                    "permission required to scan for nearby devices.",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            OutlinedButton(
+                                onClick = {
+                                    scanPermissionLauncher.launch(viewModel.requiredScanPermission())
+                                },
+                                modifier = Modifier.padding(top = 8.dp),
+                            ) { Text("Grant scan permission") }
+                        }
+                        else -> {
+                            Text(
+                                "User-initiated, ${BluetoothViewModel.SCAN_WINDOW_MS / 1000}s bounded " +
+                                    "scan of nearby BLE advertisers. No data leaves the device.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            OutlinedButton(
+                                onClick = { if (scanning) viewModel.stopScan() else viewModel.startScan() },
+                                modifier = Modifier.padding(top = 8.dp),
+                            ) { Text(if (scanning) "Stop scan" else "Start BLE scan") }
+                            if (!scanning && scanResults.isEmpty()) {
+                                Text(
+                                    "No devices seen yet.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (scanning || scanResults.isNotEmpty()) {
+                items(scanResults, key = { it.address }) { device ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                device.name ?: "Unnamed advertiser",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                "${device.address} · ${device.rssi} dBm",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
         }

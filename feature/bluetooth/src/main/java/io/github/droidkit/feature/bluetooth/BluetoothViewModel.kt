@@ -3,6 +3,9 @@ package io.github.droidkit.feature.bluetooth
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -11,12 +14,16 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class BluetoothViewModel @Inject constructor(
@@ -49,6 +56,43 @@ class BluetoothViewModel @Inject constructor(
     private val _bonded = MutableStateFlow<List<BondedDevice>>(emptyList())
     val bonded: StateFlow<List<BondedDevice>> = _bonded.asStateFlow()
 
+    // ---- BLE scan (user-initiated, time-bounded — never background) ----
+
+    data class ScanResultEntry(
+        val address: String,
+        val name: String?,
+        val rssi: Int,
+        val lastSeenNanos: Long,
+    )
+
+    private val _scanning = MutableStateFlow(false)
+    val scanning: StateFlow<Boolean> = _scanning.asStateFlow()
+
+    private val _scanResults = MutableStateFlow<List<ScanResultEntry>>(emptyList())
+    val scanResults: StateFlow<List<ScanResultEntry>> = _scanResults.asStateFlow()
+
+    private var scanTimeout: Job? = null
+
+    private val scanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            val name = runCatching { result.scanRecord?.deviceName ?: result.device.name }.getOrNull()
+            val entry = ScanResultEntry(
+                address = result.device.address,
+                name = name,
+                rssi = result.rssi,
+                lastSeenNanos = System.nanoTime(),
+            )
+            val current = _scanResults.value.toMutableList()
+            val idx = current.indexOfFirst { it.address == entry.address }
+            if (idx >= 0) current[idx] = entry else current += entry
+            _scanResults.value = current.sortedBy { it.address }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            stopScan()
+        }
+    }
+
     private val stateReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, intent: Intent) {
             if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) refresh()
@@ -80,6 +124,48 @@ class BluetoothViewModel @Inject constructor(
         refresh()
     }
 
+    /** BLUETOOTH_SCAN on API 31+; ACCESS_FINE_LOCATION on API 28–30. */
+    fun requiredScanPermission(): String =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Manifest.permission.BLUETOOTH_SCAN
+        } else {
+            Manifest.permission.ACCESS_FINE_LOCATION
+        }
+
+    fun hasScanPermission(): Boolean =
+        ContextCompat.checkSelfPermission(context, requiredScanPermission()) ==
+            PackageManager.PERMISSION_GRANTED
+
+    /** Starts a bounded BLE scan (SCAN_WINDOW_MS) — requires adapter on + permission. */
+    fun startScan() {
+        if (_scanning.value) return
+        if (!leSupported || adapter?.isEnabled != true || !hasScanPermission()) return
+        _scanResults.value = emptyList()
+        runCatching {
+            adapter?.bluetoothLeScanner?.startScan(
+                null,
+                ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .build(),
+                scanCallback,
+            )
+        }.onSuccess {
+            _scanning.value = true
+            scanTimeout?.cancel()
+            scanTimeout = viewModelScope.launch {
+                delay(SCAN_WINDOW_MS)
+                stopScan()
+            }
+        }
+    }
+
+    fun stopScan() {
+        scanTimeout?.cancel()
+        scanTimeout = null
+        runCatching { adapter?.bluetoothLeScanner?.stopScan(scanCallback) }
+        _scanning.value = false
+    }
+
     fun refresh() {
         _enabled.value = adapter?.isEnabled == true
         _bonded.value = readBonded()
@@ -100,7 +186,12 @@ class BluetoothViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        stopScan()
         runCatching { context.unregisterReceiver(stateReceiver) }
         super.onCleared()
+    }
+
+    companion object {
+        const val SCAN_WINDOW_MS = 15_000L
     }
 }

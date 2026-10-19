@@ -31,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.components.SectionHeader
 
@@ -55,12 +57,20 @@ private val presets = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeveloperLabScreen() {
+fun DeveloperLabScreen(
+    viewModel: DeveloperViewModel = hiltViewModel(),
+) {
     val context = LocalContext.current
+    val activeProvider by viewModel.activeProvider.collectAsState()
+    val logState by viewModel.logState.collectAsState()
     var launchError by remember { mutableStateOf<String?>(null) }
     var customAction by remember { mutableStateOf("") }
     var customData by remember { mutableStateOf("") }
     var customPackage by remember { mutableStateOf("") }
+    var deepLink by remember { mutableStateOf("") }
+    var deepLinkInfo by remember { mutableStateOf<String?>(null) }
+    var logTag by remember { mutableStateOf("") }
+    var logLines by remember { mutableStateOf("200") }
 
     fun launch(intent: Intent, label: String) {
         launchError = try {
@@ -85,9 +95,9 @@ fun DeveloperLabScreen() {
         ) {
             item {
                 Text(
-                    "Launch common system screens and inspect display metrics. " +
-                        "Log access and shell actions arrive post-V1 with the " +
-                        "wireless ADB provider.",
+                    "Launch system screens, test deep links, and inspect device state. " +
+                        "Elevated log access uses whichever provider is connected " +
+                        "(Shizuku, root, or wireless ADB).",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -173,6 +183,116 @@ fun DeveloperLabScreen() {
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Launch")
+                        }
+                    }
+                }
+            }
+
+            item { SectionHeader("Deep-link tester") }
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OutlinedTextField(
+                            value = deepLink,
+                            onValueChange = { deepLink = it },
+                            label = { Text("URI (e.g. https:// or myapp://…)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        deepLinkInfo?.let {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Button(
+                            onClick = {
+                                val uri = Uri.parse(deepLink.trim())
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                val resolved = runCatching {
+                                    context.packageManager.resolveActivity(intent, 0)
+                                }.getOrNull()
+                                deepLinkInfo = resolved?.let {
+                                    "Handled by ${it.activityInfo.packageName}/${it.activityInfo.name}"
+                                } ?: "No activity on this device handles this URI."
+                                launch(intent, "Deep link")
+                            },
+                            enabled = deepLink.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Resolve & launch")
+                        }
+                    }
+                }
+            }
+
+            item { SectionHeader("Log viewer") }
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            when (val p = activeProvider) {
+                                null -> "No elevated provider connected — connect Shizuku or wireless ADB first."
+                                else -> "Active provider: ${p.name.lowercase()}"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        OutlinedTextField(
+                            value = logLines,
+                            onValueChange = { logLines = it.filter(Char::isDigit).take(4) },
+                            label = { Text("Lines (max 5000)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = logTag,
+                            onValueChange = { logTag = it },
+                            label = { Text("Tag filter (optional)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Button(
+                            onClick = {
+                                viewModel.readLog(
+                                    logLines.toIntOrNull()?.coerceIn(1, 5000) ?: 200,
+                                    logTag,
+                                )
+                            },
+                            enabled = activeProvider != null &&
+                                logState !is DeveloperViewModel.LogState.Loading,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Read logcat")
+                        }
+                        when (val s = logState) {
+                            DeveloperViewModel.LogState.Idle -> {}
+                            DeveloperViewModel.LogState.Loading ->
+                                Text("Reading…", style = MaterialTheme.typography.bodyMedium)
+                            DeveloperViewModel.LogState.NoProvider -> Text(
+                                "No elevated provider available — open the ADB Lab or grant Shizuku first.",
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            is DeveloperViewModel.LogState.Failed -> Text(
+                                "Failed (${s.provider.name.lowercase()}): ${s.message}",
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            is DeveloperViewModel.LogState.Loaded -> Column {
+                                s.lines.takeLast(200).forEach { line ->
+                                    Text(
+                                        line,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                         }
                     }
                 }

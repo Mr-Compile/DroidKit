@@ -64,6 +64,9 @@ class NetworkViewModel @Inject constructor(
     private val _dns = MutableStateFlow<ToolState<NetTools.DnsResult>>(ToolState.Idle)
     val dns: StateFlow<ToolState<NetTools.DnsResult>> = _dns.asStateFlow()
 
+    private val _ports = MutableStateFlow<ToolState<List<NetTools.PortResult>>>(ToolState.Idle)
+    val ports: StateFlow<ToolState<List<NetTools.PortResult>>> = _ports.asStateFlow()
+
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) = refreshSnapshot()
         override fun onLost(network: Network) = refreshSnapshot()
@@ -191,6 +194,28 @@ class NetworkViewModel @Inject constructor(
         _dns.value = ToolState.Running
         viewModelScope.launch {
             _dns.value = runCatching { NetTools.lookupHost(target) }
+                .fold(
+                    onSuccess = { ToolState.Done(it) },
+                    onFailure = { ToolState.Failed(it.message ?: it.javaClass.simpleName) },
+                )
+        }
+    }
+
+    /** Probes comma/space-separated ports on a user-specified host. */
+    fun probePorts(host: String, portsText: String) {
+        val target = host.trim()
+        if (target.isEmpty()) return
+        val parsed = portsText.split(Regex("[,\\s]+"))
+            .mapNotNull { it.toIntOrNull() }
+            .filter { it in 1..65535 }
+            .distinct()
+        if (parsed.isEmpty()) {
+            _ports.value = ToolState.Failed("No valid ports (1–65535, comma or space separated)")
+            return
+        }
+        _ports.value = ToolState.Running
+        viewModelScope.launch {
+            _ports.value = runCatching { NetTools.probePorts(target, parsed) }
                 .fold(
                     onSuccess = { ToolState.Done(it) },
                     onFailure = { ToolState.Failed(it.message ?: it.javaClass.simpleName) },

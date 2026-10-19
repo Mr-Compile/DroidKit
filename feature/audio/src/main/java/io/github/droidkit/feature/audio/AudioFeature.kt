@@ -36,6 +36,13 @@ object AudioFeature : FeatureContribution {
             route = ROUTE,
             requiredPermissions = listOf("android.permission.VIBRATE"),
         ),
+        Tool(
+            id = "audio.routing",
+            title = "Audio Routing",
+            description = "Audio devices, active mode, routing and capabilities",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/routing",
+        ),
     )
 }
 
@@ -65,5 +72,8 @@ fun NavGraphBuilder.audioGraph(nav: NavHostController) {
             ),
             onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
         )
+    }
+    composable("${AudioFeature.ROUTE}/routing") {
+        AudioRoutingScreen()
     }
 }

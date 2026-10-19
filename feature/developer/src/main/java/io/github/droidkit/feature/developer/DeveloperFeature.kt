@@ -30,13 +30,21 @@ object DeveloperFeature : FeatureContribution {
             route = ROUTE,
         ),
         Tool(
+            id = "developer.deeplink",
+            title = "Deep-Link Tester",
+            description = "Resolve and launch arbitrary URI intents",
+            category = ToolCategory.DEVELOPER,
+            route = ROUTE,
+            safetyLevel = SafetyLevel.MINOR,
+        ),
+        Tool(
             id = "developer.logs",
             title = "Log Viewer",
             description = "Read device logs where authorized",
             category = ToolCategory.DEVELOPER,
             route = ROUTE,
             safetyLevel = SafetyLevel.ADVANCED,
-            requiredCapabilities = setOf(Capability.ADB_SHELL),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
         ),
     )

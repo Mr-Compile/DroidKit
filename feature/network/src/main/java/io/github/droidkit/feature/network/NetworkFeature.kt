@@ -59,6 +59,16 @@ object NetworkFeature : FeatureContribution {
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
         ),
+        Tool(
+            id = "network.ports",
+            title = "Port Reachability",
+            description = "TCP connect probes on user-specified host and ports",
+            category = ToolCategory.CONNECTIVITY,
+            route = ROUTE,
+            safetyLevel = SafetyLevel.SAFE,
+            requiredPermissions = NETWORK_PERMS,
+            phase = ToolPhase.V1,
+        ),
     )
 }
 

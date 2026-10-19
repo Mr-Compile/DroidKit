@@ -1,7 +1,11 @@
 package io.github.droidkit.feature.network
 
 import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 
 /** Reachability and DNS helpers — pure JVM, unit-testable. */
@@ -57,6 +61,36 @@ object NetTools {
         val addresses = InetAddress.getAllByName(host).mapNotNull { it.hostAddress }
         DnsResult(host, addresses, (System.nanoTime() - start) / 1_000_000)
     }
+
+    data class PortResult(
+        val host: String,
+        val port: Int,
+        val open: Boolean,
+        val elapsedMs: Double,
+    )
+
+    /**
+     * TCP connect probe for user-specified endpoints. Ports are validated
+     * 1–65535; probes run in parallel with a per-port timeout.
+     */
+    suspend fun probePorts(
+        host: String,
+        ports: List<Int>,
+        timeoutMs: Int = 2_000,
+    ): List<PortResult> = withContext(Dispatchers.IO) {
+        val address = InetAddress.getByName(host)
+        ports.distinct().take(MAX_PORTS).map { port ->
+            async {
+                val start = System.nanoTime()
+                val open = runCatching {
+                    Socket().use { it.connect(InetSocketAddress(address, port), timeoutMs) }
+                }.isSuccess
+                PortResult(host, port, open, (System.nanoTime() - start) / 1_000_000.0)
+            }
+        }.awaitAll()
+    }
+
+    const val MAX_PORTS = 32
 
     fun formatMs(ms: Double?): String = ms?.let { "%.1f ms".format(it) } ?: "—"
 }
