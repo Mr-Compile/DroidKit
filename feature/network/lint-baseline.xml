@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.0.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.0.1)" variant="all" version="9.0.1">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 29 (current min is 28): `android.net.LinkProperties#getMtu`"
+        errorLine1="            mtu = link?.mtu?.takeIf { it > 0 },"
+        errorLine2="                        ~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/network/NetworkViewModel.kt"
+            line="254"
+            column="25"/>
+    </issue>
+
+</issues>

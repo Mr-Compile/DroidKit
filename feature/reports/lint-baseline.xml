@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.0.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.0.1)" variant="all" version="9.0.1">
+
+    <issue
+        id="UnrememberedGetBackStackEntry"
+        message="Calling getBackStackEntry during composition without using `remember` with a NavBackStackEntry key"
+        errorLine1="        val parentEntry = nav.getBackStackEntry(ReportsFeature.ROUTE)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/reports/ReportsFeature.kt"
+            line="51"
+            column="31"/>
+    </issue>
+
+</issues>

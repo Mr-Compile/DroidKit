@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.0.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.0.1)" variant="all" version="9.0.1">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 28): `android.content.ContextWrapper#getDisplay`"
+        errorLine1="        (context as? Activity)?.display"
+        errorLine2="                                ~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/developer/DeveloperLabScreen.kt"
+            line="312"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="LocalContextResourcesRead"
+        message="Reading Resources using LocalContext.current.resources"
+        errorLine1="    val metrics = context.resources.displayMetrics"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/developer/DeveloperLabScreen.kt"
+            line="310"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                                    ?.let { intent.data = Uri.parse(it.trim()) }"
+        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/developer/DeveloperLabScreen.kt"
+            line="177"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                                    ?.let { intent.data = Uri.parse(it.trim()) }"
+        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/developer/DeveloperLabScreen.kt"
+            line="177"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                                val uri = Uri.parse(deepLink.trim())"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/developer/DeveloperLabScreen.kt"
+            line="214"
+            column="43"/>
+    </issue>
+
+</issues>

@@ -25,6 +25,12 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 targetSdk = 36
                 unitTests.isIncludeAndroidResources = true
             }
+            lint {
+                // lint-baseline.xml freezes existing findings; only new violations fail.
+                baseline = file("lint-baseline.xml")
+                abortOnError = true
+                checkReleaseBuilds = false
+            }
         }
 
         extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
