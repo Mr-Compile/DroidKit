@@ -120,6 +120,15 @@ fun UsbDetailScreen(
                             modifier = Modifier.padding(top = 8.dp),
                         )
                         Text(
+                            UsbDescriptors.interfaceInterpretation(
+                                iface.interfaceClass,
+                                iface.interfaceSubclass,
+                                iface.interfaceProtocol,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
                             iface.name ?: "No interface name",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -135,6 +144,23 @@ fun UsbDetailScreen(
                                 modifier = Modifier.padding(start = 8.dp, top = 2.dp),
                             )
                         }
+                    }
+                }
+            }
+
+            if (device.interfaceCount > 0) {
+                item {
+                    SectionCard(title = "Class inspector") {
+                        Text(
+                            UsbDescriptors.deviceInterpretation(
+                                (0 until device.interfaceCount).map {
+                                    val i = device.getInterface(it)
+                                    Triple(i.interfaceClass, i.interfaceSubclass, i.interfaceProtocol)
+                                },
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }

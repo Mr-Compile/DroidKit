@@ -50,6 +50,94 @@ object UsbDescriptors {
         UsbConstants.USB_DIR_OUT -> "OUT (host → device)"
         else -> "Unknown"
     }
+
+    /**
+     * Interface-level interpretation — what a class/subclass/protocol triple
+     * means in practice. Only statements justified by the USB-IF class codes
+     * are returned; never claim internal detail Android cannot see.
+     */
+    fun interfaceInterpretation(cls: Int, subclass: Int, protocol: Int): String = when (cls) {
+        0x01 -> "Audio" + when (subclass) {
+            0x01 -> " control interface"
+            0x02 -> " streaming (speaker/microphone data)"
+            0x03 -> " MIDI streaming"
+            else -> ""
+        }
+        0x02 -> "Communications" + when (subclass) {
+            0x02 -> " — Abstract Control Model (modem/serial-style control channel)"
+            0x04 -> " — Ethernet emulation (USB network adapter)"
+            0x06 -> " — Ethernet Networking Control Model"
+            0x0D -> " — Network Control Model (tethering)"
+            else -> " control interface"
+        }
+        0x0A -> "CDC Data — bulk data channel, typically paired with a CDC control " +
+            "interface (serial-style device such as a modem or adapter)"
+        0x03 -> "HID" + when {
+            subclass == 0x01 && protocol == 0x01 -> " boot keyboard"
+            subclass == 0x01 && protocol == 0x02 -> " boot mouse"
+            subclass == 0x01 -> " boot-interface device"
+            else -> " (keyboard/mouse/controller-class input device)"
+        }
+        0x05 -> "Physical interface device (e.g. force-feedback hardware)"
+        0x06 -> "Still image capture" + when (protocol) {
+            0x01 -> " — PTP camera protocol"
+            else -> ""
+        }
+        0x07 -> "Printer"
+        0x08 -> "Mass storage" + when (protocol) {
+            0x50 -> " — Bulk-Only Transport (typical flash drive/disk)"
+            0x62 -> " — UAS (USB Attached SCSI — faster storage protocol)"
+            else -> ""
+        }
+        0x09 -> "USB hub"
+        0x0B -> "Smart card reader (CCID)"
+        0x0D -> "Content security interface"
+        0x0E -> "Video (UVC)" + when (subclass) {
+            0x01 -> " control — webcam control interface"
+            0x02 -> " streaming — webcam video stream"
+            else -> ""
+        }
+        0x0F -> "Personal healthcare device"
+        0x10 -> "Audio/video device"
+        0x11 -> "Billboard — device reports an alternate-mode status"
+        0xDC -> "Diagnostic device"
+        0xE0 -> "Wireless controller" + when {
+            subclass == 0x01 && protocol == 0x01 -> " — Bluetooth radio"
+            subclass == 0x01 && protocol == 0x03 -> " — Bluetooth AMP"
+            subclass == 0x02 -> " — UWB radio"
+            else -> ""
+        }
+        0xEF -> "Miscellaneous" + when {
+            subclass == 0x04 && protocol == 0x01 -> " — RNDIS (Windows-style network tethering)"
+            else -> " (composite device grouping)"
+        }
+        0xFE -> "Application-specific" + when (subclass) {
+            0x01 -> " — device firmware upgrade (DFU)"
+            0x02 -> " — IRDA bridge"
+            0x03 -> " — test & measurement (USBTMC)"
+            else -> ""
+        }
+        0xFF -> "Vendor-specific protocol — interpretation requires vendor documentation"
+        else -> "Unrecognized class"
+    }
+
+    /** Whole-device capability summary from its interface mix. */
+    fun deviceInterpretation(interfaceTriples: List<Triple<Int, Int, Int>>): String {
+        if (interfaceTriples.isEmpty()) return "No interfaces exposed."
+        val labels = interfaceTriples.map { (c, s, p) -> interfaceInterpretation(c, s, p) }
+        val classes = interfaceTriples.map { it.first }.toSet()
+        return buildString {
+            appendLine(labels.joinToString("\n") { "• $it" })
+            if (0x03 in classes) appendLine("This device can act as an input peripheral.")
+            if (0x08 in classes) appendLine("Android may mount storage volumes it exposes.")
+            if (0x02 in classes || 0x0A in classes || (0xEF in classes)) {
+                appendLine("Serial/modem-style interfaces usually need a vendor driver " +
+                    "or app support — Android's generic USB API does not provide a serial console.")
+            }
+            if (0x0E in classes) appendLine("UVC video streams are not exposed through UsbManager; " +
+                "apps that read webcams use the Camera2 external-camera path.")
+        }.trim()
+    }
 }
 
 /** Clipboard/share summary for a device; `serial` is read by the caller only when permitted. */
