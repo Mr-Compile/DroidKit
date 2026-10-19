@@ -40,3 +40,16 @@ Owner approval required?: no
 Files/docs updated: `docs/01_plans/2026-10-18-droidkit-master-execution-plan.md` §1
 Migration completed? [x]
 Notes: playbook `25_VERSIONING_RELEASE_MANAGEMENT.md` holds the J→SemVer map.
+
+## Entry
+Date: 2026-10-20
+Feature: Error/problem UX + design tokens
+Old document/decision: Per-feature ad-hoc error text + `BlockedReasonList` dialog; duplicated `AiError`→message maps in 4 files
+Improved v2 decision: uiux_v5 semantic state model (`semantics/03`) — unified problem/recovery
+Repository reality: v5 spec is canonical for UX
+Conflict classification: approach refinement / supersession
+Decision: v5 wins — `UiProblem`/`RecoveryAction` + `UiProblemCard` + `AiError.describe()` are canonical; `BlockedReasonList` removed as dead code; semantic status tokens in `theme/Tokens.kt`
+Owner approval required?: no
+Files/docs updated: `core/common/UiProblem.kt`, `core/ui/components/*`, `core/ui/theme/Tokens.kt`, tracker DK-020/030/031/032
+Migration completed? [x]
+Notes: Tools/Settings surface adoption deferred to parallel UX workstream (droidkit_ux_plan).
