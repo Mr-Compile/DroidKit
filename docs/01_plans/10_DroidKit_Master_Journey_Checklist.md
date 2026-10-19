@@ -789,7 +789,41 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 
 ---
 
-# Versioning Checklist
+# UX Enhancement Pack
+
+Plan pack `01_plans/droidkit_ux_plan/` (16 docs). Execution plan + audit map:
+`01_plans/2026-10-19-ux-enhancement-execution.md`.
+
+## UX-1 Foundation & availability
+- [x] Unified UiProblem/UiProblemCard + BlockedReason/AiError mappers
+- [x] Shared runtime-permission gate (granted/requestable/permanent/not-declared, resume-refresh)
+- [x] Reactive provider status via ProviderStatusBus; blocked-tool dialog with recovery actions
+- [x] Friendly AI error text shared across chat/report/settings surfaces
+
+## UX-2 Discovery
+- [x] Tool search (title/description/keywords) + category filters
+- [x] Page destinations in search (Settings, Permissions, Privacy, About, Help, Chat, Reports, Insights, Home)
+- [x] Favorites persisted + deduped; recents bounded(8) + deduped; dashboard Pinned/Recent/Ready sections
+
+## UX-3 Trust
+- [x] Permissions & Access: Settings entry; runtime vs install-time sections; purpose + affected tools; grant/settings actions; advanced-access status
+- [x] Privacy Center: on-device data inventory + clear controls, network/AI behavior, policy link state
+- [x] AI & Online Services: opt-in BYOK Groq config, model, test connection, privacy minimization text
+- [x] Tool information dialog from real Tool metadata (permissions, hardware, API, elevated access, internet)
+
+## UX-4 Assistance & identity
+- [x] Help & FAQ generated from real behavior; Report a Problem + Send Feedback → configured GitHub Issues
+- [x] About DroidKit: identity, version/build from package metadata, GitHub Releases update check
+- [x] What's New from ReleaseNotes transcribed from CHANGELOG; OSS licenses list
+
+## UX-5 IA & recovery
+- [x] Settings: Support & privacy section (Permissions, Privacy, Help, What's New) + Reset settings with confirmation
+- [ ] Settings export/import — deferred (config surface too small; documented in plan)
+
+## UX-6 Accessibility & QA
+- [x] Heading semantics on SectionHeader; state-aware favorite-toggle labels; non-interactive status tags; Back labels; merged row semantics
+- [x] Targeted validation: compile + unit tests on changed modules
+- [ ] Device run: TalkBack, font scaling, dark/light on new surfaces — pending hardware
 
 Use Semantic Versioning:
 

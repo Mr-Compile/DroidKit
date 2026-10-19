@@ -8,6 +8,8 @@ import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolRegistry
 import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.privileges.CapabilityManager
+import io.github.droidkit.core.privileges.ProviderKind
+import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.privileges.ToolResolution
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +33,9 @@ class ToolsViewModel @Inject constructor(
     val categories: List<ToolCategory> = ToolCategory.entries
 
     val favorites: Flow<Set<String>> = settings.favoriteToolIds
+
+    /** Collecting this re-triggers [resolve] in composition when providers change. */
+    val providerStatuses: StateFlow<Map<ProviderKind, ProviderStatus>> = capabilityManager.statuses
 
     fun setQuery(q: String) { _query.value = q }
 

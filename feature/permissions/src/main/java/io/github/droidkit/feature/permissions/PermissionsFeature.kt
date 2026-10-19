@@ -38,6 +38,8 @@ object PermissionsFeature : FeatureContribution {
 
 fun NavGraphBuilder.permissionsGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(PermissionsFeature.ROUTE) {
-        PermissionCenterScreen()
+        PermissionCenterScreen(
+            onOpenSettings = { nav.navigate("settings") },
+        )
     }
 }

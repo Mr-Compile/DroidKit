@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import io.github.droidkit.core.ui.components.LoadingState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -72,8 +72,9 @@ fun AppsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
             when {
-                loading -> CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(32.dp),
+                loading -> LoadingState(
+                    label = "Loading apps…",
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
                 apps.isEmpty() -> EmptyState("No apps match the current filter.")
                 else -> LazyColumn(

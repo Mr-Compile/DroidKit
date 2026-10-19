@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.core.ui.components.ResultBadge
 import io.github.droidkit.core.ui.components.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,15 +110,7 @@ fun SessionReviewScreen(
                                 modifier = Modifier.weight(1f),
                                 style = MaterialTheme.typography.bodyLarge,
                             )
-                            Text(
-                                state.name.replace('_', ' '),
-                                color = when (state) {
-                                    TestResultState.PASS -> MaterialTheme.colorScheme.primary
-                                    TestResultState.FAIL -> MaterialTheme.colorScheme.error
-                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                style = MaterialTheme.typography.labelLarge,
-                            )
+                            ResultBadge(state)
                         }
                     }
                 }

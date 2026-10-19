@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
+import io.github.droidkit.core.ui.components.DiagnosticProgress
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,12 +45,9 @@ fun GuidedSessionScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            LinearProgressIndicator(
-                progress = {
-                    if (engineState.total == 0) 0f
-                    else engineState.index.toFloat() / engineState.total
-                },
-                modifier = Modifier.fillMaxWidth(),
+            DiagnosticProgress(
+                progress = if (engineState.total == 0) 0f
+                    else engineState.index.toFloat() / engineState.total,
             )
             val current = engineState.current
             if (current != null) {

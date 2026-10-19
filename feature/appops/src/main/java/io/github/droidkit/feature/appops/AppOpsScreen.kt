@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import io.github.droidkit.core.ui.components.LoadingState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -180,10 +180,7 @@ private fun PackageList(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
     )
     when {
-        busy -> Column(
-            modifier = Modifier.fillMaxWidth().padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) { CircularProgressIndicator() }
+        busy -> LoadingState(label = "Loading AppOps…")
         error != null -> EmptyState(error)
         packages == null -> EmptyState("Loading package list…")
         packages.isEmpty() -> EmptyState("No packages match.")
@@ -222,10 +219,7 @@ private fun OpsDetail(
         )
     }
     when {
-        busy && ops == null -> Column(
-            modifier = Modifier.fillMaxWidth().padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) { CircularProgressIndicator() }
+        busy && ops == null -> LoadingState(label = "Loading ops…")
         ops == null -> EmptyState("No AppOps data for $packageName.")
         ops.isEmpty() -> EmptyState("$packageName has no recorded AppOps entries.")
         else -> LazyColumn(
