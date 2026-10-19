@@ -413,8 +413,11 @@ Candidate post-V1 areas (status after the post-v0.8 implementation wave):
 - Advanced logs — **implemented** (Developer Lab log viewer via `ElevatedOps`)
 - IntentLab/Developer Lab expansion — **implemented** (deep-link tester, custom intents)
 - Bluetooth Lab expansion — **implemented** (bounded BLE scan + read-only GATT explorer)
-- Technician workflow — **implemented core**: session intake (customer/device labels), technician signature in Settings, session presets (Full / used-phone), before/after session compare, storage snapshots with delta, NFC scan history + write presets, sensor session CSV export, dashboard pinning
+- Technician workflow — **implemented core**: session intake (customer/device labels), technician signature in Settings, session presets (Full / used-phone), before/after session compare, storage snapshots with delta, NFC scan history + write presets, sensor session CSV export, dashboard pinning, and the inspection certificate export (PDF)
 - Elevated action audit — **implemented** (local Room log, visible in Settings)
+- USB class helpers — **implemented** (interface-level class/subclass/protocol interpretation + whole-device inspector; honest limits — no NAND/controller claims)
+- Network advanced diagnostics — **implemented** (full interface inventory with MTU/flags/addresses, bounded user-initiated NSD/mDNS service discovery)
+- Sensor orientation helper — **implemented** (azimuth/pitch/roll via rotation-vector sensor; NOT_SUPPORTED when absent)
 
 These remain governed by the same safety rules regardless of implementation status.
 

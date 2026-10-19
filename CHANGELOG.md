@@ -48,6 +48,18 @@
   BLE GATT service/characteristic explorer
 - Audio & Haptics, Camera & Flash, and Display & Touch lab index screens
   deep-linking into the standalone Phone Doctor tests (`diagnose/test/*`)
+- USB class inspectors: per-interface class/subclass/protocol
+  interpretation (HID boot devices, mass-storage BOT/UAS, CDC serial,
+  UVC video, Bluetooth radios, RNDIS…) plus a whole-device class
+  inspector — honest about Android's UsbManager limits
+- Inspection certificate export (Reports → Certificate, PDF): technician
+  signature, intake labels, result tally, per-category checklist, and a
+  not-a-guarantee notice
+- Network Lab: full interface inventory (name, MTU, up/loopback/multicast
+  flags, addresses) and bounded 10s user-initiated mDNS/NSD service
+  discovery with on-demand resolve
+- Sensor Lab: orientation helper (azimuth/pitch/roll + reported accuracy
+  from the rotation-vector sensor, NOT_SUPPORTED when absent)
 
 ### Fixed
 - Audio/camera/display tool entries previously opened stale placeholder
