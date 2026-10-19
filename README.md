@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="docs/branding/droidkit-logo.svg" alt="DroidKit" width="260" />
+  <br/>
+  <em>Tools for a healthier Android</em>
+</p>
+
 # DroidKit
 
 Android technician & power-user toolkit — device inspection, guided hardware

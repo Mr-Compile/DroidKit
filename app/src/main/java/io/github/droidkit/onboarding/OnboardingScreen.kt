@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Shield
@@ -29,7 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.droidkit.core.datastore.SettingsRepository
+import io.github.droidkit.core.ui.theme.DroidKitMark
 import kotlinx.coroutines.launch
 
 /**
@@ -41,15 +42,17 @@ private data class Page(
     val icon: ImageVector,
     val title: String,
     val body: String,
+    val tagline: String? = null,
 )
 
 private val pages = listOf(
     Page(
-        Icons.Filled.Build,
+        DroidKitMark,
         "Welcome to DroidKit",
         "A technician's toolkit for Android: diagnostics, device " +
             "inspection, connectivity labs, and repair reports — all " +
             "running natively on this device.",
+        tagline = "Tools for a healthier Android",
     ),
     Page(
         Icons.Filled.CheckCircle,
@@ -122,6 +125,16 @@ fun OnboardingScreen(
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                     )
+                    page.tagline?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            it.uppercase(),
+                            style = MaterialTheme.typography.labelMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary,
+                            letterSpacing = 2.sp,
+                        )
+                    }
                     Spacer(Modifier.height(16.dp))
                     Text(
                         page.body,

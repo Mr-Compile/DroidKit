@@ -27,6 +27,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.datastore.ThemeMode
 import io.github.droidkit.core.privileges.ProviderKind
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.ui.components.DroidKitWordmark
 import io.github.droidkit.core.ui.components.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -262,7 +263,15 @@ fun SettingsScreen(
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("DroidKit ${viewModel.versionName}", style = MaterialTheme.typography.titleSmall)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            DroidKitWordmark(markSize = 22.dp)
+                            Text(
+                                viewModel.versionName,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
                         Text(
                             "Android technician & power toolkit.",
                             style = MaterialTheme.typography.bodyMedium,

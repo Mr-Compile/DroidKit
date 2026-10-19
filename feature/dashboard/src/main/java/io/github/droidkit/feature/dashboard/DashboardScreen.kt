@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.ui.components.DroidKitWordmark
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.components.ToolCard
@@ -48,7 +49,7 @@ fun DashboardScreen(
     val favorites by viewModel.favoriteToolIds.collectAsState(initial = emptySet())
     val pinnedTools = viewModel.pinned(favorites)
 
-    Scaffold(topBar = { TopAppBar(title = { Text("DroidKit") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { DroidKitWordmark() }) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

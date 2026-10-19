@@ -18,8 +18,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -32,6 +36,9 @@ import io.github.droidkit.core.privileges.CapabilityManager
 import io.github.droidkit.core.ui.theme.DroidKitTheme
 import io.github.droidkit.navigation.DroidKitNavHost
 import javax.inject.Inject
+import kotlinx.coroutines.delay
+
+private const val SPLASH_MIN_MS = 1_500L
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,9 +84,20 @@ private fun DroidKitScaffold(
     val nav = rememberNavController()
     val backStackEntry by nav.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    // null = still reading DataStore; keep the first frame blank rather
-    // than flashing Home before the onboarding redirect.
+    // null = still reading DataStore; show the splash rather than flashing
+    // Home before the onboarding redirect. Held a minimum duration so the
+    // branding doesn't flash by on fast devices.
     val onboardingDone by settings.onboardingCompleted.collectAsState(initial = null)
+    var minSplashElapsed by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(SPLASH_MIN_MS)
+        minSplashElapsed = true
+    }
+
+    if (onboardingDone == null || !minSplashElapsed) {
+        SplashScreen()
+        return
+    }
 
     Scaffold(
         bottomBar = {
