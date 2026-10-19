@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3CE88A"/>
+      <stop offset="1" stop-color="#14B8CC"/>
+    </linearGradient>
+    <clipPath id="hd"><path d="M24 80 A30 30 0 0 1 84 80 Z"/></clipPath>
+  </defs>
+  <rect width="360" height="480" fill="#0C1416"/>
+  <g transform="translate(93.6 49.6) scale(1.6)">
+    <path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M24 80 A30 30 0 0 1 84 80 Z" fill="url(#g)"/>
+    <g clip-path="url(#hd)">
+      <rect x="18" y="70" width="72" height="6" fill="#0C1416"/>
+    </g>
+    <circle cx="42" cy="62" r="5" fill="#0C1416"/>
+    <circle cx="66" cy="62" r="5" fill="#0C1416"/>
+    <path d="M59.1 67.9 A8 8 0 1 1 48.9 67.9" fill="none" stroke="#0C1416" stroke-width="4.5" stroke-linecap="round"/>
+    <rect x="51.8" y="74" width="4.4" height="18" rx="2.2" fill="#0C1416"/>
+  </g>
+  <text x="180" y="322" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="58" font-weight="800" letter-spacing="-1"><tspan fill="#F2F6F5">Droid</tspan><tspan fill="#3CE88A">Kit</tspan></text>
+  <text x="180" y="362" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="13.5" font-weight="600" letter-spacing="4.5" fill="#3CE88A">DIAGNOSE • INSPECT • FIX</text>
+  <text x="20" y="438" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="13" font-weight="600" fill="#9DB0B2">Candidate 1</text>
+  <text x="20" y="458" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="12" fill="#7E9497">Modern Android + Tool (Gradient)</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280" width="720" height="1280">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3CE88A"/>
+      <stop offset="1" stop-color="#14B8CC"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A2C31"/>
+      <stop offset="1" stop-color="#0A1214"/>
+    </linearGradient>
+    <radialGradient id="wash" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3CE88A" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#3CE88A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3CE88A" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#3CE88A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="720" height="1280" fill="#040808"/>
+  <circle cx="-40" cy="-60" r="430" fill="url(#wash)"/>
+  <circle cx="740" cy="1300" r="460" fill="url(#wash)"/>
+  <g transform="translate(460 950) scale(3.3)" fill="#3CE88A" opacity="0.05">
+    <path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="#3CE88A" stroke-width="7" stroke-linecap="round"/>
+    <path d="M24 80 A30 30 0 0 1 84 80 Z"/>
+  </g>
+  <circle cx="360" cy="430" r="160" fill="url(#halo)">
+    <animate attributeName="opacity" values="0.55;1;0.55" dur="2.4s" repeatCount="indefinite"/>
+  </circle>
+  <g transform="translate(246.6 312.4) scale(2.1)">
+    <path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="url(#g)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M24 80 A30 30 0 0 1 84 80 Z" fill="url(#glass)" stroke="url(#g)" stroke-width="1.6" stroke-opacity="0.9"/>
+    <ellipse cx="54" cy="58" rx="24" ry="10" fill="#FFFFFF" opacity="0.07"/>
+    <circle cx="42" cy="64" r="10" fill="#3CE88A" opacity="0.25"/>
+    <circle cx="66" cy="64" r="10" fill="#3CE88A" opacity="0.25"/>
+    <circle cx="42" cy="64" r="4.5" fill="#3CE88A"/>
+    <circle cx="66" cy="64" r="4.5" fill="#3CE88A"/>
+  </g>
+  <text x="360" y="640" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="84" font-weight="800" letter-spacing="-2"><tspan fill="#F2F6F5">Droid</tspan><tspan fill="#3CE88A">Kit</tspan></text>
+  <text x="360" y="700" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="18" font-weight="600" letter-spacing="7" fill="#8FA5A7">DEEPER INSIGHTS. BETTER DEVICES.</text>
+  <circle cx="360" cy="800" r="32" fill="none" stroke="#1C2A2C" stroke-width="7"/>
+  <path d="M392 800 A32 32 0 1 1 360 768" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round">
+    <animateTransform attributeName="transform" type="rotate" from="0 360 800" to="360 360 800" dur="1s" repeatCount="indefinite"/>
+  </path>
+  <text x="360" y="880" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="20" fill="#8FA5A7">Initializing DroidKit...</text>
+  <rect x="56" y="1170" width="4" height="52" fill="url(#g)"/>
+  <text x="72" y="1188" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="15" letter-spacing="3" fill="#7E9497">YOUR ANDROID</text>
+  <text x="72" y="1208" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="15" letter-spacing="3" fill="#7E9497">TOOLKIT</text>
+  <text x="72" y="1228" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="15" letter-spacing="3" fill="#7E9497">COMPANION</text>
+</svg>

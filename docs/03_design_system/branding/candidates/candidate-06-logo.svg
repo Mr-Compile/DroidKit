@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480">
+  <rect width="360" height="480" fill="#F4F7F6"/>
+  <g transform="translate(88.2 54) scale(1.7)">
+    <path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="#3DDC84" stroke-width="7" stroke-linecap="round"/>
+    <path d="M24 80 A30 30 0 0 1 84 80 Z M37 64 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 Z M61 64 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 Z" fill="#3DDC84" fill-rule="evenodd"/>
+  </g>
+  <text x="180" y="322" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="58" font-weight="800" letter-spacing="-1"><tspan fill="#17242B">Droid</tspan><tspan fill="#0E9E6B">Kit</tspan></text>
+  <text x="180" y="362" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="13.5" font-weight="600" letter-spacing="4.5" fill="#5A6B6D">ALL-IN-ONE ANDROID TOOLKIT</text>
+  <text x="20" y="438" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="13" font-weight="600" fill="#6B7D7F">Candidate 6</text>
+  <text x="20" y="458" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="12" fill="#8A9A9C">Flat &amp; Simple</text>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480" width="360" height="480">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3CE88A"/>
+      <stop offset="1" stop-color="#14B8CC"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="480" fill="#0C1416"/>
+  <g transform="translate(99 60) scale(1.5)">
+    <g transform="rotate(-22 54 58)">
+      <path d="M6 58 A48 15 0 0 1 102 58" fill="none" stroke="url(#g)" stroke-width="6.5"/>
+    </g>
+    <g transform="translate(0 -6)">
+      <path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/>
+      <path d="M24 80 A30 30 0 0 1 84 80 Z M37 64 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 Z M61 64 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 Z" fill="url(#g)" fill-rule="evenodd"/>
+    </g>
+    <g transform="rotate(-22 54 58)">
+      <path d="M6 58 A48 15 0 0 0 102 58" fill="none" stroke="url(#g)" stroke-width="6.5"/>
+      <circle cx="93" cy="66" r="5" fill="#3CE88A"/>
+    </g>
+  </g>
+  <text x="180" y="322" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="58" font-weight="800" letter-spacing="-1"><tspan fill="#F2F6F5">Droid</tspan><tspan fill="#3CE88A">Kit</tspan></text>
+  <text x="180" y="362" text-anchor="middle" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="13.5" font-weight="600" letter-spacing="4.5" fill="#8FA5A7">INSPECT • DIAGNOSE • OPTIMIZE</text>
+  <text x="20" y="438" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="13" font-weight="600" fill="#9DB0B2">Candidate 5</text>
+  <text x="20" y="458" font-family="Segoe UI, system-ui, Roboto, sans-serif" font-size="12" fill="#7E9497">Orbit / Tech Focus</text>
+</svg>
