@@ -27,6 +27,8 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiAssistant
+import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.EmptyState
@@ -195,6 +197,22 @@ fun UsbDetailScreen(
                             }
                             context.startActivity(Intent.createChooser(send, "Share USB summary"))
                         }) { Text("Share") }
+                        AiExplainButton(
+                            assistant = AiAssistant.USB_ASSISTANT,
+                            fields = buildMap {
+                                put("Device path", device.deviceName)
+                                put("Vendor ID", UsbDescriptors.hex4(device.vendorId))
+                                put("Product ID", UsbDescriptors.hex4(device.productId))
+                                put("USB version", device.version)
+                                put("Manufacturer", device.manufacturerName)
+                                put("Product", device.productName)
+                                put("Class", UsbDescriptors.className(device.deviceClass))
+                                put("Subclass", UsbDescriptors.hex2(device.deviceSubclass))
+                                put("Protocol", UsbDescriptors.hex2(device.deviceProtocol))
+                                put("Interfaces", device.interfaceCount.toString())
+                                put("USB permission", hasPermission.toString())
+                            },
+                        )
                     }
                 }
             }

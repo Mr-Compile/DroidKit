@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.github.droidkit.core.ai.AiAssistant
+import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.EmptyState
@@ -140,6 +142,22 @@ fun NfcScreen(
                         InfoRow("Capacity", t.ndefMaxSize?.let { "$it bytes" })
                         InfoRow("NDEF type", t.ndefType)
                         InfoRow("Formatable", t.formatable.toString(), copyable = false)
+                        AiExplainButton(
+                            assistant = AiAssistant.NFC_ASSISTANT,
+                            fields = buildMap {
+                                put("Tag ID", t.idHex)
+                                put("Technologies", t.techList.joinToString())
+                                put("NDEF capable", t.ndefCapable.toString())
+                                put("Writable", t.ndefWritable?.toString())
+                                put("Capacity bytes", t.ndefMaxSize?.toString())
+                                put("NDEF type", t.ndefType)
+                                t.records.forEachIndexed { i, r ->
+                                    put("Record ${i + 1} type", r.typeHex)
+                                    r.decoded?.let { put("Record ${i + 1} value", it) }
+                                }
+                            },
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
                     }
                 }
 

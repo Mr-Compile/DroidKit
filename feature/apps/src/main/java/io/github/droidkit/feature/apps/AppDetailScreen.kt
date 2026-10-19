@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import io.github.droidkit.core.ai.AiAssistant
+import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.components.SectionHeader
 import java.text.DateFormat
@@ -172,6 +174,24 @@ fun AppDetailScreen(
                                 InfoRow("APK path", app?.sourceDir)
                             }
                         }
+                    }
+
+                    item {
+                        AiExplainButton(
+                            assistant = AiAssistant.APP_INSPECTOR,
+                            fields = buildMap {
+                                put("Label", app?.loadLabel(pm)?.toString())
+                                put("Package", packageName)
+                                put("Version", pkg.versionName)
+                                put("Target SDK", app?.targetSdkVersion?.toString())
+                                put("Min SDK", app?.minSdkVersion?.takeIf { it > 0 }?.toString())
+                                put(
+                                    "Requested permissions",
+                                    pkg.requestedPermissions?.joinToString(", "),
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
 
                     item { SectionHeader("Permissions") }

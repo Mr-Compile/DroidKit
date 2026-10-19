@@ -25,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiAssistant
+import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.feature.network.NetworkViewModel.LayerResult
@@ -188,6 +190,35 @@ fun NetworkScreen(
                         else -> {}
                     }
                 }
+            }
+
+            item {
+                AiExplainButton(
+                    assistant = AiAssistant.NETWORK_TROUBLESHOOTER,
+                    fields = buildMap {
+                        val s = snapshot
+                        put("Network available", s?.available?.toString())
+                        put("Internet capable", s?.internetCapable?.toString())
+                        put("Validated", s?.validated?.toString())
+                        put("Transports", s?.transports?.joinToString())
+                        put("Interface", s?.interfaceName)
+                        put("DNS servers", s?.dnsServers?.joinToString())
+                        layers.forEach { put("Layer ${it.name}", "${it.state}: ${it.detail}") }
+                        (ping as? ToolState.Done)?.let {
+                            put("Ping ${it.result.host}", "${it.result.lossPercent}% loss, avg ${it.result.avgMs} ms")
+                        }
+                        (dns as? ToolState.Done)?.let {
+                            put("DNS ${it.result.host}", it.result.addresses.joinToString())
+                        }
+                        (ports as? ToolState.Done)?.let { done ->
+                            put(
+                                "Ports ${done.result.firstOrNull()?.host}",
+                                done.result.joinToString { "${it.port}:${if (it.open) "open" else "closed"}" },
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }

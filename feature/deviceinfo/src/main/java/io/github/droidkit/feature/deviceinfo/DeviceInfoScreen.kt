@@ -25,6 +25,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import io.github.droidkit.core.ai.AiAssistant
+import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.system.DeviceSystemProbe
 import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.system.formatHz
@@ -92,6 +94,16 @@ fun DeviceInfoScreen(
                         }
                     }
                 }
+            }
+            item {
+                AiExplainButton(
+                    assistant = AiAssistant.DEVICE_EXPLAINER,
+                    fields = sections
+                        .flatMap { s -> s.rows.map { (l, v) -> "${s.title} / $l" to v } }
+                        .toMap(),
+                    onNavigate = { nav.navigate(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }

@@ -16,11 +16,25 @@ data class AiMessage(val role: String, val content: String)
 
 /** Provider-agnostic completion request. */
 data class AiRequest(
-    val system: String,
-    val user: String,
+    val messages: List<AiMessage>,
     val maxTokens: Int = 512,
     val temperature: Double = 0.3,
-)
+) {
+    /** Single system+user convenience — covers every non-chat call site. */
+    constructor(
+        system: String,
+        user: String,
+        maxTokens: Int = 512,
+        temperature: Double = 0.3,
+    ) : this(
+        messages = listOf(
+            AiMessage("system", system),
+            AiMessage("user", user),
+        ),
+        maxTokens = maxTokens,
+        temperature = temperature,
+    )
+}
 
 /** Provider-agnostic completion response. */
 data class AiResponse(val text: String, val model: String)

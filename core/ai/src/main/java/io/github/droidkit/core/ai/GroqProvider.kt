@@ -42,16 +42,15 @@ class GroqProvider @Inject constructor(
             }
             runCatching {
                 val model = store.model.first()
+                val messages = JSONArray()
+                request.messages.forEach { m ->
+                    messages.put(JSONObject().put("role", m.role).put("content", m.content))
+                }
                 val payload = JSONObject()
                     .put("model", model)
                     .put("max_tokens", request.maxTokens)
                     .put("temperature", request.temperature)
-                    .put(
-                        "messages",
-                        JSONArray()
-                            .put(JSONObject().put("role", "system").put("content", request.system))
-                            .put(JSONObject().put("role", "user").put("content", request.user)),
-                    )
+                    .put("messages", messages)
 
                 val conn = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"

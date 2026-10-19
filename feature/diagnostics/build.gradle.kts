@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.system)
     implementation(projects.core.ui)
+    implementation(projects.core.ai)
     implementation(projects.core.permissions)
 
     implementation(libs.androidx.camera.core)

@@ -1,5 +1,5 @@
 plugins {
-    id("droidkit.android.library")
+    id("droidkit.android.library.compose")
     id("droidkit.hilt")
 }
 android {
@@ -7,6 +7,8 @@ android {
 }
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.core.privileges)
+    implementation(projects.core.permissions)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
 

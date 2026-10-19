@@ -25,6 +25,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiAssistant
+import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.core.ui.components.SectionHeader
 
@@ -73,6 +75,27 @@ fun SessionReviewScreen(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.padding(16.dp),
                     )
+                }
+            }
+
+            item {
+                val resultFields = engineState.results.entries.associate { (id, state) ->
+                    (PhoneDoctorTests.findById(id)?.title ?: id) to state.name
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AiExplainButton(
+                        assistant = AiAssistant.DIAGNOSTIC_ANALYZER,
+                        fields = mapOf("Summary" to summary) + resultFields,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (counts[TestResultState.FAIL] != null) {
+                        AiExplainButton(
+                            assistant = AiAssistant.REPAIR_ASSISTANT,
+                            fields = mapOf("Summary" to summary) + resultFields
+                                .filterValues { it == TestResultState.FAIL.name },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
 
