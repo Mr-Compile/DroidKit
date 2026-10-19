@@ -29,11 +29,20 @@ object SensorsFeature : FeatureContribution {
             route = "$ROUTE/live/{type}",
             keywords = setOf("live", "stream", "monitor"),
         ),
+        Tool(
+            id = "sensors.orientation",
+            title = "Orientation Helper",
+            description = "Azimuth/pitch/roll from the rotation-vector sensor",
+            category = ToolCategory.DEVICE,
+            route = "$ROUTE/orientation",
+            keywords = setOf("compass", "heading", "tilt"),
+        ),
     )
 }
 
 fun NavGraphBuilder.sensorsGraph(nav: NavHostController) {
     composable(SensorsFeature.ROUTE) { SensorsScreen(nav) }
+    composable("${SensorsFeature.ROUTE}/orientation") { OrientationScreen() }
     composable(
         route = "${SensorsFeature.ROUTE}/live/{type}",
         arguments = listOf(navArgument("type") { type = NavType.IntType }),
