@@ -5,6 +5,45 @@ plugins {
 
 android {
     namespace = "io.github.droidkit"
+
+    // DK-081: release signing comes from the environment — never from files
+    // or values committed to this repo. Required env vars for a signed
+    // release build:
+    //   DROIDKIT_KEYSTORE             — path to the upload keystore (.jks/.keystore)
+    //   DROIDKIT_KEYSTORE_PASSWORD    — keystore password
+    //   DROIDKIT_KEY_ALIAS            — key alias
+    //   DROIDKIT_KEY_PASSWORD         — key password
+    // When unset, release falls back to the debug signing config so CI can
+    // still produce a build-verified (but not distributable) artifact.
+    val releaseKeystore = providers.environmentVariable("DROIDKIT_KEYSTORE").orNull
+
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("DROIDKIT_KEYSTORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("DROIDKIT_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("DROIDKIT_KEY_PASSWORD").orNull
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            // Unsigned APKs can't be installed — without env signing we sign
+            // with the debug key so validation artifacts stay installable.
+            // Distribution builds MUST set the env keystore (different cert).
+            signingConfig = signingConfigs.getByName(
+                if (releaseKeystore != null) "release" else "debug",
+            )
+        }
+    }
 }
 
 dependencies {
