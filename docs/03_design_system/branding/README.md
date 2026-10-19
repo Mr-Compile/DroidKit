@@ -1,9 +1,11 @@
 # DroidKit Brand Kit
 
 Source of truth for the DroidKit logo, colors, and taglines. The mark is
-Candidate 4 (abstract / geometric): a rounded hexagonal ring — open at the
-bottom vertex — around a vertical capsule "tool bit" glyph, drawn with a
-green→teal gradient.
+Candidate 4 (abstract / geometric): a bold, vertically stretched hexagonal
+band — split into a large left C-piece (wrapping the top vertex, left side,
+and bottom vertex) and a right bracket, with gaps at the upper-right edge
+and the bottom vertex — around a light-green vertical capsule "tool bit"
+glyph, drawn with a green→teal gradient.
 
 ## Files
 
@@ -25,6 +27,7 @@ In-app counterparts:
 | Brand Green | `#3CE88A` | Gradient start, "Kit" wordmark on dark |
 | Brand Teal | `#14B8CC` | Gradient end |
 | Green (light surfaces) | `#0E9E6B` | "Kit" wordmark on light themes (contrast) |
+| Capsule Green | `#86F595` | "tool bit" capsule inside the mark |
 | Ink | `#0C1416` | Icon background, lockup tile |
 
 ## Taglines

@@ -42,4 +42,20 @@ class ToolRegistryTest {
         assertEquals("USB Devices", registry.byId("a")?.title)
         assertTrue(registry.byId("zzz") == null)
     }
+
+    @Test
+    fun `tool rejects parameterized launch routes`() {
+        // Registry routes are navigated verbatim via nav.navigate(tool.route);
+        // nav-argument placeholders must live only in NavGraph composable patterns.
+        listOf("sensors/live/{type}", "apps/detail/{packageName}", "{a}/b").forEach { route ->
+            runCatching { Tool("t", "T", "d", ToolCategory.DEVICE, route) }
+                .onSuccess { throw AssertionError("placeholder route accepted: $route") }
+                .onFailure { assertTrue(it is IllegalArgumentException) }
+        }
+    }
+
+    @Test
+    fun `registry launch routes are all directly navigable`() {
+        registry.tools.forEach { assertTrue(it.route.none { c -> c == '{' || c == '}' }) }
+    }
 }

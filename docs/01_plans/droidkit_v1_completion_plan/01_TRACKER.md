@@ -4,8 +4,8 @@ Statuses: NOT STARTED / IN PROGRESS / BLOCKED / CODE COMPLETE / DEVICE VERIFIED 
 
 | ID | Task | Priority | Initial Status | Completion evidence |
 |---|---|---|---|---|
-| DK-001 | Fix sensors.live parameterized launch route | P0 | NOT STARTED | Build + route regression check + manual/nav verification |
-| DK-002 | Fix App Inspector package visibility | P1 | NOT STARTED | Merged manifest + API30+ device verification |
+| DK-001 | Fix sensors.live parameterized launch route | P0 | CODE COMPLETE | `Tool` init now rejects `{arg}` launch routes (invariant by construction); `sensors.live` routes to new `sensors/live` chooser → typed `sensors/live/{type}` kept for internal nav; ToolRegistryTest 6/6 green; `:feature:sensors`+`:app` assembleDebug green. Device nav check pending. |
+| DK-002 | Fix App Inspector package visibility | P1 | CODE COMPLETE | `<queries>` MAIN+LAUNCHER added to `feature/apps` + `feature/packages` manifests; verified present in merged app manifest; no QUERY_ALL_PACKAGES (frozen decision); visibility caveat text already in UI. API30+ device verification pending. |
 | DK-010 | Minimal CI | P0 | NOT STARTED | PR workflow green |
 | DK-011 | Lint/static analysis baseline | P1 | NOT STARTED | Local + CI lint green |
 | DK-012 | Regression/architecture gates | P1 | NOT STARTED | Invariant tests green |

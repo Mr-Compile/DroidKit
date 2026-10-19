@@ -23,7 +23,15 @@ data class Tool(
     val minSdk: Int? = null,
     val phase: ToolPhase = ToolPhase.V1,
     val keywords: Set<String> = emptySet(),
-)
+) {
+    init {
+        // A tool's route is a generic launch route (nav.navigate(tool.route)).
+        // Parameterized nav patterns belong in the NavGraph, never here.
+        require('{' !in route && '}' !in route) {
+            "Tool $id route must be directly navigable, found argument placeholder in '$route'"
+        }
+    }
+}
 
 interface FeatureContribution {
     val tools: List<Tool>

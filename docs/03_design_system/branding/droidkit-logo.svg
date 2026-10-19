@@ -7,11 +7,13 @@
   </defs>
   <rect width="360" height="480" fill="#0C1416"/>
   <g transform="translate(82.8 52.8) scale(1.8)">
-    <path d="M47.07 80 L28.02 69 L28.02 39 L54 24 L79.98 39 L79.98 69 L60.93 80"
-          fill="none" stroke="url(#dkg)" stroke-width="7"
-          stroke-linejoin="round" stroke-linecap="butt"/>
-    <path d="M49.5 44.5 Q49.5 40 54 40 Q58.5 40 58.5 44.5 L58.5 65.5 Q58.5 70 54 70 Q49.5 70 49.5 65.5 Z"
-          fill="url(#dkg)"/>
+    <path d="M54 82 L27 66.5 L27 42 L52.5 26 L56.5 28"
+          fill="none" stroke="url(#dkg)" stroke-width="14"
+          stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M74.5 37.6 L81.5 42 L81.5 65.5 L64.6 75.6"
+          fill="none" stroke="url(#dkg)" stroke-width="14"
+          stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="46.5" y="35" width="15" height="38" rx="7.5" fill="#86F595"/>
   </g>
   <text x="180" y="322" text-anchor="middle"
         font-family="Segoe UI, system-ui, Roboto, sans-serif"

@@ -1,2 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Android 11+ package visibility: App Inspector's product scope is the
+      user-facing app inventory, so declare the narrowest matching scope —
+      packages with a launcher entry. Non-launchable packages (services-only,
+      libraries, etc.) stay invisible and the list header discloses the limit.
+      QUERY_ALL_PACKAGES is intentionally not used (frozen V1 decision).
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+</manifest>

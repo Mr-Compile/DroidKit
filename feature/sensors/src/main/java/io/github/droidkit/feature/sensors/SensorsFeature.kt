@@ -26,7 +26,7 @@ object SensorsFeature : FeatureContribution {
             title = "Live Sensor Monitor",
             description = "Stream live readings from supported sensors",
             category = ToolCategory.DIAGNOSTICS,
-            route = "$ROUTE/live/{type}",
+            route = "$ROUTE/live",
             keywords = setOf("live", "stream", "monitor"),
         ),
         Tool(
@@ -43,6 +43,7 @@ object SensorsFeature : FeatureContribution {
 fun NavGraphBuilder.sensorsGraph(nav: NavHostController) {
     composable(SensorsFeature.ROUTE) { SensorsScreen(nav) }
     composable("${SensorsFeature.ROUTE}/orientation") { OrientationScreen() }
+    composable("${SensorsFeature.ROUTE}/live") { LiveSensorPickerScreen(nav) }
     composable(
         route = "${SensorsFeature.ROUTE}/live/{type}",
         arguments = listOf(navArgument("type") { type = NavType.IntType }),
