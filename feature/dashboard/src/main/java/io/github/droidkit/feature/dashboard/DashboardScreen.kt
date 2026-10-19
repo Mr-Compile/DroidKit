@@ -1,5 +1,6 @@
 package io.github.droidkit.feature.dashboard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +26,12 @@ import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.components.ToolCard
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private fun fmtDay(epochMs: Long): String =
+    SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(epochMs))
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,8 +39,10 @@ fun DashboardScreen(
     onNavigateToTools: () -> Unit,
     onNavigateToDiagnose: () -> Unit,
     onOpenTool: (String) -> Unit,
+    onOpenInsights: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
+    val latestInsight by viewModel.latestInsight.collectAsState(initial = null)
     val recents by viewModel.recentToolIds.collectAsState(initial = emptyList())
     val recentTools = recents.mapNotNull { viewModel.toolById(it) }
     val favorites by viewModel.favoriteToolIds.collectAsState(initial = emptySet())
@@ -76,6 +85,29 @@ fun DashboardScreen(
                 }
             }
 
+            latestInsight?.let { h ->
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onOpenInsights),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("Insights", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                buildString {
+                                    append("Latest diagnostic: ${h.pass}/${h.total} passed")
+                                    if (h.fail > 0) append(" · ${h.fail} failed")
+                                    append(" · ${fmtDay(h.startedAtEpochMs)} →")
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 Button(onClick = onNavigateToDiagnose, modifier = Modifier.fillMaxWidth()) {
                     Text("Start Full Diagnostic")
@@ -88,7 +120,7 @@ fun DashboardScreen(
                     ToolCard(
                         tool = tool,
                         resolution = viewModel.resolve(tool),
-                        onClick = { onOpenTool(tool.route) },
+                        onClick = { viewModel.recordOpen(tool); onOpenTool(tool.route) },
                     )
                 }
             }
@@ -101,7 +133,7 @@ fun DashboardScreen(
                     ToolCard(
                         tool = tool,
                         resolution = viewModel.resolve(tool),
-                        onClick = { onOpenTool(tool.route) },
+                        onClick = { viewModel.recordOpen(tool); onOpenTool(tool.route) },
                     )
                 }
             }
@@ -111,7 +143,7 @@ fun DashboardScreen(
                 ToolCard(
                     tool = tool,
                     resolution = viewModel.resolve(tool),
-                    onClick = { onOpenTool(tool.route) },
+                    onClick = { viewModel.recordOpen(tool); onOpenTool(tool.route) },
                 )
             }
         }

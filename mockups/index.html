@@ -214,6 +214,15 @@
   .torch-on { box-shadow: 0 0 90px 30px rgba(255,240,140,.55) inset; }
   .sensorbar { height: 4px; background: var(--card2); border-radius: 2px; margin: 2px 0 6px; overflow: hidden; }
   .sensorbar > div { height: 100%; background: var(--primary); }
+  /* ---------- insights ---------- */
+  .statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--card2); border-radius: 10px; padding: 10px 12px; }
+  .stat .n { font-size: 19px; font-weight: 700; }
+  .stat .l { font-size: 11px; color: var(--sub); margin-top: 1px; }
+  .donutwrap { position: relative; width: 104px; flex: none; }
+  .donutwrap .dlabel { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .hbar { height: 4px; background: var(--card2); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+  .hbar > div { height: 100%; background: var(--error); }
   /* ---------- flow map ---------- */
   .flowmap {
     width: 330px; flex: none; border-left: 1px solid #262b34;
@@ -310,6 +319,8 @@ const S = {
   btEnabled: false,
   favorites: new Set(["battery.lab"]),
   recentTools: [],
+  toolUse: {"battery.lab":9,"diagnostics.full":6,"nfc.read":4,"apps.installed":3},
+  insightRange: "30d",
   toolsQuery: "", toolsCategory: null,
   appsQuery: "", appsFilter: "ALL",
   reportsFilter: "ALL",
@@ -320,6 +331,7 @@ const S = {
   usbPermPending: {},
   nfc: { scanning: false, armed: null, tag: null, result: null },
   timers: [],
+  snapshots: [],
 };
 /* ---------------- tools (mirrors every *Feature.kt tools list) ------- */
 const CAT = { DEVICE:"DEVICE", DIAGNOSTICS:"DIAGNOSTICS", APPS:"APPS", CONNECTIVITY:"CONNECTIVITY", HARDWARE:"HARDWARE", DEVELOPER:"DEVELOPER", REPORTS:"REPORTS" };
@@ -374,6 +386,7 @@ const TOOLS = [
   t("adb.pairing","Wireless ADB Pairing","Pair with the device's own wireless debugging service",CAT.DEVELOPER,"adb",{safety:SYSCHG,caps:[CAP.ADB],phase:"V2"}),
   t("adb.shell","ADB Shell","Run shell commands through the wireless ADB provider",CAT.DEVELOPER,"adb",{safety:ADV,caps:[CAP.ADB],phase:"V2"}),
   t("reports.export","Export Report","Share a diagnostic report as text",CAT.REPORTS,"reports",{safety:MINOR}),
+  t("analytics.insights","Device Insights","Health trends, diagnostic history and on-device usage stats",CAT.REPORTS,"insights"),
 ];
 function t(id,title,description,category,route,o={}) {
   return { id,title,description,category,route,
@@ -503,8 +516,47 @@ const INSTALL_TIME = new Set(["android.permission.INTERNET","android.permission.
   res["sensor.proximity"] = { state:"NOT_SUPPORTED", note:"No proximity sensor reported" };
   res["power.charging"] = { state:"NOT_TESTED", note:null };
   S.sessions.push({ id, started: Date.parse("2026-10-18T16:42:00"), status:"COMPLETED",
-    version:"0.1.0", notes:"Customer reports dead touch zone top-left — confirmed on grid test.",
+    version:"0.1.0", preset:"Full diagnostic", customerLabel:"Walk-in #1042", deviceLabel:"Shelf A3",
+    notes:"Customer reports dead touch zone top-left — confirmed on grid test.",
     results: res });
+  // post-repair "after" session — same device, touch fixed
+  const res2 = {};
+  seq.forEach(tid => res2[tid] = { state:"PASS", note:null });
+  res2["sensor.proximity"] = { state:"NOT_SUPPORTED", note:"No proximity sensor reported" };
+  res2["power.charging"] = { state:"NOT_TESTED", note:null };
+  S.sessions.push({ id:"s-20261019-2", started: Date.parse("2026-10-19T10:15:00"), status:"COMPLETED",
+    version:"0.1.0", preset:"Full diagnostic", customerLabel:"Walk-in #1042", deviceLabel:"Shelf A3",
+    notes:"Post-repair verification after panel replacement.",
+    results: res2 });
+  // older history for the Insights trend — Aug session falls outside the 30-day chip
+  const resA = {};
+  seq.forEach(tid => resA[tid] = { state:"PASS", note:null });
+  resA["display.dead_pixel"] = { state:"FAIL", note:"two stuck pixels, top edge" };
+  resA["touch.grid"] = { state:"FAIL", note:"dead zone top-left; Coverage 61/96 (64%)" };
+  resA["audio.microphone"] = { state:"FAIL", note:"recording silent" };
+  resA["sensor.proximity"] = { state:"NOT_SUPPORTED", note:"No proximity sensor reported" };
+  resA["power.charging"] = { state:"NOT_TESTED", note:null };
+  S.sessions.push({ id:"s-20260822-0", started: Date.parse("2026-08-22T11:05:00"), status:"COMPLETED",
+    version:"0.1.0", preset:"Full diagnostic", customerLabel:"Walk-in #980", deviceLabel:"Shelf A3",
+    notes:"Intake check — digitizer and mic faults suspected.",
+    results: resA });
+  const resB = {};
+  seq.forEach(tid => resB[tid] = { state:"PASS", note:null });
+  resB["touch.grid"] = { state:"FAIL", note:"dead zone top-left; Coverage 70/96 (73%)" };
+  resB["audio.microphone"] = { state:"FAIL", note:"recording distorted at high gain" };
+  resB["sensor.proximity"] = { state:"NOT_SUPPORTED", note:"No proximity sensor reported" };
+  resB["power.charging"] = { state:"NOT_TESTED", note:null };
+  S.sessions.push({ id:"s-20261006-0", started: Date.parse("2026-10-06T15:30:00"), status:"COMPLETED",
+    version:"0.1.0", preset:"Full diagnostic", customerLabel:"Walk-in #1042", deviceLabel:"Shelf A3",
+    notes:"Recheck after mic flex reseat — still failing.",
+    results: resB });
+  S.sessions.sort((a,b) => b.started - a.started);
+  // storage snapshots with free space — feed the Insights sparkline
+  const day = 86400000, now = Date.now();
+  S.snapshots.push(
+    { id:1, at:now-12*day, free: 88919244800 },
+    { id:2, at:now-5*day,  free: 81224564736 },
+    { id:3, at:now-1*day,  free: DEVICE.storageFree });
 })();
 /* ============================== helpers ============================== */
 const $ = sel => document.querySelector(sel);
@@ -520,6 +572,7 @@ function toast(msg){
 }
 function fmtBytes(b){ const u=["B","KB","MB","GB","TB"]; let i=0; while(b>=1024&&i<u.length-1){b/=1024;i++;} return b.toFixed(i?1:0)+" "+u[i]; }
 function fmtDT(ms){ return new Date(ms).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}); }
+function fmtDay(ms){ return new Date(ms).toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
 function providerLabel(k){ const p=PROVIDERS[k]; if(!p) return "Unavailable";
   return p.status==="ready" ? "Ready" : p.status==="setup" ? `Setup required — ${p.instructions}` : p.reason; }
 function providerLabelHome(k){ const p=PROVIDERS[k]; if(!p) return "unavailable";
@@ -593,6 +646,7 @@ function goBack(){ if(S.stack.length>1){ S.stack.pop(); clearTimers(); closeOver
 function goTab(tab){ S.tab=tab; S.stack=[tab]; clearTimers(); closeOverlay(); render(); }
 function recordRecent(toolId){
   S.recentTools = [toolId, ...S.recentTools.filter(x=>x!==toolId)].slice(0,5);
+  S.toolUse[toolId] = (S.toolUse[toolId]||0)+1;
 }
 /* ============================== screens ============================== */
 function render(){
@@ -621,6 +675,7 @@ function render(){
       else { body=scrDeviceInfo(); title="Device Inspector"; actions=`<span class="iconbtn" data-act="share-device" title="Share summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L8.9 12.7a3.2 3.2 0 0 0 0-1.4l7-4a3 3 0 1 0-.9-1.7l-7 4a3 3 0 1 0 0 4.8l7.1 4.1A3 3 0 1 0 18 16z"/></svg></span>`; }
       break;
     case "battery": body = scrBattery(); title="Battery Lab"; break;
+    case "insights": body = scrInsights(); title="Insights"; break;
     case "display": body = labIndex("Display & Touch",
         "Standalone display and touch checks from Phone Doctor. Results here are not saved — run Full Diagnostic to persist them.",
         [["display.color","Display colors","Cycle solid colors and check coverage, banding and tint."],
@@ -693,6 +748,7 @@ function scrHome(){
     <div class="card"><div class="t-small">This device</div>
       <div class="t-body" style="margin-top:4px">${DEVICE.manufacturer} ${DEVICE.model} · Android ${DEVICE.androidRelease} (API ${DEVICE.sdkInt}) · ${fmtBytes(DEVICE.storageFree)} free</div></div>
     <div class="card"><div class="t-small">Elevated access</div><div style="margin-top:4px">${prov}</div></div>
+    ${insightsHomeCard()}
     <button class="btn full" data-nav="diagnose/guided">Start Full Diagnostic</button>
     <div class="sec-head">Recent tools</div>
     ${recents.length ? recents.map(x=>toolCard(x)).join("") : `<div class="empty">No recent tools yet — browse the Tools tab.</div>`}
@@ -1005,6 +1061,134 @@ function scrSettings(){
     <div class="card"><div class="t-body">High-impact actions always show their exact consequence and ask for explicit confirmation. DroidKit never performs security or credential bypass operations.</div></div>
     <div class="sec-head">About</div>
     <div class="card"><div class="t-small">DroidKit ${DEVICE.appVersion}</div><div class="t-body">Android technician &amp; power toolkit.</div></div>
+  </div>`;
+}
+/* ---------- insights ---------- */
+function sessStats(s){
+  const c={PASS:0,FAIL:0,SKIP:0,total:0};
+  Object.values(s.results).forEach(r=>{ c.total++;
+    if(r.state==="PASS")c.PASS++; else if(r.state==="FAIL")c.FAIL++; else c.SKIP++; });
+  c.rate=c.total?c.PASS/c.total:0; return c;
+}
+function insightSessions(){
+  const cutoff = S.insightRange==="30d" ? Date.now()-30*86400000 : 0;
+  return S.sessions.filter(x=>x.status==="COMPLETED"&&x.started>=cutoff)
+    .sort((a,b)=>a.started-b.started);
+}
+function donutSvg(st){
+  const size=104, rr=43, C=2*Math.PI*rr, tot=st.total||1; let off=0;
+  const seg=(frac,color)=>{ if(frac<=0)return""; const len=frac*C;
+    const el=`<circle cx="52" cy="52" r="${rr}" fill="none" stroke="${color}" stroke-width="15" stroke-dasharray="${len.toFixed(1)} ${(C-len).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}"/>`;
+    off+=len; return el; };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+    <circle cx="52" cy="52" r="${rr}" fill="none" stroke="var(--card2)" stroke-width="15"/>
+    ${seg(st.PASS/tot,"var(--primary)")}${seg(st.FAIL/tot,"var(--error)")}${seg(st.SKIP/tot,"var(--outline)")}</svg>`;
+}
+function barsSvg(points){
+  const w=340,h=104,n=points.length,gap=(w-20)/n,bw=Math.min(36,gap-10),base=h-22;
+  const bars=points.map((p,i)=>{
+    const bh=Math.max(3,Math.round(p.rate*(base-10)));
+    const x=10+i*gap+(gap-bw)/2, y=base-bh;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${p.fail?"var(--error)":"var(--primary)"}"><title>${esc(p.title)}</title></rect>
+      <text x="${x+bw/2}" y="${h-6}" text-anchor="middle" font-size="9.5" fill="var(--sub)">${esc(p.label)}</text>`;
+  }).join("");
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}">
+    <line x1="10" y1="${base}" x2="${w-10}" y2="${base}" stroke="var(--outline)" stroke-width="1" opacity=".5"/>${bars}</svg>`;
+}
+function sparkSvg(vals){
+  const w=300,h=44,min=Math.min(...vals),max=Math.max(...vals),span=(max-min)||1;
+  const pts=vals.map((v,i)=>`${(10+i*(w-20)/(vals.length-1)).toFixed(1)},${(8+(1-(v-min)/span)*(h-18)).toFixed(1)}`).join(" ");
+  const [lx,ly]=pts.split(" ").pop().split(",");
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lx}" cy="${ly}" r="3.5" fill="var(--primary)"/></svg>`;
+}
+function testAttention(list){
+  const agg={};
+  list.forEach(s=>Object.entries(s.results).forEach(([tid,r])=>{
+    const a=agg[tid]||(agg[tid]={fails:0,skips:0});
+    if(r.state==="FAIL")a.fails++; else if(r.state!=="PASS")a.skips++;
+  }));
+  return Object.entries(agg).filter(([,a])=>a.fails||a.skips)
+    .sort((x,y)=>(y[1].fails*2+y[1].skips)-(x[1].fails*2+x[1].skips)).slice(0,4);
+}
+function insightsHomeCard(){
+  const done=S.sessions.filter(x=>x.status==="COMPLETED").sort((a,b)=>b.started-a.started);
+  if(!done.length) return "";
+  const s=done[0], st=sessStats(s);
+  return `<div class="card clickable" data-nav="insights">
+    <div class="row"><span class="grow"><span class="t-small">Insights</span>
+    <div class="t-mini sub" style="margin-top:2px">Latest diagnostic: ${st.PASS}/${st.total} passed${st.FAIL?` · ${st.FAIL} failed`:""} · ${fmtDay(s.started)}</div></span>
+    <span class="t-mini pri">Open →</span></div></div>`;
+}
+function scrInsights(){
+  const rangeChips=`<div class="chiprow" style="padding-bottom:4px">
+    ${[["30d","30 days"],["all","All time"]].map(([k,l])=>
+      `<button class="fchip ${S.insightRange===k?"sel":""}" data-irange="${k}">${l}</button>`).join("")}</div>`;
+  const list=insightSessions(), latest=list[list.length-1], prev=list[list.length-2];
+  let health;
+  if(latest){
+    const st=sessStats(latest), p=prev?sessStats(prev):null, pct=Math.round(st.rate*100);
+    const delta=p?st.PASS-p.PASS:0;
+    const deltaTxt=!p?"First session in range"
+      :delta>0?`▲ ${delta} more passed than ${fmtDay(prev.started)}`
+      :delta<0?`▼ ${-delta} fewer passed than ${fmtDay(prev.started)}`
+      :"Same pass count as previous session";
+    const att=testAttention(list);
+    const attMax=att.length?Math.max(...att.map(([,a])=>a.fails*2+a.skips)):1;
+    health=`<div class="card"><div class="row" style="align-items:center;gap:14px">
+      <div class="donutwrap">${donutSvg(st)}
+        <div class="dlabel"><span style="font-size:19px;font-weight:700">${pct}%</span><span class="t-mini sub">passed</span></div></div>
+      <div class="grow"><div class="t-small">Latest diagnostic</div>
+        <div class="t-body" style="margin-top:3px">${st.PASS} of ${st.total} tests passed</div>
+        <div class="t-mini sub" style="margin-top:2px">${fmtDay(latest.started)}${latest.preset?` · ${esc(latest.preset)}`:""}</div>
+        <div class="t-mini ${delta>0?"pri":delta<0?"err":"sub"}" style="margin-top:5px">${deltaTxt}</div>
+        <div class="t-mini sub" style="margin-top:5px">PASS ${st.PASS} · FAIL ${st.FAIL} · Skipped/other ${st.SKIP}</div></div></div></div>
+    <div class="sec-head">Pass rate per session</div>
+    <div class="card">${barsSvg(list.map(s=>{const c=sessStats(s);
+        return{rate:c.rate,fail:c.FAIL>0,label:fmtDay(s.started),title:`${fmtDT(s.started)} — ${c.PASS}/${c.total} passed`};}))}
+      <div class="t-mini sub" style="margin-top:6px">Bar height = share of tests passed. Red = session had a failure.</div></div>
+    <div class="sec-head">Tests needing attention</div>
+    ${att.length?att.map(([tid,a])=>{const t=TEST(tid);
+        return`<div class="card"><div class="row"><span class="grow t-med">${t?esc(t.title):esc(tid)}</span>
+          <span class="t-mini ${a.fails?"err":"sub"}" style="font-weight:600">${a.fails?a.fails+"× fail":""}${a.fails&&a.skips?" · ":""}${a.skips?a.skips+"× skipped/other":""}</span></div>
+          <div class="hbar"><div style="width:${Math.max(6,Math.round((a.fails*2+a.skips)/attMax*100))}%"></div></div></div>`;}).join("")
+      :`<div class="card"><div class="t-body">No failed or skipped tests in range.</div></div>`}`;
+  } else {
+    health=`<div class="card"><div class="t-body">No completed diagnostics in this range.</div>
+      <div class="t-mini sub" style="margin-top:4px">Run a Full Diagnostic to start building health trends.</div></div>
+      <button class="btn full" data-nav="diagnose">Start Full Diagnostic</button>`;
+  }
+  const snaps=S.snapshots.filter(x=>x.free!=null).sort((a,b)=>a.at-b.at);
+  const d=snaps.length>=2?snaps[snaps.length-1].free-snaps[0].free:0;
+  const storage=snaps.length>=2
+    ?`<div class="card">${sparkSvg(snaps.map(s=>s.free))}
+      ${infoRow("Free space now",fmtBytes(snaps[snaps.length-1].free),false)}
+      ${infoRow("Change across "+snaps.length+" snapshots",(d<0?"−":d>0?"+":"±")+fmtBytes(Math.abs(d)),false)}
+      <div class="t-mini sub" style="margin-top:2px">Internal storage free space per snapshot — captured in Storage Lab.</div></div>`
+    :`<div class="card"><div class="t-body">No storage trend yet.</div>
+      <div class="t-mini sub" style="margin-top:4px">Capture two or more snapshots in Storage Lab to chart free space.</div></div>`;
+  const completed=S.sessions.filter(x=>x.status==="COMPLETED");
+  const testsRun=completed.reduce((n,s)=>n+Object.keys(s.results).length,0);
+  const tiles=[["Diagnostics",completed.length],["Tests recorded",testsRun],
+    ["Tools used",Object.keys(S.toolUse).length],["NFC scans",S.nfc.history.length],
+    ["Snapshots",S.snapshots.length],["Elevated actions",S.elevLog.length]];
+  const top=Object.entries(S.toolUse).sort((a,b)=>b[1]-a[1]).slice(0,3), topMax=top.length?top[0][1]:1;
+  const topHtml=top.length?top.map(([id,n])=>{const t=TOOLS.find(x=>x.id===id);if(!t)return"";
+      return`<div class="card clickable" data-nav="${t.route}" data-tool="${t.id}">
+        <div class="row"><span class="grow t-med">${esc(t.title)}</span><span class="t-mini sub">${n}×</span></div>
+        <div class="hbar"><div style="width:${Math.round(n/topMax*100)}%;background:var(--primary)"></div></div></div>`;}).join("")
+    :`<div class="empty">No tool usage yet — open a few tools first.</div>`;
+  return `<div class="pad col">${rangeChips}
+    <div class="sec-head" style="padding-top:0">Device health</div>
+    ${health}
+    <div class="sec-head">Storage</div>
+    ${storage}
+    <div class="sec-head">Activity</div>
+    <div class="statgrid">${tiles.map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("")}</div>
+    <div class="sec-head">Most used tools</div>
+    ${topHtml}
+    <div class="t-mini sub" style="padding:4px 4px 12px">All stats are computed on-device from your diagnostic sessions and labs. Nothing leaves this phone.</div>
   </div>`;
 }
 /* ---------- device inspector / storage / battery ---------- */
@@ -1389,6 +1573,7 @@ const FLOW = [
     ["Session review","diagnose/review",1],
     ["Reports","reports",1],
     ["Report detail","reports/detail/{sessionId}",2],
+    ["Insights","insights",1],
   ]},
   {h:"Device labs", nodes:[
     ["Device Inspector","deviceinfo"],["Storage Lab","deviceinfo/storage",1],
@@ -1441,6 +1626,7 @@ document.addEventListener("click", e => {
   const fv = e.target.closest("[data-fav]"); if(fv){ e.stopPropagation();
     const id=fv.dataset.fav; S.favorites.has(id)?S.favorites.delete(id):S.favorites.add(id); renderToolList(); return; }
   const cp = e.target.closest("[data-copy]"); if(cp){ e.stopPropagation(); navigator.clipboard?.writeText(cp.dataset.copy).catch(()=>{}); toast("Copied"); return; }
+  const ir = e.target.closest("[data-irange]"); if(ir){ S.insightRange=ir.dataset.irange; render(); return; }
   const ac = e.target.closest("[data-act]");
   if(ac){ handleAct(ac.dataset.act, ac, e); return; }
 });

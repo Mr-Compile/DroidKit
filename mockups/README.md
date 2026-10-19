@@ -31,7 +31,11 @@ Simulates a Pixel 8 Pro, Android 15, mid-setup:
   gates).
 - STANDARD provider ready; ADB needs pairing; SHIZUKU/ROOT unavailable —
   V2 tools show real **Blocked** badges and stub screens show blocked reasons.
-- One saved diagnostic report is seeded in Reports / Diagnose history.
+- Four saved diagnostic sessions are seeded in Reports / Diagnose history —
+  they tell one story (Aug intake: dead pixels + touch + mic faults → Oct recheck
+  → post-repair pass on Oct 19) and feed the Insights charts. One session is
+  older than 30 days to demo the range filter.
+- Three storage snapshots are seeded with declining free space.
 - A USB flash disk and an NDEF-formatted NFC tag are "attached" (Start scan in
   NFC Lab finds the tag after ~1.5 s).
 
@@ -46,6 +50,11 @@ Simulates a Pixel 8 Pro, Android 15, mid-setup:
 4. **NFC Lab → Start scan** — tag appears with Tag Doctor verdicts; try
    Write / erase for the armed-write confirmation flow.
 5. **Settings** — theme radios switch the phone between dark/light.
+6. **Home → Insights card** (or Tools → Reports category → Device Insights) —
+   the on-device analytics screen: verdict donut + pass-rate trend across
+   sessions, tests needing attention, storage sparkline, activity stats, and
+   most-used tools. Flip the 30 days / All time chips to see the Aug session
+   drop out. Run a diagnostic or capture a snapshot and the charts react.
 
 ## Fidelity notes
 

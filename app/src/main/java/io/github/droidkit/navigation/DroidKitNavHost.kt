@@ -19,6 +19,7 @@ import io.github.droidkit.feature.developer.developerGraph
 import io.github.droidkit.feature.deviceinfo.deviceInfoGraph
 import io.github.droidkit.feature.diagnostics.diagnosticsGraph
 import io.github.droidkit.feature.display.displayGraph
+import io.github.droidkit.feature.insights.insightsGraph
 import io.github.droidkit.feature.network.networkGraph
 import io.github.droidkit.feature.nfc.nfcGraph
 import io.github.droidkit.feature.packages.packagesGraph
@@ -48,6 +49,7 @@ fun DroidKitNavHost(
         toolsGraph(nav)
         diagnosticsGraph(nav)
         reportsGraph(nav)
+        insightsGraph(nav)
         settingsGraph(nav)
         deviceInfoGraph(nav)
 

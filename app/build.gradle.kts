@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.feature.tools)
     implementation(projects.feature.diagnostics)
     implementation(projects.feature.reports)
+    implementation(projects.feature.insights)
     implementation(projects.feature.settings)
     implementation(projects.feature.deviceinfo)
     implementation(projects.feature.battery)

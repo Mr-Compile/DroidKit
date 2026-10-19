@@ -36,6 +36,11 @@ and propose allow-listed actions — the app works fully without it.
   device snapshot, text and PDF export via FileProvider, session compare
   (before/after diff), inspection-certificate PDF with technician signature,
   and per-report or delete-all management.
+- **Insights** — on-device analytics over local data only: latest-session
+  verdict ring, per-session pass-rate trend, tests needing attention,
+  storage free-space trend, and activity counters (sessions, tests, tools,
+  NFC scans, snapshots, reports, elevated actions) plus most-used tools.
+  30-day / all-time ranges; honest empty states until data exists.
 - **Device Inspector / Storage Lab** — identity, OS, hardware, memory,
   storage, display, battery and feature inventory with per-field copy/share;
   volume list plus storage snapshots diffed across two points in time.

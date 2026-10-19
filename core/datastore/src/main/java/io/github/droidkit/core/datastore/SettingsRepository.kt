@@ -21,6 +21,7 @@ class SettingsRepository @Inject constructor(
     private val themeKey = stringPreferencesKey("theme_mode")
     private val favoritesKey = stringSetPreferencesKey("favorite_tools")
     private val recentsKey = stringPreferencesKey("recent_tools")
+    private val toolUseKey = stringPreferencesKey("tool_use_counts")
     private val onboardingKey = androidx.datastore.preferences.core.booleanPreferencesKey("onboarding_completed")
     private val technicianKey = stringPreferencesKey("technician_name")
 
@@ -62,10 +63,28 @@ class SettingsRepository @Inject constructor(
         context.settingsStore.edit { it[technicianKey] = name.trim() }
     }
 
+    /** Times each tool was opened — feeds Insights "most used". */
+    val toolUseCounts: Flow<Map<String, Int>> = context.settingsStore.data.map { prefs ->
+        prefs[toolUseKey].orEmpty().split(",")
+            .mapNotNull {
+                val n = it.substringAfterLast(':').toIntOrNull() ?: return@mapNotNull null
+                it.substringBeforeLast(':') to n
+            }
+            .toMap()
+    }
+
     suspend fun recordRecent(toolId: String) {
         context.settingsStore.edit { prefs ->
             val current = prefs[recentsKey]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
             prefs[recentsKey] = (listOf(toolId) + current.filter { it != toolId }).take(8).joinToString(",")
+            val counts = prefs[toolUseKey].orEmpty().split(",")
+                .mapNotNull {
+                    val n = it.substringAfterLast(':').toIntOrNull() ?: return@mapNotNull null
+                    it.substringBeforeLast(':') to n
+                }
+                .toMap().toMutableMap()
+            counts[toolId] = (counts[toolId] ?: 0) + 1
+            prefs[toolUseKey] = counts.entries.joinToString(",") { "${it.key}:${it.value}" }
         }
     }
 }

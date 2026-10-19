@@ -1,4 +1,4 @@
-package io.github.droidkit.feature.deviceinfo
+package io.github.droidkit.core.database
 
 import io.github.droidkit.core.database.StorageSnapshotEntity
 

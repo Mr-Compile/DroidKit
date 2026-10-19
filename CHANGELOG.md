@@ -3,6 +3,13 @@
 ## [0.9.0-alpha.1] - Unreleased
 
 ### Added
+- Insights (`feature:insights`): on-device analytics dashboard computed
+  entirely from Room/DataStore — latest-session verdict ring, per-session
+  pass-rate bars with day labels, "tests needing attention" ranking
+  (fails weighed double), storage free-space trendline, activity counters
+  (diagnostics, tests, tools, scans, snapshots, reports, elevated
+  actions) and most-used tools. 30-day / all-time range chips, honest
+  empty states, summary card on Home, tool entry under Reports
 - Elevated capability providers (J18/J19/J20 groundwork): Shizuku provider
   (live status, grant flow, `newProcess` exec), wireless ADB provider
   (custom SPAKE2 pairing, TLS/plain sessions, RSA-2048 identity in

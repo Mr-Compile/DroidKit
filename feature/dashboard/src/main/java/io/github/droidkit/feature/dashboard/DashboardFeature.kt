@@ -27,6 +27,7 @@ fun NavGraphBuilder.dashboardGraph(nav: NavHostController) {
             onNavigateToTools = { nav.navigate("tools") },
             onNavigateToDiagnose = { nav.navigate("diagnose") },
             onOpenTool = { route -> nav.navigate(route) },
+            onOpenInsights = { nav.navigate("insights") },
         )
     }
 }

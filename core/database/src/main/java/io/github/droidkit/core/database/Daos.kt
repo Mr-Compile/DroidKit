@@ -67,6 +67,9 @@ interface SavedReportDao {
     @Query("SELECT * FROM saved_reports ORDER BY generatedAtEpochMs DESC")
     fun observeAll(): Flow<List<SavedReportEntity>>
 
+    @Query("SELECT COUNT(*) FROM saved_reports")
+    fun observeCount(): Flow<Int>
+
     @Query("DELETE FROM saved_reports")
     suspend fun deleteAll()
 }
@@ -94,6 +97,9 @@ interface NfcTagScanDao {
     @Query("SELECT * FROM nfc_tag_scans ORDER BY scannedAtEpochMs DESC LIMIT :limit")
     fun observeRecent(limit: Int = 50): Flow<List<NfcTagScanEntity>>
 
+    @Query("SELECT COUNT(*) FROM nfc_tag_scans")
+    fun observeCount(): Flow<Int>
+
     @Query("DELETE FROM nfc_tag_scans")
     suspend fun deleteAll()
 }
@@ -105,6 +111,9 @@ interface ElevatedActionLogDao {
 
     @Query("SELECT * FROM elevated_action_log ORDER BY epochMs DESC LIMIT :limit")
     fun observeRecent(limit: Int = 100): Flow<List<ElevatedActionLogEntity>>
+
+    @Query("SELECT COUNT(*) FROM elevated_action_log")
+    fun observeCount(): Flow<Int>
 
     @Query("DELETE FROM elevated_action_log")
     suspend fun deleteAll()
