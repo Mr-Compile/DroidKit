@@ -734,6 +734,61 @@ Completion gate:
 
 ---
 
+# UI/UX V5 Design System Pass
+
+Queue item Q16b — plan `plans/2026-10-19-ui-ux-v5-design-system.md`. Canonical spec `docs/DroidKit_UI_UX_Design_System_v5/` (supersedes v4). Per-slice gate: v5 `implementation/22_DEFINITION_OF_DONE.md`.
+
+## V5-0 Audit
+- [ ] `docs/audits/V5_UI_AUDIT.md` — inventory, state/error gaps, per-feature file lists, conflicts logged
+
+## V5-1 Foundation
+- [ ] Production Candidate-4 assets (adaptive + monochrome icon, splash) — plan Task 1
+- [ ] `core-splashscreen` cold-start splash, no artificial delay
+- [ ] Dark + light semantic tokens in `:core:ui` (`SemanticColors.kt`, `Spacing.kt`, `Shape.kt`, `Type.kt`) — plan Task 2
+- [ ] `J03_DESIGN_TOKENS.md` v5-name mapping appended
+- [ ] Shared primitives/badges (`StatusBadge`, `CapabilityBadge`, `ResultBadge`, `BentoCard`, `TechnicalValue`, `DiagnosticProgress`) — plan Task 3
+- [ ] Shared screen states (Loading/Empty/PermissionRequired/SetupRequired/Unsupported/Offline/FriendlyError) + semantics helpers — plan Task 4
+- [ ] Risk + AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — plan Task 5
+
+## V5-2 Semantic UX
+- [ ] `ToolAvailability` model mapped from `ToolResolution`/`BlockedReason` — plan Task 6
+- [ ] `FriendlyError` + mapper + `strings_errors.xml` (error catalog strings) — plan Task 6
+- [ ] Progressive sanitized technical details on error surfaces
+
+## V5-3 Shell
+- [ ] Adaptive navigation (compact bottom bar / medium+expanded rail) — plan Task 7
+- [ ] Home bento hierarchy per `screens/10_HOME_TOOLS.md`
+- [ ] Tools search/filter with availability badges
+
+## V5-4 Features
+- [ ] Device Inspector migrated — plan Task 8
+- [ ] App Inspector migrated — plan Task 8
+- [ ] USB Lab migrated — plan Task 8
+- [ ] NFC Lab migrated — plan Task 8
+- [ ] Phone Doctor (progress/summary/result controls) — plan Task 9
+- [ ] Reports migrated — plan Task 9
+- [ ] Network/Bluetooth/Sensors migrated — plan Task 9
+
+## V5-5 Advanced/AI
+- [ ] Capability Center — plan Task 10
+- [ ] Permission Center — plan Task 10
+- [ ] AI insight surfaces + AI settings friendly states — plan Task 10
+- [ ] Settings grouped Material lists — plan Task 10
+
+## V5-6 QA
+- [ ] Dark + light
+- [ ] Compact / medium / expanded
+- [ ] Portrait + landscape
+- [ ] Large font/display scale
+- [ ] TalkBack critical flows
+- [ ] Keyboard/focus larger widths
+- [ ] Permission/setup/unsupported/error/offline states per screen
+- [ ] AI-disabled + AI-failure paths
+- [ ] Consistency screenshot review
+- [ ] Feature DoD line "UI follows the design system" ticked for migrated features
+
+---
+
 # Versioning Checklist
 
 Use Semantic Versioning:
