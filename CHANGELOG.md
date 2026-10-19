@@ -3,6 +3,25 @@
 ## [0.9.0-alpha.1] - Unreleased
 
 ### Added
+- Elevated capability providers (J18/J19/J20 groundwork): Shizuku provider
+  (live status, grant flow, `newProcess` exec), wireless ADB provider
+  (custom SPAKE2 pairing, TLS/plain sessions, RSA-2048 identity in
+  AndroidKeyStore, structured allow-listed actions), and a root `su`
+  executor — all routed through a shared `ElevatedOps`/`ELEVATED_SHELL`
+  abstraction so features never touch provider implementations
+- Elevated feature screens: AppOps viewer + mode controls, package
+  controls (disable/clear data/uninstall-for-user with high-impact
+  confirmation), and the ADB Lab (pair, connect, structured actions)
+- Lab depth: user-initiated 15s BLE scan (Bluetooth), TCP port
+  reachability probes (Network), display modes inventory (Display),
+  audio routing/device inventory (Audio), Camera2 capability inventory
+  (Camera), deep-link tester and elevated log viewer (Developer)
+- DroidKit Intelligence (J21 core): `core:ai` module — `AIProvider`
+  abstraction, Groq provider (OpenAI-compatible chat completions), BYOK
+  key encrypted under AndroidKeyStore AES/GCM, `PrivacyFilter` secret
+  redaction + context minimization, typed errors, enable toggle, model
+  selection, test-connection and disconnect in Settings → DroidKit
+  Intelligence, plus optional "Summarize with AI" on report detail
 - Developer Lab V1 subset (approved scope): intent launcher with curated
   system-destination list plus custom action/data/package intents with
   preview and honest failure states, and display metrics (resolution, dp

@@ -556,25 +556,29 @@ Examples:
 
 Suggested target: a post-v1 minor release such as `v1.5.0`, adjusted according to actual roadmap.
 
+Status: implementation complete and statically verified (`assembleDebug` +
+`testDebugUnitTest` green, plan `plans/2026-10-19-j18-shizuku.md`). Release
+items stay open — real-device grant flow and API matrix not yet run.
+
 ## Research
-- [ ] Re-check current Shizuku documentation
-- [ ] Define supported Android versions
-- [ ] Define Shizuku lifecycle/state model
-- [ ] Define permission flow
-- [ ] Define reconnect/error behavior
-- [ ] Define exact capabilities DroidKit will expose
+- [x] Re-check current Shizuku documentation
+- [x] Define supported Android versions
+- [x] Define Shizuku lifecycle/state model
+- [x] Define permission flow
+- [x] Define reconnect/error behavior
+- [x] Define exact capabilities DroidKit will expose
 
 ## Implementation
-- [ ] ShizukuProvider
-- [ ] Provider availability detection
-- [ ] Permission request
-- [ ] Capability registration
-- [ ] Read-only elevated proof-of-concept
-- [ ] AppOps inspection
-- [ ] Approved AppOps mutation
-- [ ] Advanced package controls
+- [x] ShizukuProvider
+- [x] Provider availability detection
+- [x] Permission request
+- [x] Capability registration
+- [x] Read-only elevated proof-of-concept
+- [x] AppOps inspection
+- [x] Approved AppOps mutation
+- [x] Advanced package controls
 - [ ] Advanced permission controls
-- [ ] Risk confirmations
+- [x] Risk confirmations
 - [ ] Audit/result history where useful
 
 Release:
@@ -589,25 +593,30 @@ Release:
 
 Suggested target: later `1.x`, for example `v1.7.0`, but do not lock the number until roadmap review.
 
+Status: implementation complete and statically verified. Custom SPAKE2 +
+TLS/plain protocol implementation (no third-party ADB library), RSA-2048
+identity in AndroidKeyStore, actions routed through `ElevatedOps` allow-list.
+Pairing/connect round-trips not yet run on hardware — release items open.
+
 ## Research
-- [ ] Select ADB protocol/library strategy
-- [ ] Review licensing
-- [ ] Define pairing flow
-- [ ] Define authentication/key storage
-- [ ] Define connection/session lifecycle
-- [ ] Define supported structured actions
-- [ ] Define threat/security model
+- [x] Select ADB protocol/library strategy
+- [x] Review licensing
+- [x] Define pairing flow
+- [x] Define authentication/key storage
+- [x] Define connection/session lifecycle
+- [x] Define supported structured actions
+- [x] Define threat/security model
 
 ## Implementation
-- [ ] Pairing UI
-- [ ] Secure key storage
-- [ ] Session manager
-- [ ] Capability provider
-- [ ] Structured command/action executor
-- [ ] Package actions
-- [ ] Device property actions
-- [ ] Authorized log tools
-- [ ] Reboot/system actions only where appropriate
+- [x] Pairing UI
+- [x] Secure key storage
+- [x] Session manager
+- [x] Capability provider
+- [x] Structured command/action executor
+- [x] Package actions
+- [x] Device property actions
+- [x] Authorized log tools
+- [x] Reboot/system actions only where appropriate
 - [ ] Terminal only if explicitly approved as product scope
 
 Release:
@@ -648,38 +657,45 @@ Before `v2.0.0`:
 
 Post-V1 add-on journey (`specs/ai_security_addon/` + `plans/2026-10-19-ai-security-addon.md` Part B). **Not part of the frozen V1 scope** — starts only after owner approval, likely as a minor post-v1 release.
 
+Status: AI-0/AI-1/AI-2 implemented in `core:ai` + Settings → DroidKit
+Intelligence (BYOK, AES/GCM key under AndroidKeyStore, `PrivacyFilter`
+redaction, typed errors, 20s timeout/fail-fast). Report Assistant (AI-3)
+ships as an optional "Summarize with AI" action on report detail.
+Statically verified only — no live key test, no structured actions (AI-4),
+no QA pass (AI-5). Core app remains fully functional with AI disabled.
+
 ## AI-0 Research
 - [ ] Verify current Groq API documentation (auth, endpoints, models, limits, terms)
-- [ ] Decide BYOK vs hosted-backend mode
-- [ ] Threat-model credentials and context
-- [ ] Define AIProvider contract
-- [ ] Define privacy UX
+- [x] Decide BYOK vs hosted-backend mode
+- [x] Threat-model credentials and context
+- [x] Define AIProvider contract
+- [x] Define privacy UX
 - [ ] Define structured output schemas
 
 ## AI-1 Core
-- [ ] AIProvider
-- [ ] GroqProvider
-- [ ] AIContextBuilder
-- [ ] PrivacyFilter
+- [x] AIProvider
+- [x] GroqProvider
+- [x] AIContextBuilder
+- [x] PrivacyFilter
 - [ ] PromptRegistry
-- [ ] Model/config registry
-- [ ] Typed errors
-- [ ] Timeout/retry policy
-- [ ] Secret redaction
+- [x] Model/config registry
+- [x] Typed errors
+- [x] Timeout/retry policy
+- [x] Secret redaction
 
 ## AI-2 Setup
-- [ ] AI settings screen
-- [ ] BYOK key entry
-- [ ] Reviewed runtime credential storage
-- [ ] Test connection
-- [ ] Clear/Disconnect
-- [ ] Offline/no-key states
+- [x] AI settings screen
+- [x] BYOK key entry
+- [x] Reviewed runtime credential storage
+- [x] Test connection
+- [x] Clear/Disconnect
+- [x] Offline/no-key states
 
 ## AI-3 Assistants
 - [ ] Device Explainer
 - [ ] Diagnostic Analyzer
 - [ ] Repair Assistant
-- [ ] Report Assistant
+- [x] Report Assistant
 - [ ] USB Assistant
 - [ ] NFC Assistant
 - [ ] App Inspector Assistant

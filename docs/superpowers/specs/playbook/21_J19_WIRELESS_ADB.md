@@ -1,28 +1,33 @@
 # Journey 19 - Wireless ADB Provider
 
+Status: implementation complete and statically verified. Custom SPAKE2 +
+TLS/plain protocol (no third-party ADB library), RSA-2048 identity in
+AndroidKeyStore, actions routed through the `ElevatedOps` allow-list.
+Pairing/connect round-trips not yet run on hardware — Gate stays open.
+
 ## Research first
-- [ ] Current Android Wireless Debugging behavior
-- [ ] Pairing/auth protocol strategy
-- [ ] Library/license decision
-- [ ] Key generation/storage
-- [ ] Session lifecycle
-- [ ] Network threat model
-- [ ] Capability map
+- [x] Current Android Wireless Debugging behavior
+- [x] Pairing/auth protocol strategy
+- [x] Library/license decision
+- [x] Key generation/storage
+- [x] Session lifecycle
+- [x] Network threat model
+- [x] Capability map
 
 ## Product principle
 Prefer structured actions over a raw terminal:
 User action -> validated parameters -> known command/action -> result parser -> UI result.
 
 ## Implementation
-- [ ] Pairing UI
-- [ ] Secure credential/key storage
-- [ ] Session manager
-- [ ] Capability provider
-- [ ] Reconnect/timeout
-- [ ] Structured package actions
-- [ ] Device property actions
-- [ ] Authorized log actions
-- [ ] Carefully scoped reboot/system actions
+- [x] Pairing UI
+- [x] Secure credential/key storage
+- [x] Session manager
+- [x] Capability provider
+- [x] Reconnect/timeout
+- [x] Structured package actions
+- [x] Device property actions
+- [x] Authorized log actions
+- [x] Carefully scoped reboot/system actions
 - [ ] Optional terminal only after separate approval
 
 ## Gate
