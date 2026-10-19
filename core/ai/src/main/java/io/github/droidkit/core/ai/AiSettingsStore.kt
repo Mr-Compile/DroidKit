@@ -106,11 +106,11 @@ class AiSettingsStore @Inject constructor(
     }
 
     companion object {
-        const val DEFAULT_MODEL = "llama-3.3-70b-versatile"
+        const val DEFAULT_MODEL = "openai/gpt-oss-120b"
         val MODEL_CHOICES = listOf(
-            "llama-3.3-70b-versatile",
-            "llama-3.1-8b-instant",
             "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b",
+            "qwen/qwen3.8-27b",
         )
         private const val KEYSTORE = "AndroidKeyStore"
         private const val KEY_ALIAS = "droidkit_ai_key"
