@@ -38,11 +38,30 @@ object BluetoothFeature : FeatureContribution {
             minSdk = 31,
             phase = ToolPhase.V2,
         ),
+        Tool(
+            id = "bluetooth.gatt",
+            title = "GATT Explorer",
+            description = "Connect to a discovered device and inspect services (read-only)",
+            category = ToolCategory.CONNECTIVITY,
+            route = ROUTE,
+            safetyLevel = SafetyLevel.MINOR,
+            requiredPermissions = listOf("android.permission.BLUETOOTH_CONNECT"),
+            requiredFeatures = setOf("android.hardware.bluetooth_le"),
+            minSdk = 31,
+            phase = ToolPhase.V2,
+        ),
     )
+
+    fun gattRoute(address: String) = "$ROUTE/gatt/$address"
 }
 
 fun NavGraphBuilder.bluetoothGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(BluetoothFeature.ROUTE) {
-        BluetoothScreen()
+        BluetoothScreen(
+            onOpenDevice = { address -> nav.navigate(BluetoothFeature.gattRoute(address)) },
+        )
+    }
+    composable("${BluetoothFeature.ROUTE}/gatt/{address}") {
+        GattExplorerScreen()
     }
 }

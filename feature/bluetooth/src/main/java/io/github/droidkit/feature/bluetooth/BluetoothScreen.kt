@@ -34,6 +34,7 @@ import io.github.droidkit.core.ui.components.EmptyState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BluetoothScreen(
+    onOpenDevice: (String) -> Unit = {},
     viewModel: BluetoothViewModel = hiltViewModel(),
 ) {
     val enabled by viewModel.enabled.collectAsState()
@@ -179,7 +180,15 @@ fun BluetoothScreen(
 
             if (scanning || scanResults.isNotEmpty()) {
                 items(scanResults, key = { it.address }) { device ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    Card(
+                        onClick = {
+                            if (hasPermission) {
+                                viewModel.stopScan()
+                                onOpenDevice(device.address)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 device.name ?: "Unnamed advertiser",
@@ -189,6 +198,12 @@ fun BluetoothScreen(
                                 "${device.address} · ${device.rssi} dBm",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                if (hasPermission) "Tap to inspect GATT services (read-only)"
+                                else "BLUETOOTH_CONNECT required to inspect services",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
