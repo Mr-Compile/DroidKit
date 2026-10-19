@@ -30,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -60,7 +62,10 @@ fun AppOpsScreen(
                 title = { Text(selected ?: "AppOps") },
                 navigationIcon = {
                     if (selected != null) {
-                        IconButton(onClick = viewModel::back) { Text("←") }
+                        IconButton(
+                            onClick = viewModel::back,
+                            modifier = Modifier.semantics { contentDescription = "Back" },
+                        ) { Text("←") }
                     }
                 },
             )

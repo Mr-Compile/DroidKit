@@ -17,9 +17,9 @@ Statuses: NOT STARTED / IN PROGRESS / BLOCKED / CODE COMPLETE / DEVICE VERIFIED 
 | DK-031 | V5 shared components | P2 | CODE COMPLETE | `StatusBadge`/`ResultBadge` (TestResultState→semantic kind, not color-only) in `components/StatusBadge.kt`; consolidated ad-hoc CircularProgressIndicator (Apps/AppOps) + hand-rolled result-color text (SessionReview) into shared components |
 | DK-032 | Semantic state components | P2 | CODE COMPLETE | `components/SemanticStates.kt` — LoadingState, OfflineState, UnsupportedState, SetupRequiredState, FriendlyErrorState (wraps UiProblemCard), DiagnosticProgress; permission-required covered by RuntimePermissionGate + UiProblemCard recovery |
 | DK-033 | Apply V5 to primary surfaces | P2 | IN PROGRESS | Applied: Apps/AppOps LoadingState, Diagnostics SessionReview ResultBadge, GuidedSession DiagnosticProgress; Dashboard/Reports/Sensors already on shared EmptyState/ToolCard/UiProblemCard; Tools+Settings surfaces owned by parallel in-flight work — adoption deferred to avoid clobbering |
-| DK-040 | Semantics pass | P1 | NOT STARTED | accessibility checks + TalkBack |
-| DK-041 | Interaction/layout accessibility | P1 | NOT STARTED | touch/focus/font/contrast verified |
-| DK-042 | Accessibility verification | P1 | NOT STARTED | automated + manual checklist |
+| DK-040 | Semantics pass | P1 | IN PROGRESS | heading() on SectionHeader+SemanticPanel; contentDescription on all icon/icon-button sites (grep-verified, zero unlabeled); non-interactive tags don't fake click semantics; InfoRow copy labeled; Tools/Settings/Permissions surfaces under parallel a11y work |
+| DK-041 | Interaction/layout accessibility | P1 | IN PROGRESS | Statically verified: status never color-only (ResultBadge/StatusBadge wording+tint); no custom sub-48dp hit areas; typography-scale text only. fontScale/display-size/contrast need device |
+| DK-042 | Accessibility verification | P1 | DEVICE GATE | `docs/04_audits/2026-10-20-accessibility-audit.md` — static audit done, TalkBack/fontScale/contrast/traversal checklist written, needs a physical device |
 | DK-050 | Phone Doctor catalog closure | P1 | NOT STARTED | every catalog entry classified/wired honestly |
 | DK-051 | Settings V1 completion | P3 | NOT STARTED | requirements-based settings matrix |
 | DK-052 | Dead code/dependency cleanup | P3 | NOT STARTED | build/test/lint after removals |

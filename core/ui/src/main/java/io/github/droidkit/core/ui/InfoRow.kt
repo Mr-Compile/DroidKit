@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -28,11 +30,14 @@ fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
         Text(shown, style = MaterialTheme.typography.bodyMedium)
         if (copyable && value != null) {
-            TextButton(onClick = {
-                scope.launch {
-                    clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, "$label: $value")))
-                }
-            }) {
+            TextButton(
+                onClick = {
+                    scope.launch {
+                        clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, "$label: $value")))
+                    }
+                },
+                modifier = Modifier.semantics { contentDescription = "Copy $label to clipboard" },
+            ) {
                 Text("Copy")
             }
         }

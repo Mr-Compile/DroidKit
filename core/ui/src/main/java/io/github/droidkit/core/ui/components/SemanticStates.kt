@@ -12,6 +12,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import io.github.droidkit.core.common.RecoveryAction
 import io.github.droidkit.core.common.UiProblem
 import io.github.droidkit.core.ui.theme.DroidKitSpacing
@@ -121,7 +123,12 @@ private fun SemanticPanel(
         modifier = modifier.fillMaxWidth().padding(DroidKitSpacing.Xxl),
         verticalArrangement = Arrangement.spacedBy(DroidKitSpacing.Sm),
     ) {
-        Text(title, style = MaterialTheme.typography.titleSmall, color = accent)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleSmall,
+            color = accent,
+            modifier = Modifier.semantics { heading() },
+        )
         Text(message, style = MaterialTheme.typography.bodyMedium)
         if (actionLabel != null && onAction != null) {
             TextButton(onClick = onAction) { Text(actionLabel) }
