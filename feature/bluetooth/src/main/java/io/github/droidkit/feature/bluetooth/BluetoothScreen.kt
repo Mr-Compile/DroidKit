@@ -22,7 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -37,11 +37,11 @@ fun BluetoothScreen(
     onOpenDevice: (String) -> Unit = {},
     viewModel: BluetoothViewModel = hiltViewModel(),
 ) {
-    val enabled by viewModel.enabled.collectAsState()
-    val permissionVersion by viewModel.permissionVersion.collectAsState()
-    val bonded by viewModel.bonded.collectAsState()
-    val scanning by viewModel.scanning.collectAsState()
-    val scanResults by viewModel.scanResults.collectAsState()
+    val enabled by viewModel.enabled.collectAsStateWithLifecycle()
+    val permissionVersion by viewModel.permissionVersion.collectAsStateWithLifecycle()
+    val bonded by viewModel.bonded.collectAsStateWithLifecycle()
+    val scanning by viewModel.scanning.collectAsStateWithLifecycle()
+    val scanResults by viewModel.scanResults.collectAsStateWithLifecycle()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),

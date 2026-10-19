@@ -17,7 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,12 +48,12 @@ fun DashboardScreen(
     onOpenInsights: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
-    val latestInsight by viewModel.latestInsight.collectAsState(initial = null)
-    val recents by viewModel.recentToolIds.collectAsState(initial = emptyList())
+    val latestInsight by viewModel.latestInsight.collectAsStateWithLifecycle(initialValue = null)
+    val recents by viewModel.recentToolIds.collectAsStateWithLifecycle(initialValue = emptyList())
     val recentTools = recents.mapNotNull { viewModel.toolById(it) }
-    val favorites by viewModel.favoriteToolIds.collectAsState(initial = emptySet())
+    val favorites by viewModel.favoriteToolIds.collectAsStateWithLifecycle(initialValue = emptySet())
     val pinnedTools = viewModel.pinned(favorites)
-    val providerStatuses by viewModel.providerStatuses.collectAsState()
+    val providerStatuses by viewModel.providerStatuses.collectAsStateWithLifecycle()
     // Recomputed when provider status changes — drives the "Ready now" section.
     val quickTools = remember(providerStatuses) { viewModel.quickTools() }
     var infoTool by remember { mutableStateOf<Tool?>(null) }

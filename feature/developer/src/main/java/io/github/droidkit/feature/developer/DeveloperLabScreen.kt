@@ -32,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.components.SectionHeader
 
@@ -61,8 +61,8 @@ fun DeveloperLabScreen(
     viewModel: DeveloperViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val activeProvider by viewModel.activeProvider.collectAsState()
-    val logState by viewModel.logState.collectAsState()
+    val activeProvider by viewModel.activeProvider.collectAsStateWithLifecycle()
+    val logState by viewModel.logState.collectAsStateWithLifecycle()
     var launchError by remember { mutableStateOf<String?>(null) }
     var customAction by remember { mutableStateOf("") }
     var customData by remember { mutableStateOf("") }

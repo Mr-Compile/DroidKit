@@ -23,7 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,8 +43,8 @@ fun NfcWriteScreen(
     viewModel: NfcViewModel = hiltViewModel(),
 ) {
     val activity = LocalContext.current as? Activity
-    val armed by viewModel.armed.collectAsState()
-    val actionResult by viewModel.actionResult.collectAsState()
+    val armed by viewModel.armed.collectAsStateWithLifecycle()
+    val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
     var kind by remember { mutableStateOf(RecordKind.TEXT) }
     var input by remember { mutableStateOf("") }
     var confirmWrite by remember { mutableStateOf(false) }

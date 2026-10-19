@@ -18,7 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,7 +38,7 @@ fun SessionReviewScreen(
     onSaved: () -> Unit,
     viewModel: DiagnosticsViewModel,
 ) {
-    val engineState by viewModel.engine.state.collectAsState()
+    val engineState by viewModel.engine.state.collectAsStateWithLifecycle()
     var notes by rememberSaveable { mutableStateOf("") }
 
     val retryable = engineState.results

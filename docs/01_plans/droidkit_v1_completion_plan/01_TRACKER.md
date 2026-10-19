@@ -29,7 +29,7 @@ Statuses: NOT STARTED / IN PROGRESS / BLOCKED / CODE COMPLETE / DEVICE VERIFIED 
 | DK-062 | Root real-device gate | P0 | BLOCKED — NO DEVICE | needs rooted device specifically; runbook 1.6 + matrix ready |
 | DK-070 | API-level compatibility matrix | P1 | MATRIX READY | API 28–36 matrix template added to runbook §7 — fills on device(s) |
 | DK-071 | OEM compatibility matrix | P1 | MATRIX READY | OEM findings table added to runbook §7 — fills per device |
-| DK-072 | Performance/lifecycle hardening | P2 | NOT STARTED | profiling needs device/emulator — could partially run on emulator if enabled |
+| DK-072 | Performance/lifecycle hardening | P2 | STATIC COMPLETE | 23 screens migrated collectAsState→collectAsStateWithLifecycle (collection now pauses in background); sensor listeners verified unregistering in DisposableEffect; 5 parallel-owned files left for their session; profiling/startup-metrics still need a device |
 | DK-073 | Security/privacy review | P1 | STATIC COMPLETE | `docs/04_audits/2026-10-20-security-privacy-review.md` — secrets scan clean, manifest/components audited, allowBackup disabled, BYOK Keystore-GCM verified, provider/AI privacy confirmed; open items are device-side |
 | DK-080 | Release build/R8 config | P0 | CODE COMPLETE | release buildType: minify+shrinkResources+proguard-rules.pro; `assembleRelease` green end-to-end → app-release.apk 5.68MB (vs 75MB debug); apksigner v2 verified; runtime verification needs device |
 | DK-081 | Secure signing strategy | P0 | CODE COMPLETE | env-driven signingConfig (DROIDKIT_KEYSTORE/_PASSWORD/_ALIAS) — nothing committed; falls back to debug signing so CI artifacts stay installable; CI reads secrets.* only; custody remains with owner |

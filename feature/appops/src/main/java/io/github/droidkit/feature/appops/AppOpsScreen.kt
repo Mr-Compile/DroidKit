@@ -23,7 +23,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,15 +45,15 @@ fun AppOpsScreen(
     onOpenAdb: () -> Unit,
     viewModel: AppOpsViewModel = hiltViewModel(),
 ) {
-    val provider by viewModel.provider.collectAsState()
-    val identity by viewModel.identity.collectAsState()
-    val packages by viewModel.packages.collectAsState()
-    val selected by viewModel.selected.collectAsState()
-    val ops by viewModel.ops.collectAsState()
-    val busy by viewModel.busy.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val lastAction by viewModel.lastAction.collectAsState()
-    val query by viewModel.query.collectAsState()
+    val provider by viewModel.provider.collectAsStateWithLifecycle()
+    val identity by viewModel.identity.collectAsStateWithLifecycle()
+    val packages by viewModel.packages.collectAsStateWithLifecycle()
+    val selected by viewModel.selected.collectAsStateWithLifecycle()
+    val ops by viewModel.ops.collectAsStateWithLifecycle()
+    val busy by viewModel.busy.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+    val lastAction by viewModel.lastAction.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
     var pending by remember { mutableStateOf<Triple<String, String, AppOpMode>?>(null) }
 
     Scaffold(

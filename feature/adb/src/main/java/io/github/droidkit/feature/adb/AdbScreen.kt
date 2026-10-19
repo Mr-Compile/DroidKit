@@ -25,7 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,19 +41,19 @@ import io.github.droidkit.core.ui.SectionCard
 fun AdbScreen(
     viewModel: AdbViewModel = hiltViewModel(),
 ) {
-    val session by viewModel.session.collectAsState()
-    val busy by viewModel.busy.collectAsState()
-    val events by viewModel.events.collectAsState()
-    val props by viewModel.props.collectAsState()
-    val log by viewModel.log.collectAsState()
+    val session by viewModel.session.collectAsStateWithLifecycle()
+    val busy by viewModel.busy.collectAsStateWithLifecycle()
+    val events by viewModel.events.collectAsStateWithLifecycle()
+    val props by viewModel.props.collectAsStateWithLifecycle()
+    val log by viewModel.log.collectAsStateWithLifecycle()
 
-    val pairingHost by viewModel.pairingHost.collectAsState()
-    val pairingPort by viewModel.pairingPort.collectAsState()
-    val pairingCode by viewModel.pairingCode.collectAsState()
-    val connectHost by viewModel.connectHost.collectAsState()
-    val connectPort by viewModel.connectPort.collectAsState()
-    val logLines by viewModel.logLines.collectAsState()
-    val useTls by viewModel.useTls.collectAsState()
+    val pairingHost by viewModel.pairingHost.collectAsStateWithLifecycle()
+    val pairingPort by viewModel.pairingPort.collectAsStateWithLifecycle()
+    val pairingCode by viewModel.pairingCode.collectAsStateWithLifecycle()
+    val connectHost by viewModel.connectHost.collectAsStateWithLifecycle()
+    val connectPort by viewModel.connectPort.collectAsStateWithLifecycle()
+    val logLines by viewModel.logLines.collectAsStateWithLifecycle()
+    val useTls by viewModel.useTls.collectAsStateWithLifecycle()
 
     var confirmReboot by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }

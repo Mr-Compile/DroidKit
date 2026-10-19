@@ -19,7 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,10 +33,10 @@ fun AppsScreen(
     onOpenDetail: (String) -> Unit,
     viewModel: AppsViewModel = hiltViewModel(),
 ) {
-    val apps by viewModel.packages.collectAsState()
-    val loading by viewModel.loading.collectAsState()
-    val query by viewModel.query.collectAsState()
-    val filter by viewModel.filter.collectAsState()
+    val apps by viewModel.packages.collectAsStateWithLifecycle()
+    val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val filter by viewModel.filter.collectAsStateWithLifecycle()
 
     Scaffold(topBar = { TopAppBar(title = { Text("App Inspector") }) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {

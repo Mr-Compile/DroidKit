@@ -19,7 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -93,8 +93,8 @@ class SessionCompareViewModel @Inject constructor(
 fun SessionCompareScreen(
     viewModel: SessionCompareViewModel = hiltViewModel(),
 ) {
-    val sessions by viewModel.sessions.collectAsState()
-    val result by viewModel.result.collectAsState()
+    val sessions by viewModel.sessions.collectAsStateWithLifecycle()
+    val result by viewModel.result.collectAsStateWithLifecycle()
     var beforeId by remember { mutableStateOf<String?>(null) }
     var afterId by remember { mutableStateOf<String?>(null) }
 

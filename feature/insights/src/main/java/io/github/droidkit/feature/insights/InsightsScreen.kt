@@ -20,7 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,8 +42,8 @@ fun InsightsScreen(
     onStartDiagnostic: () -> Unit,
     viewModel: InsightsViewModel = hiltViewModel(),
 ) {
-    val health by viewModel.health.collectAsState()
-    val activity by viewModel.activity.collectAsState()
+    val health by viewModel.health.collectAsStateWithLifecycle()
+    val activity by viewModel.activity.collectAsStateWithLifecycle()
 
     Scaffold(topBar = { TopAppBar(title = { Text("Insights") }) }) { padding ->
         LazyColumn(

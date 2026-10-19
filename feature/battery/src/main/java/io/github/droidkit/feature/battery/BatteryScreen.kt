@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +28,7 @@ import io.github.droidkit.core.ui.SectionCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BatteryScreen(viewModel: BatteryViewModel = hiltViewModel()) {
-    val status by viewModel.status.collectAsState()
+    val status by viewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 

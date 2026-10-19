@@ -24,7 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,11 +43,11 @@ fun PackagesScreen(
     onOpenAdb: () -> Unit,
     viewModel: PackagesViewModel = hiltViewModel(),
 ) {
-    val elevated by viewModel.elevated.collectAsState()
-    val packages by viewModel.packages.collectAsState()
-    val query by viewModel.query.collectAsState()
-    val busy by viewModel.busy.collectAsState()
-    val events by viewModel.events.collectAsState()
+    val elevated by viewModel.elevated.collectAsStateWithLifecycle()
+    val packages by viewModel.packages.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val busy by viewModel.busy.collectAsStateWithLifecycle()
+    val events by viewModel.events.collectAsStateWithLifecycle()
 
     var pending by remember { mutableStateOf<Pair<PackagesViewModel.Action, String>?>(null) }
     var permTarget by remember { mutableStateOf<String?>(null) }
@@ -230,7 +230,7 @@ fun PackagesScreen(
 
     // Runtime permission sheet — grant/revoke goes through the elevated provider.
     permTarget?.let { pkg ->
-        val perms by viewModel.perms.collectAsState()
+        val perms by viewModel.perms.collectAsStateWithLifecycle()
         AlertDialog(
             onDismissRequest = {
                 permTarget = null

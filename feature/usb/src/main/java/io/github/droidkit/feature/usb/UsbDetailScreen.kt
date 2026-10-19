@@ -18,7 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,9 +40,9 @@ fun UsbDetailScreen(
     deviceName: String,
     viewModel: UsbViewModel,
 ) {
-    val devices by viewModel.devices.collectAsState()
-    val permissionVersion by viewModel.permissionVersion.collectAsState()
-    val permissionPending by viewModel.permissionPending.collectAsState()
+    val devices by viewModel.devices.collectAsStateWithLifecycle()
+    val permissionVersion by viewModel.permissionVersion.collectAsStateWithLifecycle()
+    val permissionPending by viewModel.permissionPending.collectAsStateWithLifecycle()
     val device = devices.firstOrNull { it.deviceName == deviceName }
     val context = LocalContext.current
     val clipboard = LocalClipboard.current

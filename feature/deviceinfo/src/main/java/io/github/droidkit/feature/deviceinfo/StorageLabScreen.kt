@@ -19,7 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,9 +40,9 @@ import java.util.Date
 fun StorageLabScreen(
     viewModel: StorageLabViewModel = hiltViewModel(),
 ) {
-    val live by viewModel.live.collectAsState()
-    val snapshots by viewModel.snapshots.collectAsState()
-    val diff by viewModel.diff.collectAsState()
+    val live by viewModel.live.collectAsStateWithLifecycle()
+    val snapshots by viewModel.snapshots.collectAsStateWithLifecycle()
+    val diff by viewModel.diff.collectAsStateWithLifecycle()
     var beforeId by remember { mutableStateOf<String?>(null) }
     var afterId by remember { mutableStateOf<String?>(null) }
 

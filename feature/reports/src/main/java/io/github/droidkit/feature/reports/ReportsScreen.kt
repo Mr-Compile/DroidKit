@@ -21,7 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,8 +40,8 @@ fun ReportsScreen(
     onCompare: () -> Unit,
     viewModel: ReportsViewModel = hiltViewModel(),
 ) {
-    val rows by viewModel.rows.collectAsState()
-    val filter by viewModel.statusFilter.collectAsState()
+    val rows by viewModel.rows.collectAsStateWithLifecycle()
+    val filter by viewModel.statusFilter.collectAsStateWithLifecycle()
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
 

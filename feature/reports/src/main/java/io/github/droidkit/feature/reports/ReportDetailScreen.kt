@@ -24,7 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -190,7 +190,7 @@ fun ReportDetailScreen(
 
             item { SectionHeader("AI summary") }
             item {
-                val aiState by viewModel.aiSummary.collectAsState()
+                val aiState by viewModel.aiSummary.collectAsStateWithLifecycle()
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         when (val s = aiState) {

@@ -12,7 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 
@@ -22,8 +22,8 @@ fun GuidedSessionScreen(
     onFinished: () -> Unit,
     viewModel: DiagnosticsViewModel,
 ) {
-    val sessionId by viewModel.activeSessionId.collectAsState()
-    val engineState by viewModel.engine.state.collectAsState()
+    val sessionId by viewModel.activeSessionId.collectAsStateWithLifecycle()
+    val engineState by viewModel.engine.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         if (sessionId == null) viewModel.startGuided()

@@ -24,7 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +45,7 @@ fun DiagnosticsScreen(
     onOpenReports: () -> Unit,
     viewModel: DiagnosticsViewModel = hiltViewModel(),
 ) {
-    val sessions by viewModel.sessions.collectAsState()
+    val sessions by viewModel.sessions.collectAsStateWithLifecycle()
     var preset by remember { mutableStateOf(DiagnosticPreset.FULL) }
     var showIntake by remember { mutableStateOf(false) }
 

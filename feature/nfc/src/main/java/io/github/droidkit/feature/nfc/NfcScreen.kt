@@ -21,7 +21,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +47,12 @@ fun NfcScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
-    val adapterEnabled by viewModel.adapterEnabled.collectAsState()
-    val scanning by viewModel.scanning.collectAsState()
-    val tag by viewModel.tag.collectAsState()
-    val armed by viewModel.armed.collectAsState()
-    val actionResult by viewModel.actionResult.collectAsState()
-    val history by viewModel.history.collectAsState()
+    val adapterEnabled by viewModel.adapterEnabled.collectAsStateWithLifecycle()
+    val scanning by viewModel.scanning.collectAsStateWithLifecycle()
+    val tag by viewModel.tag.collectAsStateWithLifecycle()
+    val armed by viewModel.armed.collectAsStateWithLifecycle()
+    val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
     var confirmErase by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(Unit) {

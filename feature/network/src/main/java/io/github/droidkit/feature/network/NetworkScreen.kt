@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,11 +39,11 @@ import io.github.droidkit.feature.network.NetworkViewModel.ToolState
 fun NetworkScreen(
     viewModel: NetworkViewModel = hiltViewModel(),
 ) {
-    val snapshot by viewModel.snapshot.collectAsState()
-    val layers by viewModel.layers.collectAsState()
-    val ping by viewModel.ping.collectAsState()
-    val dns by viewModel.dns.collectAsState()
-    val ports by viewModel.ports.collectAsState()
+    val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
+    val layers by viewModel.layers.collectAsStateWithLifecycle()
+    val ping by viewModel.ping.collectAsStateWithLifecycle()
+    val dns by viewModel.dns.collectAsStateWithLifecycle()
+    val ports by viewModel.ports.collectAsStateWithLifecycle()
     var pingHost by remember { mutableStateOf("") }
     var dnsHost by remember { mutableStateOf("") }
     var portHost by remember { mutableStateOf("") }
@@ -228,7 +228,7 @@ fun NetworkScreen(
             }
 
             item {
-                val nsd by viewModel.nsdState.collectAsState()
+                val nsd by viewModel.nsdState.collectAsStateWithLifecycle()
                 var serviceType by remember { mutableStateOf("_ipp._tcp") }
                 var resolved by remember { mutableStateOf<NetworkViewModel.NsdFound?>(null) }
                 SectionCard(title = "Local service discovery") {
