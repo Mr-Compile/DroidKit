@@ -280,23 +280,33 @@ fun ReportDetailScreen(
                         onClick = { format = "PDF" },
                         label = { Text("PDF (.pdf)") },
                     )
+                    FilterChip(
+                        selected = format == "CERT",
+                        onClick = { format = "CERT" },
+                        label = { Text("Certificate") },
+                    )
                 }
                 Button(
                     onClick = {
                         scope.launch {
-                            val file = if (format == "PDF") {
-                                ReportExporter.exportPdf(context, sessionId, report)
+                            val text = if (format == "CERT") {
+                                ReportBuilder.buildCertificate(d.session, d.snapshot, d.results)
                             } else {
-                                ReportExporter.exportText(context, sessionId, report)
+                                report
+                            }
+                            val file = if (format == "TEXT") {
+                                ReportExporter.exportText(context, sessionId, text)
+                            } else {
+                                ReportExporter.exportPdf(context, sessionId, text)
                             }
                             viewModel.recordSavedReport(sessionId, format, file.absolutePath)
-                            shareFile(context, file, format)
+                            shareFile(context, file, if (format == "TEXT") "TEXT" else "PDF")
                             showExport = false
                         }
                     },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 24.dp),
                 ) {
-                    Text("Share $format report")
+                    Text("Share ${if (format == "CERT") "certificate" else "$format report"}")
                 }
             }
         }

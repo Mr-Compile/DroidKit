@@ -108,6 +108,85 @@ object ReportBuilder {
         appendLine(DISCLAIMER)
     }
 
+    /**
+     * Formal inspection certificate — the technician-facing document for
+     * used-phone sales and repair handover. Presents the same data as the
+     * diagnostic report in a certificate layout; still honest about limits.
+     */
+    fun buildCertificate(
+        session: DiagnosticSessionEntity,
+        snapshot: DeviceSnapshotEntity?,
+        results: List<DiagnosticResultEntity>,
+    ): String = buildString {
+        val df = DateFormat.getDateTimeInstance()
+        appendLine("DroidKit Device Inspection Certificate")
+        appendLine("======================================")
+        appendLine()
+        appendLine("Certificate ID: ${session.id}")
+        appendLine("Issued: ${df.format(Date(session.startedAtEpochMs))}")
+        session.technicianName?.takeIf { it.isNotBlank() }?.let { appendLine("Technician: $it") }
+        session.customerLabel?.takeIf { it.isNotBlank() }?.let { appendLine("Customer / ticket: $it") }
+        session.deviceLabel?.takeIf { it.isNotBlank() }?.let { appendLine("Device label: $it") }
+        appendLine("Inspection preset: ${session.preset.replace('_', ' ')}")
+        appendLine()
+
+        appendLine("Device")
+        appendLine("------")
+        if (snapshot == null) {
+            appendLine("No device snapshot captured.")
+        } else {
+            appendLine("${snapshot.manufacturer} ${snapshot.model} · " +
+                "Android ${snapshot.androidRelease} (API ${snapshot.apiLevel})" +
+                (snapshot.securityPatch?.let { ", patch $it" } ?: ""))
+            appendLine("RAM ${snapshot.totalRamMb} MB · " +
+                "Storage ${snapshot.storageFreeBytes / (1024 * 1024)} MB free of " +
+                "${snapshot.storageTotalBytes / (1024 * 1024)} MB")
+        }
+        appendLine()
+
+        appendLine("Inspection checklist")
+        appendLine("--------------------")
+        if (results.isEmpty()) {
+            appendLine("No inspection results recorded.")
+        } else {
+            val counts = results.groupingBy { it.state }.eachCount()
+            appendLine(
+                "Tally: " + counts.entries.joinToString(" · ") {
+                    "${it.key.replace('_', ' ')}: ${it.value}"
+                },
+            )
+            appendLine()
+            results.groupBy { it.category }.forEach { (category, rows) ->
+                appendLine("[$category]")
+                rows.forEach { r ->
+                    appendLine("  ${r.testId}: ${r.state.replace('_', ' ')}")
+                }
+            }
+        }
+        appendLine()
+
+        session.notes?.takeIf { it.isNotBlank() }?.let {
+            appendLine("Technician notes")
+            appendLine("----------------")
+            appendLine(it)
+            appendLine()
+        }
+
+        appendLine("Signature")
+        appendLine("---------")
+        appendLine(session.technicianName?.takeIf { it.isNotBlank() } ?: "(unsigned)")
+        appendLine()
+        appendLine("Certificate notice")
+        appendLine("------------------")
+        appendLine(
+            "This certificate records the observable results of a DroidKit " +
+                "inspection at the stated date. It is not a guarantee of device " +
+                "condition: manual checks reflect the technician's judgment, and " +
+                "NOT SUPPORTED entries mean the hardware or value was not exposed " +
+                "to Android — not that it failed.",
+        )
+    }
+
     /** One-line summary for clipboard/share previews. */
     fun buildSummary(
         session: DiagnosticSessionEntity,
