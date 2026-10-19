@@ -32,20 +32,19 @@ fun PhoneDoctorTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
 ) {
-    when {
-        test.id.startsWith("display.") -> DisplayColorScreen(test, onResult)
-        test.id == "touch.grid" -> TouchGridScreen(test, onResult)
-        test.id == "touch.multitouch" -> MultitouchScreen(test, onResult)
-        test.id == "haptics.vibration" -> VibrationScreen(test, onResult)
-        test.id == "audio.speaker" -> SpeakerTestScreen(test, onResult)
-        test.id == "audio.microphone" -> MicrophoneTestScreen(test, onResult)
-        test.id.startsWith("camera.") && test.id != "camera.flash" ->
-            CameraTestScreen(test, onResult)
-        test.id == "camera.flash" -> FlashTestScreen(test, onResult)
-        test.capabilityKey != null -> ConnectivityCheckScreen(test, onResult)
-        test.id == "power.charging" -> ChargingCheckScreen(test, onResult)
-        test.sensorType != null -> SensorTestScreen(test, onResult)
-        else -> UnsupportedTestPlaceholder(test)
+    when (routeFor(test)) {
+        PhoneDoctorRoute.DisplayColor -> DisplayColorScreen(test, onResult)
+        PhoneDoctorRoute.TouchGrid -> TouchGridScreen(test, onResult)
+        PhoneDoctorRoute.Multitouch -> MultitouchScreen(test, onResult)
+        PhoneDoctorRoute.Vibration -> VibrationScreen(test, onResult)
+        PhoneDoctorRoute.Speaker -> SpeakerTestScreen(test, onResult)
+        PhoneDoctorRoute.Microphone -> MicrophoneTestScreen(test, onResult)
+        PhoneDoctorRoute.CameraPreview -> CameraTestScreen(test, onResult)
+        PhoneDoctorRoute.Flash -> FlashTestScreen(test, onResult)
+        PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult)
+        PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult)
+        PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult)
+        PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test)
     }
 }
 

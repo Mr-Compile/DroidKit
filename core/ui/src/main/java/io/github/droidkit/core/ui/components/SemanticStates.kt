@@ -12,10 +12,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import io.github.droidkit.core.common.RecoveryAction
 import io.github.droidkit.core.common.UiProblem
+import io.github.droidkit.core.ui.R
 import io.github.droidkit.core.ui.theme.DroidKitSpacing
 import io.github.droidkit.core.ui.theme.DroidKitStatusColors
 
@@ -42,10 +44,10 @@ fun LoadingState(modifier: Modifier = Modifier, label: String? = null) {
 @Composable
 fun OfflineState(modifier: Modifier = Modifier, onRetry: (() -> Unit)? = null) {
     SemanticPanel(
-        title = "You're offline",
-        message = "This needs a network connection. Reconnect and try again.",
+        title = stringResource(R.string.dk_state_offline_title),
+        message = stringResource(R.string.dk_state_offline_message),
         accent = DroidKitStatusColors.Info,
-        actionLabel = if (onRetry != null) "Retry" else null,
+        actionLabel = if (onRetry != null) stringResource(R.string.dk_state_offline_retry) else null,
         onAction = onRetry,
         modifier = modifier,
     )
@@ -56,7 +58,7 @@ fun OfflineState(modifier: Modifier = Modifier, onRetry: (() -> Unit)? = null) {
 fun UnsupportedState(title: String, modifier: Modifier = Modifier, detail: String? = null) {
     SemanticPanel(
         title = title,
-        message = detail ?: "This device doesn't support it.",
+        message = detail ?: stringResource(R.string.dk_state_unsupported_fallback),
         accent = DroidKitStatusColors.Unsupported,
         modifier = modifier,
     )
@@ -73,7 +75,7 @@ fun SetupRequiredState(
 ) {
     SemanticPanel(
         title = title,
-        message = instructions ?: "Setup is required before this can run.",
+        message = instructions ?: stringResource(R.string.dk_state_setup_fallback),
         accent = DroidKitStatusColors.SetupRequired,
         actionLabel = actionLabel,
         onAction = onAction,

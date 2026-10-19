@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Recovery action labels (UiProblemCard) -->
+    <string name="dk_recovery_retry">Retry</string>
+    <string name="dk_recovery_dismiss">Dismiss</string>
+    <string name="dk_recovery_open_app_settings">Open app settings</string>
+    <string name="dk_recovery_set_up_access">Set up access</string>
+    <string name="dk_recovery_grant_permission">Grant permission</string>
+    <string name="dk_recovery_open">Open</string>
+
+    <!-- UiProblemCard -->
+    <string name="dk_problem_show_details">Technical details</string>
+    <string name="dk_problem_hide_details">Hide technical details</string>
+
+    <!-- Semantic states -->
+    <string name="dk_state_offline_title">You\'re offline</string>
+    <string name="dk_state_offline_message">This needs a network connection. Reconnect and try again.</string>
+    <string name="dk_state_offline_retry">Retry</string>
+    <string name="dk_state_unsupported_fallback">This device doesn\'t support it.</string>
+    <string name="dk_state_setup_fallback">Setup is required before this can run.</string>
+
+    <!-- InfoRow -->
+    <string name="dk_copy">Copy</string>
+    <string name="dk_copy_to_clipboard">Copy %1$s to clipboard</string>
+    <string name="dk_not_exposed">Not exposed</string>
+</resources>

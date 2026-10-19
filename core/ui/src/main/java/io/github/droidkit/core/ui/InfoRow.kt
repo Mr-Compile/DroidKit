@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -22,7 +23,8 @@ import kotlinx.coroutines.launch
 fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    val shown = value ?: "Not exposed"
+    val shown = value ?: stringResource(R.string.dk_not_exposed)
+    val copyDescription = stringResource(R.string.dk_copy_to_clipboard, label)
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -36,9 +38,9 @@ fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
                         clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, "$label: $value")))
                     }
                 },
-                modifier = Modifier.semantics { contentDescription = "Copy $label to clipboard" },
+                modifier = Modifier.semantics { contentDescription = copyDescription },
             ) {
-                Text("Copy")
+                Text(stringResource(R.string.dk_copy))
             }
         }
     }

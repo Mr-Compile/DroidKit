@@ -50,13 +50,3 @@ fun BlockedReason.describe(): String = when (this) {
     }
 }
 
-@Composable
-fun BlockedReasonList(reasons: List<BlockedReason>) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Why this is blocked", style = MaterialTheme.typography.titleSmall)
-        reasons.forEach { reason ->
-            Text("• ${reason.describe()}", style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 4.dp))
-        }
-    }
-}

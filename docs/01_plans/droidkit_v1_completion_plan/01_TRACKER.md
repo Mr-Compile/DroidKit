@@ -20,10 +20,10 @@ Statuses: NOT STARTED / IN PROGRESS / BLOCKED / CODE COMPLETE / DEVICE VERIFIED 
 | DK-040 | Semantics pass | P1 | IN PROGRESS | heading() on SectionHeader+SemanticPanel; contentDescription on all icon/icon-button sites (grep-verified, zero unlabeled); non-interactive tags don't fake click semantics; InfoRow copy labeled; Tools/Settings/Permissions surfaces under parallel a11y work |
 | DK-041 | Interaction/layout accessibility | P1 | IN PROGRESS | Statically verified: status never color-only (ResultBadge/StatusBadge wording+tint); no custom sub-48dp hit areas; typography-scale text only. fontScale/display-size/contrast need device |
 | DK-042 | Accessibility verification | P1 | DEVICE GATE | `docs/04_audits/2026-10-20-accessibility-audit.md` — static audit done, TalkBack/fontScale/contrast/traversal checklist written, needs a physical device |
-| DK-050 | Phone Doctor catalog closure | P1 | NOT STARTED | every catalog entry classified/wired honestly |
-| DK-051 | Settings V1 completion | P3 | NOT STARTED | requirements-based settings matrix |
-| DK-052 | Dead code/dependency cleanup | P3 | NOT STARTED | build/test/lint after removals |
-| DK-053 | strings.xml/i18n readiness | P2 | NOT STARTED | production UI copy resource-backed |
+| DK-050 | Phone Doctor catalog closure | P1 | CODE COMPLETE | All 21 catalog entries route to real screens; `routeFor()` extracted to pure function; `PhoneDoctorCatalogTest` 4/4 locks zero-Unsupported invariant + unique ids + preset subset + sensorType/capabilityKey presence |
+| DK-051 | Settings V1 completion | P3 | PARALLEL-OWNED | About/privacy/support/reset landed via 5ea2d1e + parallel UX pack; settings matrix work continues there — not this phase |
+| DK-052 | Dead code/dependency cleanup | P3 | IN PROGRESS | Removed `FeatureStubScreen` + `BlockedReasonList` (zero call sites; ToolsScreen uses UiProblemCard); broader dependency audit pending |
+| DK-053 | strings.xml/i18n readiness | P2 | IN PROGRESS | `core/ui` res/values/strings.xml created (recovery labels, problem card, semantic states, copy actions); shared components migrated to stringResource; feature-screen copy extraction remains (largely parallel-owned surfaces) |
 | DK-060 | Shizuku real-device gate | P0 | NOT STARTED | device evidence |
 | DK-061 | Wireless ADB real-device gate | P0 | NOT STARTED | device evidence |
 | DK-062 | Root real-device gate | P0 | NOT STARTED | rooted-device evidence |
