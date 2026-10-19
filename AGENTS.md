@@ -70,6 +70,9 @@ Never claim tests passed unless they were actually executed.
 Never mark checklist items complete based only on scaffolding.
 DoD: `playbook/27`. Audit templates: `playbook/26`.
 
+## UI mockup
+- `mockups/index.html` is the living UI mockup of the app. Any UI/UX change — new or modified screens, navigation, components, states, or theming — must update it in the same commit so the mockup stays synchronized with the implementation.
+
 ## AI and secrets
 - Features depend on `core:ai`'s `AIProvider`/`AiUseCase`, never on the Groq client directly; AI stays optional and core diagnostics must work with AI disabled, offline, or with no key.
 - Every outbound AI context passes through `AiContextBuilder`/`PrivacyFilter` (secret redaction + minimization) — never send raw logs, whole entities, or unfiltered tool output.
