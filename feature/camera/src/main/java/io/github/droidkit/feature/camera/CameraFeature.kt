@@ -6,8 +6,8 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
-import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
+import io.github.droidkit.core.ui.LabEntry
+import io.github.droidkit.core.ui.LabIndexScreen
 
 object CameraFeature : FeatureContribution {
     const val ROUTE = "camera"
@@ -33,13 +33,33 @@ object CameraFeature : FeatureContribution {
     )
 }
 
-fun NavGraphBuilder.cameraGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
+fun NavGraphBuilder.cameraGraph(nav: NavHostController) {
     composable(CameraFeature.ROUTE) {
-        FeatureStubScreen(
+        LabIndexScreen(
             title = "Camera & Flash",
-            subtitle = "Camera and flash tests ship in Phase 3 (Phone Doctor).",
-            tools = CameraFeature.tools,
-            resolve = resolve,
+            subtitle = "Standalone camera checks from Phone Doctor. " +
+                "Results here are not saved — run Full Diagnostic to persist them.",
+            entries = listOf(
+                LabEntry(
+                    testId = "camera.front",
+                    title = "Front camera",
+                    blurb = "Confirm the front preview renders a live image. " +
+                        "Needs camera permission.",
+                ),
+                LabEntry(
+                    testId = "camera.rear",
+                    title = "Rear camera",
+                    blurb = "Confirm the rear preview renders a live image. " +
+                        "Needs camera permission.",
+                ),
+                LabEntry(
+                    testId = "camera.flash",
+                    title = "Flash",
+                    blurb = "Toggle the torch and confirm the LED lights. " +
+                        "Needs camera permission.",
+                ),
+            ),
+            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
         )
     }
 }

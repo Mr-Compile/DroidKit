@@ -6,8 +6,8 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
-import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
+import io.github.droidkit.core.ui.LabEntry
+import io.github.droidkit.core.ui.LabIndexScreen
 
 object AudioFeature : FeatureContribution {
     const val ROUTE = "audio"
@@ -39,13 +39,31 @@ object AudioFeature : FeatureContribution {
     )
 }
 
-fun NavGraphBuilder.audioGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
+fun NavGraphBuilder.audioGraph(nav: NavHostController) {
     composable(AudioFeature.ROUTE) {
-        FeatureStubScreen(
+        LabIndexScreen(
             title = "Audio & Haptics",
-            subtitle = "Speaker, microphone and vibration tests ship in Phase 3 (Phone Doctor).",
-            tools = AudioFeature.tools,
-            resolve = resolve,
+            subtitle = "Standalone audio and haptics checks from Phone Doctor. " +
+                "Results here are not saved — run Full Diagnostic to persist them.",
+            entries = listOf(
+                LabEntry(
+                    testId = "audio.speaker",
+                    title = "Speaker",
+                    blurb = "Play a test tone and confirm clear, consistent output.",
+                ),
+                LabEntry(
+                    testId = "audio.microphone",
+                    title = "Microphone",
+                    blurb = "Record a few seconds of speech and play it back. " +
+                        "Needs microphone permission.",
+                ),
+                LabEntry(
+                    testId = "haptics.vibration",
+                    title = "Vibration",
+                    blurb = "Buzz the haptic motor and confirm the response.",
+                ),
+            ),
+            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
         )
     }
 }

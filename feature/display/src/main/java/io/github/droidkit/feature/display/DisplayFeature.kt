@@ -6,8 +6,8 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
-import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
+import io.github.droidkit.core.ui.LabEntry
+import io.github.droidkit.core.ui.LabIndexScreen
 
 object DisplayFeature : FeatureContribution {
     const val ROUTE = "display"
@@ -30,13 +30,35 @@ object DisplayFeature : FeatureContribution {
     )
 }
 
-fun NavGraphBuilder.displayGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
+fun NavGraphBuilder.displayGraph(nav: NavHostController) {
     composable(DisplayFeature.ROUTE) {
-        FeatureStubScreen(
+        LabIndexScreen(
             title = "Display & Touch",
-            subtitle = "Interactive display and touch tests ship in Phase 3 (Phone Doctor).",
-            tools = DisplayFeature.tools,
-            resolve = resolve,
+            subtitle = "Standalone display and touch checks from Phone Doctor. " +
+                "Results here are not saved — run Full Diagnostic to persist them.",
+            entries = listOf(
+                LabEntry(
+                    testId = "display.color",
+                    title = "Display colors",
+                    blurb = "Cycle solid colors and check coverage, banding and tint.",
+                ),
+                LabEntry(
+                    testId = "display.dead_pixel",
+                    title = "Dead-pixel check",
+                    blurb = "Inspect the whole panel for stuck or dead pixels.",
+                ),
+                LabEntry(
+                    testId = "touch.grid",
+                    title = "Touch grid",
+                    blurb = "Fill every grid cell to expose dead touch zones.",
+                ),
+                LabEntry(
+                    testId = "touch.multitouch",
+                    title = "Multitouch",
+                    blurb = "Count simultaneous touch points with several fingers.",
+                ),
+            ),
+            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
         )
     }
 }
