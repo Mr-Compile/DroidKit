@@ -719,7 +719,7 @@ disabled.
 - [x] Reject arbitrary model commands
 
 ## AI-5 QA
-- [ ] No/invalid key
+- [x] No/invalid key
 - [ ] Offline/timeout
 - [ ] Rate limit/provider outage
 - [x] Malformed response

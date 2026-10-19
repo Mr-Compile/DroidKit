@@ -27,6 +27,25 @@
   preview and honest failure states, and display metrics (resolution, dp
   size, density, scaled density, physical dpi, refresh rate, supported
   modes, HDR types)
+- DroidKit Intelligence expansion: ten fixed-persona assistants
+  (PromptRegistry), contextual AI chat at `settings/ai_chat`, and
+  structured proposals (OpenTool / read-only elevated) parsed against an
+  approved schema, validated via ToolRegistry + CapabilityManager, and
+  executed only after user confirmation
+- Runtime permission controls: `pm grant`/`pm revoke` + `dumpsys`
+  runtime-permission parsing in Package Controls, and a local elevated
+  action audit log (Room) surfaced in Settings
+- Technician workflow (post-V1): session intake fields
+  (customer/device labels), technician signature configured in Settings
+  and stamped on reports, diagnostic presets (Full / used-phone check),
+  and session compare — before/after diff of test states and device
+  snapshot fields
+- Storage snapshots: capture per-volume free/used and diff two points in
+  time (Storage Lab)
+- NFC scan history (local, truncated tag IDs) and NDEF write presets
+- Sensor session recording with CSV share (Sensor Lab), display motion
+  test patterns (Display Lab), pinned tools on Home, and a read-only
+  BLE GATT service/characteristic explorer
 - Audio & Haptics, Camera & Flash, and Display & Touch lab index screens
   deep-linking into the standalone Phone Doctor tests (`diagnose/test/*`)
 

@@ -408,12 +408,13 @@ Candidate post-V1 areas (status after the post-v0.8 implementation wave):
 - Shizuku provider — **implemented** (`privilege/shizuku`; device validation pending)
 - AppOps inspection/control — **implemented** (`feature/appops`)
 - Elevated package actions — **implemented** (`feature/packages`, allow-listed via `ElevatedOps`)
-- Advanced permission controls — planned (`pm grant/revoke` not yet allow-listed)
+- Advanced permission controls — **implemented** (runtime grant/revoke via `pm grant/revoke`, allow-listed)
 - Wireless ADB — **implemented** (`privilege/adb` + `feature/adb` ADB Lab; device pairing validation pending)
 - Advanced logs — **implemented** (Developer Lab log viewer via `ElevatedOps`)
 - IntentLab/Developer Lab expansion — **implemented** (deep-link tester, custom intents)
-- Bluetooth Lab expansion — **implemented** (bounded BLE scan)
-- Additional technician workflows — ongoing
+- Bluetooth Lab expansion — **implemented** (bounded BLE scan + read-only GATT explorer)
+- Technician workflow — **implemented core**: session intake (customer/device labels), technician signature in Settings, session presets (Full / used-phone), before/after session compare, storage snapshots with delta, NFC scan history + write presets, sensor session CSV export, dashboard pinning
+- Elevated action audit — **implemented** (local Room log, visible in Settings)
 
 These remain governed by the same safety rules regardless of implementation status.
 
@@ -422,11 +423,12 @@ These remain governed by the same safety rules regardless of implementation stat
 # 9. Future / Experimental Ideas
 
 - Optional root provider — **partially implemented** (`privilege/root` `su` executor exists; product review for surfaced features still pending)
-- DroidKit Intelligence (AI add-on) — **implemented core** (`core:ai`): Groq BYOK only, opt-in and disabled by default, AndroidKeyStore-encrypted key, redacted/minimized context, typed errors; AI may explain/summarize — never executes actions. Assistants beyond the report summary remain experimental. See `ai_security_addon/` for the governing spec.
+- DroidKit Intelligence (AI add-on) — **implemented** (`core:ai`): Groq BYOK only, opt-in and disabled by default, AndroidKeyStore-encrypted key, redacted/minimized context, typed errors; ten fixed-persona assistants, contextual chat, and structured proposals (OpenTool / read-only elevated) that parse, validate against registry + capabilities, and execute only on user confirmation. See `ai_security_addon/` for the governing spec.
+- Before/after repair reports — **implemented** (session compare in Reports)
+- Repair intake / technician signature — **implemented** (session intake fields + Settings technician name)
 - Extension/plugin system
 - Repair-shop workflow
 - Multi-device history
-- Before/after repair reports
 - Optional encrypted synchronization
 - Team/shop features
 - Desktop companion
