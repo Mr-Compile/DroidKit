@@ -11,5 +11,7 @@ object SettingsFeature : FeatureContribution {
 }
 
 fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
-    composable(SettingsFeature.ROUTE) { SettingsScreen() }
+    composable(SettingsFeature.ROUTE) {
+        SettingsScreen(onOpenAdb = { nav.navigate("adb") })
+    }
 }

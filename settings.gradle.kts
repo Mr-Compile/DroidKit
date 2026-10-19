@@ -24,6 +24,7 @@ include(":core:ui")
 include(":core:database")
 include(":core:datastore")
 include(":core:permissions")
+include(":core:ai")
 include(":core:system")
 include(":core:privileges")
 

@@ -24,6 +24,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -183,6 +184,41 @@ fun ReportDetailScreen(
                 item {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Text(notes, modifier = Modifier.padding(16.dp))
+                    }
+                }
+            }
+
+            item { SectionHeader("AI summary") }
+            item {
+                val aiState by viewModel.aiSummary.collectAsState()
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        when (val s = aiState) {
+                            ReportsViewModel.AiSummaryState.Idle -> Text(
+                                "Send a minimized, redacted copy of this report to Groq " +
+                                    "for a technician summary. Optional — the report above " +
+                                    "never leaves the device unless you ask.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            ReportsViewModel.AiSummaryState.Loading ->
+                                Text("Summarizing…")
+                            is ReportsViewModel.AiSummaryState.Text ->
+                                Text(s.summary, style = MaterialTheme.typography.bodyMedium)
+                            is ReportsViewModel.AiSummaryState.Unavailable -> Text(
+                                s.reason,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.summarize(
+                                    ReportBuilder.build(d.session, d.snapshot, d.results),
+                                )
+                            },
+                            enabled = aiState !is ReportsViewModel.AiSummaryState.Loading,
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) { Text("Summarize with AI") }
                     }
                 }
             }

@@ -3,6 +3,8 @@ package io.github.droidkit.feature.reports
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.droidkit.core.ai.AiError
+import io.github.droidkit.core.ai.AiUseCase
 import io.github.droidkit.core.database.DeviceSnapshotDao
 import io.github.droidkit.core.database.DeviceSnapshotEntity
 import io.github.droidkit.core.database.DiagnosticResultDao
@@ -33,7 +35,36 @@ class ReportsViewModel @Inject constructor(
     private val resultDao: DiagnosticResultDao,
     private val snapshotDao: DeviceSnapshotDao,
     private val reportDao: SavedReportDao,
+    private val aiUseCase: AiUseCase,
 ) : ViewModel() {
+
+    sealed interface AiSummaryState {
+        data object Idle : AiSummaryState
+        data object Loading : AiSummaryState
+        data class Text(val summary: String) : AiSummaryState
+        data class Unavailable(val reason: String) : AiSummaryState
+    }
+
+    val aiSummary = MutableStateFlow<AiSummaryState>(AiSummaryState.Idle)
+
+    /** Optional, user-invoked report summary through the AI pipeline. */
+    fun summarize(reportText: String) {
+        aiSummary.value = AiSummaryState.Loading
+        viewModelScope.launch {
+            val result = aiUseCase.summarizeReport(reportText)
+            aiSummary.value = result.text?.let { AiSummaryState.Text(it) }
+                ?: AiSummaryState.Unavailable(
+                    when (result.error) {
+                        AiError.DISABLED -> "Enable DroidKit Intelligence in Settings"
+                        AiError.NO_KEY -> "No API key — add one in Settings"
+                        AiError.OFFLINE -> "Device is offline"
+                        AiError.AUTH_ERROR -> "API key rejected"
+                        AiError.RATE_LIMITED -> "Rate limited — try later"
+                        else -> "AI provider error"
+                    },
+                )
+        }
+    }
 
     val statusFilter = MutableStateFlow(StatusFilter.ALL)
 
