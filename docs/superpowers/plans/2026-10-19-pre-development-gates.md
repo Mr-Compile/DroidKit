@@ -1,5 +1,12 @@
 # Pre-Development Gates (J01–J04 tails) Implementation Plan
 
+> **STATUS: IMPLEMENTED** — all tasks executed (2026-10-19). Deliverables verified
+> on `main`: `docs/PRD_APPROVAL.md` (V1-OPTIONAL calls approved), J02 evidence
+> (`docs/feasibility/J02_TOOL_RECORDS.md` + `J02_MATRICES.md`), J03 design
+> (`docs/design/J03_*.md`), J04 ratification (`docs/ENGINEERING_FOUNDATION.md`),
+> `V1_SCOPE_FROZEN` recorded in playbook `03` + tracker. Report export format
+> decision (D4) was resolved at Q12 as canonical text + framework PDF.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close out the pre-development journeys — PRD approval record, J02 feasibility audit, J03 design foundation, J04 engineering ratification — ending with `V1_SCOPE_FROZEN = TRUE`.

@@ -1,5 +1,11 @@
 # AI + Secrets Security Add-on — Implementation Plan
 
+> **STATUS: PART A IMPLEMENTED** — secrets/GitHub hardening done 2026-10-19
+> (Q6b in the master execution plan): `.gitignore` covers `.env`/keystores,
+> `.env.example` holds placeholders only, AI/secrets rules live in root
+> `AGENTS.md`, Q6b + Q23/J21 registered. **Part B (J21 AI journey) remains
+> DEFERRED** — post-V1; requires owner scope/mode approval before AI-0 planning.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement Part A task-by-task. Part B is a post-V1 journey: write its detailed plan at AI-0, do not execute now.
 
 **Goal:** Adopt `specs/ai_security_addon/` — Part A lands the secrets/GitHub hardening that applies to all code starting now (before the J05 skeleton); Part B registers the AI/Groq journey for post-V1 without touching the frozen V1 scope.

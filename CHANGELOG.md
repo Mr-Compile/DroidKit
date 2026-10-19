@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.9.0-alpha.1] - Unreleased
+
+### Added
+- Developer Lab V1 subset (approved scope): intent launcher with curated
+  system-destination list plus custom action/data/package intents with
+  preview and honest failure states, and display metrics (resolution, dp
+  size, density, scaled density, physical dpi, refresh rate, supported
+  modes, HDR types)
+- Audio & Haptics, Camera & Flash, and Display & Touch lab index screens
+  deep-linking into the standalone Phone Doctor tests (`diagnose/test/*`)
+
+### Fixed
+- Audio/camera/display tool entries previously opened stale placeholder
+  screens claiming tests "ship in Phase 3" — the tests already shipped in
+  J08/J09; labs now launch them
+- App icon in App Inspector detail now carries a content description
+  (J14 accessibility finding)
+- Stale "Phase N" copy on post-V1 stub screens now references the J18–J19
+  journey names
+
+### Docs
+- Release notes draft (`docs/release/RELEASE_NOTES_v1.0.0_DRAFT.md`) and
+  privacy policy draft (`docs/PRIVACY_POLICY_DRAFT.md`) for owner review
+- Tracker/J14 status resynced; plan files marked IMPLEMENTED where done
+
 ## [0.8.0] - Unreleased
 
 ### Added

@@ -76,6 +76,31 @@ hardware-dependent items remain open and require physical devices.
 - App icon `Image` in `AppDetailScreen` is decorative without a
   contentDescription — minor a11y nit.
 
+## Addendum — 2026-10-19 re-audit fixes
+
+Same-day follow-up pass closed the codeable findings and one wiring gap:
+
+- **FIXED — lab stub wiring.** `feature/audio`, `feature/camera`,
+  `feature/display` V1 tools landed on `FeatureStubScreen` placeholders
+  claiming tests "ship in Phase 3". The tests shipped in J08/J09 under
+  `diagnose/test/{testId}`. Each lab is now a `LabIndexScreen` (`core:ui`)
+  listing its tests and deep-linking by route string — no cross-module
+  dependency, permission/hardware states owned by the test screens.
+- **FIXED — Developer Lab V1 subset.** Owner-approved scope ("Intent
+  Launcher + Display Metrics", `PRD_APPROVAL.md`) was never implemented;
+  the `developer` route hit a stub. `DeveloperLabScreen` ships curated
+  `Settings.ACTION_*` presets + custom action/data/package intents with
+  preview and `ActivityNotFoundException`/`SecurityException` honesty, plus
+  a display-metrics card. `developer.logs` stays `ToolPhase.V2`.
+- **FIXED — app-icon contentDescription** in `AppDetailScreen` (the a11y
+  nit above).
+- **FIXED — stale "Phase N" copy** on the adb/appops/packages stub screens
+  now names journeys J18/J19; dead `FeatureStubScreen` import removed from
+  `PermissionsFeature`.
+- Re-verified: `:app:assembleDebug` green; `testDebugUnitTest` green; all
+  40 tool routes resolve to registered destinations; zero `privilege.*`
+  imports in `feature/`; zero TODO/mock placeholders in main sources.
+
 ## Items still requiring hardware (out of agent scope)
 - Android-version matrix runs, representative OEM devices
   (Samsung/Xiaomi/OPPO/Vivo/Transsion/Pixel), USB multi-class devices,

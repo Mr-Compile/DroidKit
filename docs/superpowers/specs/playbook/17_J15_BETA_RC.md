@@ -15,8 +15,8 @@ v1.0.0-beta.1 -> v1.0.0-beta.N -> v1.0.0-rc.1
 - [ ] Accessibility acceptance
 - [ ] Privacy/security review
 - [ ] Signing/release key process
-- [ ] Release notes
-- [ ] README/user guide
+- [x] Release notes — draft at `docs/release/RELEASE_NOTES_v1.0.0_DRAFT.md` (owner review pending)
+- [x] README/user guide — README refreshed to v0.8.0 feature set; user-guide expansion can grow in beta
 - [ ] Distribution requirements
 - [ ] Beta tester acceptance
 

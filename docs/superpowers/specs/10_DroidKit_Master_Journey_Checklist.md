@@ -14,7 +14,7 @@ This file is the project-wide progress tracker. Update `[ ]` to `[x]` only when 
 - [x] Planning documents packaged
 - [x] Pre-development specification completed
 - [x] V1 scope frozen
-- [ ] Development started
+- [x] Development started
 
 ---
 

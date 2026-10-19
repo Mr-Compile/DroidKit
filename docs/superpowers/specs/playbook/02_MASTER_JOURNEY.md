@@ -17,7 +17,7 @@ Use this as the lifecycle map. A journey is complete only when its gate is satis
 | J11 | App Inspector | v0.6.0 | [x] `v0.6.0` |
 | J12 | USB Lab | v0.7.0 | [x] `v0.7.0` |
 | J13 | NFC + Network | v0.8.0 | [x] `v0.8.0` |
-| J14 | Integrated Alpha | v0.9.0-alpha.N | [ ] |
+| J14 | Integrated Alpha | v0.9.0-alpha.N | [~] Static gates pass; device matrix pending |
 | J15 | Beta / RC | v1.0.0-beta.N / rc.N | [ ] |
 | J16 | Stable V1 | v1.0.0 | [ ] |
 | J17 | Maintenance | v1.0.x / v1.x | [ ] Ongoing |

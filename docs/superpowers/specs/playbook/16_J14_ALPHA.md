@@ -15,7 +15,7 @@ Recommended: v0.9.0-alpha.1, alpha.2, ...
 - [ ] OEM/device matrix — requires devices
 - [ ] Alpha feedback process — requires testers
 - [ ] Defect severity system — requires testers/issues
-- [ ] Blockers fixed — none found in static review; device run may surface some
+- [~] Blockers fixed — 2026-10-19 re-audit found + fixed: audio/camera/display lab stubs wired to live Phone Doctor tests, Developer Lab V1 subset (intent launcher + display metrics) shipped, app-icon `contentDescription` added; device run may surface more
 
 Alpha exit:
 - [ ] No critical blocker — none found statically; device run pending
