@@ -403,24 +403,26 @@ V1 should prove DroidKit is useful on a normal, non-rooted phone.
 
 # 8. Post-V1 Product Scope
 
-Candidate post-V1 areas:
-- Shizuku provider
-- AppOps inspection/control
-- Elevated package actions
-- Advanced permission controls
-- Wireless ADB
-- Advanced logs
-- IntentLab/Developer Lab expansion
-- Bluetooth Lab expansion
-- Additional technician workflows
+Candidate post-V1 areas (status after the post-v0.8 implementation wave):
 
-These are candidates, not automatic promises. Each requires a new feasibility and security review.
+- Shizuku provider — **implemented** (`privilege/shizuku`; device validation pending)
+- AppOps inspection/control — **implemented** (`feature/appops`)
+- Elevated package actions — **implemented** (`feature/packages`, allow-listed via `ElevatedOps`)
+- Advanced permission controls — planned (`pm grant/revoke` not yet allow-listed)
+- Wireless ADB — **implemented** (`privilege/adb` + `feature/adb` ADB Lab; device pairing validation pending)
+- Advanced logs — **implemented** (Developer Lab log viewer via `ElevatedOps`)
+- IntentLab/Developer Lab expansion — **implemented** (deep-link tester, custom intents)
+- Bluetooth Lab expansion — **implemented** (bounded BLE scan)
+- Additional technician workflows — ongoing
+
+These remain governed by the same safety rules regardless of implementation status.
 
 ---
 
 # 9. Future / Experimental Ideas
 
-- Optional root provider
+- Optional root provider — **partially implemented** (`privilege/root` `su` executor exists; product review for surfaced features still pending)
+- DroidKit Intelligence (AI add-on) — **implemented core** (`core:ai`): Groq BYOK only, opt-in and disabled by default, AndroidKeyStore-encrypted key, redacted/minimized context, typed errors; AI may explain/summarize — never executes actions. Assistants beyond the report summary remain experimental. See `ai_security_addon/` for the governing spec.
 - Extension/plugin system
 - Repair-shop workflow
 - Multi-device history
