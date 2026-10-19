@@ -1,0 +1,106 @@
+package io.github.droidkit.feature.bluetooth
+
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+@HiltViewModel
+class BluetoothViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+) : ViewModel() {
+
+    data class BondedDevice(
+        val name: String?,
+        val address: String?,
+        val typeName: String,
+        val bondStateName: String,
+    )
+
+    private val bluetoothManager =
+        context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+    private val adapter: BluetoothAdapter? get() = bluetoothManager?.adapter
+
+    val classicSupported: Boolean =
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+    val leSupported: Boolean =
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+    val adapterPresent: Boolean get() = adapter != null
+
+    private val _enabled = MutableStateFlow(adapter?.isEnabled == true)
+    val enabled: StateFlow<Boolean> = _enabled.asStateFlow()
+
+    private val _permissionVersion = MutableStateFlow(0)
+    val permissionVersion: StateFlow<Int> = _permissionVersion.asStateFlow()
+
+    private val _bonded = MutableStateFlow<List<BondedDevice>>(emptyList())
+    val bonded: StateFlow<List<BondedDevice>> = _bonded.asStateFlow()
+
+    private val stateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, intent: Intent) {
+            if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) refresh()
+        }
+    }
+
+    init {
+        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(stateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            context.registerReceiver(stateReceiver, filter)
+        }
+        refresh()
+    }
+
+    /** BLUETOOTH_CONNECT is a runtime permission on API 31+; below, BLUETOOTH is install-time. */
+    fun hasConnectPermission(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) ==
+                PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+
+    fun onPermissionResult() {
+        _permissionVersion.value += 1
+        refresh()
+    }
+
+    fun refresh() {
+        _enabled.value = adapter?.isEnabled == true
+        _bonded.value = readBonded()
+    }
+
+    private fun readBonded(): List<BondedDevice> {
+        if (!hasConnectPermission()) return emptyList()
+        return runCatching {
+            adapter?.bondedDevices.orEmpty().map { d ->
+                BondedDevice(
+                    name = runCatching { d.name }.getOrNull(),
+                    address = runCatching { d.address }.getOrNull(),
+                    typeName = BtNames.deviceType(runCatching { d.type }.getOrDefault(0)),
+                    bondStateName = BtNames.bondState(runCatching { d.bondState }.getOrDefault(10)),
+                )
+            }.sortedBy { it.name ?: "" }
+        }.getOrDefault(emptyList())
+    }
+
+    override fun onCleared() {
+        runCatching { context.unregisterReceiver(stateReceiver) }
+        super.onCleared()
+    }
+}
