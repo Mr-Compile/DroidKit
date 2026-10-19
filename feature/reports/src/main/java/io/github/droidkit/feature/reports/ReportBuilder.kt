@@ -30,6 +30,10 @@ object ReportBuilder {
         appendLine("Date: ${df.format(Date(session.startedAtEpochMs))}")
         session.completedAtEpochMs?.let { appendLine("Completed: ${df.format(Date(it))}") }
         appendLine("App version: ${session.appVersion}")
+        appendLine("Preset: ${session.preset.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }}")
+        session.customerLabel?.takeIf { it.isNotBlank() }?.let { appendLine("Customer: $it") }
+        session.deviceLabel?.takeIf { it.isNotBlank() }?.let { appendLine("Device label: $it") }
+        session.technicianName?.takeIf { it.isNotBlank() }?.let { appendLine("Technician: $it") }
         appendLine()
 
         appendLine("Device summary")

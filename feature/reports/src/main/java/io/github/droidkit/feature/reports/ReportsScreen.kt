@@ -37,6 +37,7 @@ import java.util.Date
 @Composable
 fun ReportsScreen(
     onOpenDetail: (String) -> Unit,
+    onCompare: () -> Unit,
     viewModel: ReportsViewModel = hiltViewModel(),
 ) {
     val rows by viewModel.rows.collectAsState()
@@ -78,6 +79,11 @@ fun ReportsScreen(
                         label = { Text(f.name.replace('_', ' ').lowercase().replaceFirstChar { c -> c.uppercase() }) },
                     )
                 }
+                FilterChip(
+                    selected = false,
+                    onClick = onCompare,
+                    label = { Text("Compare") },
+                )
             }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),

@@ -13,6 +13,8 @@ import io.github.droidkit.core.common.ToolPhase
 object ReportsFeature : FeatureContribution {
     const val ROUTE = "reports"
 
+    const val COMPARE_ROUTE = "reports/compare"
+
     override val tools = listOf(
         Tool(
             id = "reports.export",
@@ -23,6 +25,14 @@ object ReportsFeature : FeatureContribution {
             safetyLevel = SafetyLevel.MINOR,
             phase = ToolPhase.V1,
         ),
+        Tool(
+            id = "reports.compare",
+            title = "Compare Sessions",
+            description = "Before/after diff of two diagnostic sessions — prove a repair",
+            category = ToolCategory.REPORTS,
+            route = COMPARE_ROUTE,
+            safetyLevel = SafetyLevel.SAFE,
+        ),
     )
 }
 
@@ -30,7 +40,11 @@ fun NavGraphBuilder.reportsGraph(nav: NavHostController) {
     composable(ReportsFeature.ROUTE) {
         ReportsScreen(
             onOpenDetail = { id -> nav.navigate("reports/detail/$id") },
+            onCompare = { nav.navigate(ReportsFeature.COMPARE_ROUTE) },
         )
+    }
+    composable(ReportsFeature.COMPARE_ROUTE) {
+        SessionCompareScreen()
     }
     composable("reports/detail/{sessionId}") { backStackEntry ->
         val sessionId = backStackEntry.arguments?.getString("sessionId").orEmpty()

@@ -67,6 +67,32 @@ fun SettingsScreen(
                 }
             }
 
+            item { SectionHeader("Reports") }
+            item {
+                val technician by viewModel.technicianName.collectAsState()
+                var techInput by androidx.compose.runtime.remember(technician) {
+                    androidx.compose.runtime.mutableStateOf(technician)
+                }
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = techInput,
+                            onValueChange = { techInput = it },
+                            label = { Text("Technician name / signature") },
+                            supportingText = {
+                                Text("Stamped on new diagnostic sessions and reports. Stored locally.")
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        TextButton(
+                            onClick = { viewModel.setTechnicianName(techInput) },
+                            enabled = techInput.trim() != technician,
+                        ) { Text("Save") }
+                    }
+                }
+            }
+
             item { SectionHeader("Advanced access") }
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {

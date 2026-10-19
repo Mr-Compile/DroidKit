@@ -54,6 +54,15 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settings.setThemeMode(mode) }
     }
 
+    // ---- Reports ----
+
+    val technicianName: StateFlow<String> =
+        settings.technicianName.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
+
+    fun setTechnicianName(name: String) {
+        viewModelScope.launch { settings.setTechnicianName(name) }
+    }
+
     fun refreshProviders() {
         _providerStatuses.value = capabilityManager.providerStatuses()
     }
