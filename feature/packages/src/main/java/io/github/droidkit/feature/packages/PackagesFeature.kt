@@ -53,7 +53,7 @@ fun NavGraphBuilder.packagesGraph(nav: NavHostController, resolve: (Tool) -> Too
     composable(PackagesFeature.ROUTE) {
         FeatureStubScreen(
             title = "Package Controls",
-            subtitle = "High-impact package operations gated on wireless ADB — Phase 8/9. " +
+            subtitle = "High-impact package operations gated on wireless ADB — post-V1 journeys J18/J19. " +
                 "Each action will show its exact consequence before running.",
             tools = PackagesFeature.tools,
             resolve = resolve,

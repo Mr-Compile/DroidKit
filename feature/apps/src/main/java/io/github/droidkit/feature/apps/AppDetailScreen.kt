@@ -90,7 +90,7 @@ fun AppDetailScreen(
                             if (icon != null) {
                                 Image(
                                     bitmap = icon,
-                                    contentDescription = null,
+                                    contentDescription = "${app?.loadLabel(pm) ?: packageName} icon",
                                     modifier = Modifier.size(48.dp).padding(end = 12.dp),
                                 )
                             }

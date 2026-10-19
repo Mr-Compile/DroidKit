@@ -10,7 +10,6 @@ import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
 
 object PermissionsFeature : FeatureContribution {
     const val ROUTE = "permissions"

@@ -43,7 +43,7 @@ fun NavGraphBuilder.adbGraph(nav: NavHostController, resolve: (Tool) -> ToolReso
     composable(AdbFeature.ROUTE) {
         FeatureStubScreen(
             title = "Wireless ADB",
-            subtitle = "Pairing/session provider ships in Phase 9.",
+            subtitle = "Pairing/session provider — post-V1 journey J19.",
             tools = AdbFeature.tools,
             resolve = resolve,
         )

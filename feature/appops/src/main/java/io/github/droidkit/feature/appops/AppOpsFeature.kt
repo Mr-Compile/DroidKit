@@ -42,7 +42,7 @@ fun NavGraphBuilder.appOpsGraph(nav: NavHostController, resolve: (Tool) -> ToolR
     composable(AppOpsFeature.ROUTE) {
         FeatureStubScreen(
             title = "AppOps",
-            subtitle = "Requires the Shizuku provider — Phase 7/8.",
+            subtitle = "Requires the Shizuku provider — post-V1 journey J18.",
             tools = AppOpsFeature.tools,
             resolve = resolve,
         )
