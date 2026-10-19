@@ -83,3 +83,55 @@ as a crash or a fabricated value.
 - [ ] Permission denial paths show PERMISSION_REQUIRED everywhere new
 - [ ] Rotation on each new screen — no state loss/crash
 - [ ] Dark theme pass on new cards
+
+---
+
+## 7. Evidence matrix (fill per device — required to close DK-060/061/062, DK-070/071)
+
+Record one row per physical device. "N/A" is valid only with a reason
+(e.g., rooted device unavailable → Root column N/A + note).
+
+| Field | Value |
+|-------|-------|
+| Device / model | _fill_ |
+| Android version (API) | _fill_ |
+| OEM / skin | _fill_ |
+| Build fingerprint | _fill_ |
+| App versionName/versionCode tested | _fill_ |
+| Date / tester | _fill_ |
+
+### Per-device results
+
+| Gate | Item | Result | Notes/log ref |
+|------|------|--------|---------------|
+| DK-060 | Shizuku grant → Ready (runbook 1.2) | PENDING | |
+| DK-060 | Elevated action via Shizuku (1.3) | PENDING | |
+| DK-061 | Wireless ADB pair + connect (1.4) | PENDING | |
+| DK-061 | Structured action + audit log (1.5) | PENDING | |
+| DK-062 | Root grant → provider Ready (1.6) | PENDING | |
+| DK-062 | Elevated tool via root | PENDING | |
+| DK-021 | Runtime permission deny → rationale → permanent deny → Open Settings | PENDING | |
+| DK-022 | Provider status flips live after grant/connect (no restart) | PENDING | |
+| DK-070 | API-level behaviors on this device (per table below) | PENDING | |
+| DK-071 | OEM-specific findings | PENDING | |
+| DK-042 | TalkBack / fontScale 1.3 / contrast checklist | PENDING | |
+
+### API-level matrix (fill across devices)
+
+| Behavior | API 28–29 | API 30–32 | API 33–35 | API 36 |
+|----------|-----------|-----------|-----------|--------|
+| Package visibility (`<queries>` MAIN+LAUNCHER) | n/a (pre-30) | PENDING | PENDING | PENDING |
+| Runtime permission permanent-denial flow | PENDING | PENDING | PENDING | PENDING |
+| Wireless ADB pairing | n/a (pre-30) | PENDING | PENDING | PENDING |
+| Notification / nearby-wifi / bt permissions | PENDING | PENDING | PENDING | PENDING |
+| Scoped-storage file access | PENDING | PENDING | PENDING | PENDING |
+
+### OEM matrix (fill per OEM encountered)
+
+| OEM/skin | Finding | Repro | Impact | Mitigation |
+|----------|---------|-------|--------|------------|
+| _e.g., Samsung OneUI_ | _fill_ | _fill_ | _fill_ | _fill_ |
+
+> No devices were attached when this section was written (adb devices:
+> empty, 2026-10-20). DK-060/061/062 remain BLOCKED until at least one
+> row above is completed with real results.

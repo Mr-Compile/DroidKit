@@ -24,13 +24,13 @@ Statuses: NOT STARTED / IN PROGRESS / BLOCKED / CODE COMPLETE / DEVICE VERIFIED 
 | DK-051 | Settings V1 completion | P3 | PARALLEL-OWNED | About/privacy/support/reset landed via 5ea2d1e + parallel UX pack; settings matrix work continues there — not this phase |
 | DK-052 | Dead code/dependency cleanup | P3 | IN PROGRESS | Removed `FeatureStubScreen` + `BlockedReasonList` (zero call sites; ToolsScreen uses UiProblemCard); broader dependency audit pending |
 | DK-053 | strings.xml/i18n readiness | P2 | IN PROGRESS | `core/ui` res/values/strings.xml created (recovery labels, problem card, semantic states, copy actions); shared components migrated to stringResource; feature-screen copy extraction remains (largely parallel-owned surfaces) |
-| DK-060 | Shizuku real-device gate | P0 | NOT STARTED | device evidence |
-| DK-061 | Wireless ADB real-device gate | P0 | NOT STARTED | device evidence |
-| DK-062 | Root real-device gate | P0 | NOT STARTED | rooted-device evidence |
-| DK-070 | API-level compatibility matrix | P1 | NOT STARTED | matrix + evidence |
-| DK-071 | OEM compatibility matrix | P1 | NOT STARTED | reproduced OEM findings |
-| DK-072 | Performance/lifecycle hardening | P2 | NOT STARTED | profiling evidence |
-| DK-073 | Security/privacy review | P1 | NOT STARTED | review checklist + fixes |
+| DK-060 | Shizuku real-device gate | P0 | BLOCKED — NO DEVICE | adb daemon up, zero devices attached (2026-10-20); runbook items 1.2/1.3 + evidence matrix ready in DEVICE_VALIDATION_RUNBOOK.md §7 |
+| DK-061 | Wireless ADB real-device gate | P0 | BLOCKED — NO DEVICE | same as DK-060; runbook 1.4/1.5 + matrix ready |
+| DK-062 | Root real-device gate | P0 | BLOCKED — NO DEVICE | needs rooted device specifically; runbook 1.6 + matrix ready |
+| DK-070 | API-level compatibility matrix | P1 | MATRIX READY | API 28–36 matrix template added to runbook §7 — fills on device(s) |
+| DK-071 | OEM compatibility matrix | P1 | MATRIX READY | OEM findings table added to runbook §7 — fills per device |
+| DK-072 | Performance/lifecycle hardening | P2 | NOT STARTED | profiling needs device/emulator — could partially run on emulator if enabled |
+| DK-073 | Security/privacy review | P1 | IN PROGRESS | secret-scan clean on all commits so far; AI privacy filter + BYOK already architecturally enforced; full checklist review pending |
 | DK-080 | Release build/R8 config | P0 | NOT STARTED | release build/runtime verified |
 | DK-081 | Secure signing strategy | P0 | NOT STARTED | secrets externalized |
 | DK-082 | APK/AAB + upgrade verification | P1 | NOT STARTED | clean + upgrade installs pass |
