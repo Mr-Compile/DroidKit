@@ -97,14 +97,14 @@ For every V1 tool verify API, permission, hardware, restrictions, OEM difference
 ## 2.3 Advanced Capability Research
 Not required to block V1 unless the V1 scope changes.
 
-- [ ] Review current Shizuku APIs/documentation
-- [ ] Define Shizuku capability map
-- [ ] Research Wireless ADB implementation options
-- [ ] Define secure ADB key storage approach
-- [ ] Research AppOps limitations
-- [ ] Research advanced package-management limitations
-- [ ] Research log access limitations
-- [ ] Research root provider only when future milestone begins
+- [x] Review current Shizuku APIs/documentation
+- [x] Define Shizuku capability map
+- [x] Research Wireless ADB implementation options
+- [x] Define secure ADB key storage approach
+- [x] Research AppOps limitations
+- [x] Research advanced package-management limitations
+- [x] Research log access limitations
+- [x] Research root provider only when future milestone begins
 
 Completion gate:
 - [x] Every V1 feature has a verified feasibility note.
@@ -577,9 +577,9 @@ items stay open — real-device grant flow and API matrix not yet run.
 - [x] AppOps inspection
 - [x] Approved AppOps mutation
 - [x] Advanced package controls
-- [ ] Advanced permission controls
+- [x] Advanced permission controls
 - [x] Risk confirmations
-- [ ] Audit/result history where useful
+- [x] Audit/result history where useful
 
 Release:
 - [ ] Shizuku features tested across supported versions
@@ -657,12 +657,19 @@ Before `v2.0.0`:
 
 Post-V1 add-on journey (`specs/ai_security_addon/` + `plans/2026-10-19-ai-security-addon.md` Part B). **Not part of the frozen V1 scope** — starts only after owner approval, likely as a minor post-v1 release.
 
-Status: AI-0/AI-1/AI-2 implemented in `core:ai` + Settings → DroidKit
-Intelligence (BYOK, AES/GCM key under AndroidKeyStore, `PrivacyFilter`
-redaction, typed errors, 20s timeout/fail-fast). Report Assistant (AI-3)
-ships as an optional "Summarize with AI" action on report detail.
-Statically verified only — no live key test, no structured actions (AI-4),
-no QA pass (AI-5). Core app remains fully functional with AI disabled.
+Status: AI-0/AI-1/AI-2/AI-3/AI-4 implemented in `core:ai` + Settings →
+DroidKit Intelligence (BYOK, AES/GCM key under AndroidKeyStore,
+`PrivacyFilter` redaction, typed errors, 20s timeout/fail-fast). All ten
+assistant personas live via `PromptRegistry` + `AiUseCase.assist`, wired
+into device/diagnostics/USB/NFC/app/network/report surfaces plus a
+Contextual Chat screen under Settings. Structured actions use an
+allow-listed proposal schema (`AiProposalParser`/`AiActionValidator`):
+navigation + read-only elevated reads only, executed solely on explicit
+user tap — mutations are unrepresentable in the schema. AI-5 partially
+covered by unit tests (malformed output, prompt injection, redaction);
+live-key, offline, timeout, and rate-limit behavior remain unverified
+against the real provider. Core app remains fully functional with AI
+disabled.
 
 ## AI-0 Research
 - [ ] Verify current Groq API documentation (auth, endpoints, models, limits, terms)
@@ -677,7 +684,7 @@ no QA pass (AI-5). Core app remains fully functional with AI disabled.
 - [x] GroqProvider
 - [x] AIContextBuilder
 - [x] PrivacyFilter
-- [ ] PromptRegistry
+- [x] PromptRegistry
 - [x] Model/config registry
 - [x] Typed errors
 - [x] Timeout/retry policy
@@ -692,32 +699,32 @@ no QA pass (AI-5). Core app remains fully functional with AI disabled.
 - [x] Offline/no-key states
 
 ## AI-3 Assistants
-- [ ] Device Explainer
-- [ ] Diagnostic Analyzer
-- [ ] Repair Assistant
+- [x] Device Explainer
+- [x] Diagnostic Analyzer
+- [x] Repair Assistant
 - [x] Report Assistant
-- [ ] USB Assistant
-- [ ] NFC Assistant
-- [ ] App Inspector Assistant
-- [ ] Network Troubleshooter
-- [ ] Tool Recommender
-- [ ] Contextual Chat
+- [x] USB Assistant
+- [x] NFC Assistant
+- [x] App Inspector Assistant
+- [x] Network Troubleshooter
+- [x] Tool Recommender
+- [x] Contextual Chat
 
 ## AI-4 Structured Actions
-- [ ] Allow-listed action schema
-- [ ] Validator
-- [ ] ToolRegistry mapping
-- [ ] Risk Engine integration
-- [ ] Explicit confirmation
-- [ ] Reject arbitrary model commands
+- [x] Allow-listed action schema
+- [x] Validator
+- [x] ToolRegistry mapping
+- [x] Risk Engine integration
+- [x] Explicit confirmation
+- [x] Reject arbitrary model commands
 
 ## AI-5 QA
 - [ ] No/invalid key
 - [ ] Offline/timeout
 - [ ] Rate limit/provider outage
-- [ ] Malformed response
-- [ ] Prompt injection in tool data
-- [ ] Secret-redaction tests
+- [x] Malformed response
+- [x] Prompt injection in tool data
+- [x] Secret-redaction tests
 - [ ] Context-minimization review
 - [ ] AI-disabled core regression
 
