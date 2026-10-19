@@ -54,6 +54,6 @@ fun DroidKitNavHost(
         appOpsGraph(nav, resolve)
         packagesGraph(nav, resolve)
         adbGraph(nav, resolve)
-        developerGraph(nav, resolve)
+        developerGraph(nav)
     }
 }

@@ -9,20 +9,25 @@ import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolPhase
-import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
 
 object DeveloperFeature : FeatureContribution {
     const val ROUTE = "developer"
 
     override val tools = listOf(
         Tool(
-            id = "developer.shortcuts",
-            title = "Developer Shortcuts",
-            description = "Jump to Developer options, USB debugging and system settings",
+            id = "developer.intents",
+            title = "Intent Launcher",
+            description = "Jump to Developer options, system settings screens and custom intents",
             category = ToolCategory.DEVELOPER,
             route = ROUTE,
             safetyLevel = SafetyLevel.MINOR,
+        ),
+        Tool(
+            id = "developer.display",
+            title = "Display Metrics",
+            description = "Resolution, density, refresh rate and HDR capabilities",
+            category = ToolCategory.DEVELOPER,
+            route = ROUTE,
         ),
         Tool(
             id = "developer.logs",
@@ -37,13 +42,8 @@ object DeveloperFeature : FeatureContribution {
     )
 }
 
-fun NavGraphBuilder.developerGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
+fun NavGraphBuilder.developerGraph(nav: NavHostController) {
     composable(DeveloperFeature.ROUTE) {
-        FeatureStubScreen(
-            title = "Developer Lab",
-            subtitle = "Shortcuts, dumpsys helpers and authorized log access — Phase 10.",
-            tools = DeveloperFeature.tools,
-            resolve = resolve,
-        )
+        DeveloperLabScreen()
     }
 }
