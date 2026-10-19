@@ -106,11 +106,14 @@ git push origin
     android:viewportWidth="108" android:viewportHeight="108">
     <group android:scaleX="0.5" android:scaleY="0.5"
         android:translateX="27" android:translateY="27">
-        <path android:strokeColor="#3CE88A" android:strokeWidth="7"
-            android:strokeLineCap="butt" android:strokeLineJoin="round"
-            android:pathData="M47.07 80 L28.02 69 L28.02 39 L54 24 L79.98 39 L79.98 69 L60.93 80" />
-        <path android:fillColor="#14B8CC"
-            android:pathData="M49.5 44.5 Q49.5 40 54 40 Q58.5 40 58.5 44.5 L58.5 65.5 Q58.5 70 54 70 Q49.5 70 49.5 65.5 Z" />
+        <path android:strokeColor="#3CE88A" android:strokeWidth="14"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M54 82 L27 66.5 L27 42 L52.5 26 L56.5 28" />
+        <path android:strokeColor="#3CE88A" android:strokeWidth="14"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M74.5 37.6 L81.5 42 L81.5 65.5 L64.6 75.6" />
+        <path android:fillColor="#86F595"
+            android:pathData="M46.5 42.5 Q46.5 35 54 35 Q61.5 35 61.5 42.5 L61.5 65.5 Q61.5 73 54 73 Q46.5 73 46.5 65.5 Z" />
     </group>
 </vector>
 ```
