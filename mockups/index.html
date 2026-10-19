@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DroidKit — interactive UI mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: #0d0f13;
+    color: #dde2ea;
+    display: flex; flex-direction: column;
+  }
+  header.page {
+    padding: 14px 22px; border-bottom: 1px solid #262b34;
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  }
+  header.page h1 { font-size: 18px; font-weight: 600; }
+  header.page .hint { font-size: 13px; color: #8a93a5; }
+  .layout { flex: 1; display: flex; min-height: 0; }
+  .phone-col {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 18px; gap: 10px; min-width: 430px;
+  }
+  .route-bar {
+    font: 12px/1.4 Consolas, monospace; color: #7fd4c1;
+    background: #151a20; border: 1px solid #262b34; border-radius: 8px;
+    padding: 5px 12px; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* ---------- phone frame ---------- */
+  .phone {
+    width: 392px; height: 800px; border-radius: 36px;
+    border: 10px solid #1a1c22; outline: 1px solid #33363f;
+    background: #000; position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55);
+  }
+  .phone[data-theme="dark"] {
+    --surface: #111318; --card: #1d2129; --card2: #262b34;
+    --text: #e3e7ee; --sub: #a3aab8; --outline: #4a5160;
+    --primary: #a8c7fa; --on-primary: #0a2a5e; --error: #f2b8b5;
+    --tonal: #2a2f3a; --ok: #a8c7fa; --field: #171a20;
+  }
+  .phone[data-theme="light"] {
+    --surface: #fbf8fd; --card: #f0edf4; --card2: #e6e1ea;
+    --text: #1b1b21; --sub: #49454f; --outline: #c9c4d4;
+    --primary: #425e91; --on-primary: #ffffff; --error: #b3261e;
+    --tonal: #e6e1ea; --ok: #425e91; --field: #f3f0f7;
+  }
+  .statusbar {
+    height: 26px; flex: none; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 18px;
+    font-size: 12px; font-weight: 600; color: var(--text);
+    background: var(--surface); z-index: 5;
+  }
+  .statusbar .sicons { display: flex; gap: 5px; align-items: center; }
+  /* ---------- material-ish widgets ---------- */
+  #appbar {
+    flex: none; min-height: 56px; display: flex; align-items: center;
+    padding: 0 16px; background: var(--surface); color: var(--text);
+    font-size: 20px; position: relative;
+  }
+  #appbar .title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #appbar .actions { margin-left: auto; display: flex; align-items: center; }
+  #appbar .iconbtn { cursor: pointer; padding: 6px; border-radius: 50%; }
+  #appbar .iconbtn:hover { background: rgba(128,128,128,.18); }
+  #appbar .textbtn { margin-left: 4px; }
+  .progress-line { height: 3px; background: var(--card2); flex: none; }
+  .progress-line > div { height: 100%; background: var(--primary); transition: width .3s; }
+  #body { flex: 1; overflow-y: auto; background: var(--surface); color: var(--text); position: relative; }
+  #body::-webkit-scrollbar { width: 4px; }
+  #body::-webkit-scrollbar-thumb { background: var(--outline); border-radius: 2px; }
+  .pad { padding: 8px 16px 16px; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .card {
+    background: var(--card); border-radius: 12px; padding: 16px;
+    color: var(--text);
+  }
+  .card.clickable { cursor: pointer; }
+  .card.clickable:hover { background: var(--card2); }
+  .t-small { font-size: 14px; font-weight: 600; }
+  .t-med { font-size: 15px; }
+  .t-body { font-size: 13.5px; line-height: 1.45; }
+  .t-mini { font-size: 12px; }
+  .sub { color: var(--sub); }
+  .err { color: var(--error); }
+  .pri { color: var(--primary); }
+  .sec-head {
+    font-size: 13px; font-weight: 600; color: var(--primary);
+    padding: 8px 16px; letter-spacing: .2px;
+  }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .grow { flex: 1; min-width: 0; }
+  .inforow { display: flex; align-items: center; padding: 4px 0; gap: 8px; }
+  .inforow .k { flex: 1; font-size: 13.5px; color: var(--text); }
+  .inforow .v { font-size: 13.5px; color: var(--text); text-align: right; word-break: break-all; }
+  .inforow .v.na { color: var(--sub); }
+  .copybtn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 8px; border-radius: 6px; }
+  .copybtn:hover { background: rgba(128,128,128,.15); }
+  .btn {
+    display: inline-block; border: none; border-radius: 20px; cursor: pointer;
+    background: var(--primary); color: var(--on-primary);
+    font-size: 14px; font-weight: 600; padding: 10px 18px; text-align: center;
+  }
+  .btn.full { display: block; width: 100%; }
+  .btn:disabled { opacity: .38; cursor: default; }
+  .btn-outline {
+    background: transparent; color: var(--primary);
+    border: 1px solid var(--outline); border-radius: 20px;
+    font-size: 14px; font-weight: 600; padding: 9px 16px; cursor: pointer; text-align: center;
+  }
+  .btn-outline:disabled { opacity: .38; cursor: default; }
+  .textbtn {
+    background: none; border: none; color: var(--primary); font-size: 13.5px;
+    font-weight: 600; cursor: pointer; padding: 8px 10px; border-radius: 8px;
+  }
+  .textbtn:hover { background: rgba(128,128,128,.14); }
+  .chip {
+    display: inline-block; border: 1px solid var(--outline); border-radius: 8px;
+    font-size: 11.5px; padding: 4px 9px; color: var(--sub); margin: 2px 4px 0 0;
+  }
+  .fchip {
+    border: 1px solid var(--outline); background: transparent; color: var(--text);
+    border-radius: 8px; font-size: 13px; padding: 7px 13px; cursor: pointer; flex: none;
+  }
+  .fchip.sel { background: var(--card2); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .badge { border: 1px solid var(--outline); border-radius: 8px; font-size: 11.5px; padding: 4px 9px; flex: none; }
+  .badge.ready { color: var(--primary); }
+  .badge.blocked { color: var(--error); }
+  .field {
+    width: 100%; background: var(--field); border: 1px solid var(--outline);
+    border-radius: 4px 4px 0 0; border-bottom-width: 2px;
+    color: var(--text); font-size: 14px; padding: 12px 12px 8px; outline: none;
+  }
+  .field:focus { border-bottom-color: var(--primary); }
+  .field::placeholder { color: var(--sub); }
+  .flabel { font-size: 11px; color: var(--sub); display: block; padding: 0 0 2px 2px; }
+  .empty { padding: 32px 16px; color: var(--sub); font-size: 13.5px; }
+  .chiprow { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; }
+  .chiprow::-webkit-scrollbar { display: none; }
+  .star { cursor: pointer; font-size: 18px; color: var(--outline); flex: none; padding: 4px; }
+  .star.on { color: #f4c542; }
+  /* ---------- bottom nav + gesture bar ---------- */
+  .bottomnav {
+    flex: none; height: 64px; background: var(--card); display: flex;
+    border-top: 1px solid rgba(128,128,128,.12);
+  }
+  .bnav { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--sub); font-size: 11px; }
+  .bnav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+  .bnav .pill { padding: 3px 14px; border-radius: 14px; }
+  .bnav.sel { color: var(--primary); }
+  .bnav.sel .pill { background: var(--card2); }
+  .gesturebar {
+    flex: none; height: 26px; background: var(--card); display: flex;
+    align-items: center; justify-content: space-around; padding: 0 70px;
+  }
+  .gesturebar .g { cursor: pointer; opacity: .7; }
+  .gesturebar .g:hover { opacity: 1; }
+  /* ---------- test result bar ---------- */
+  .testbar { flex: none; background: var(--tonal); padding: 8px 16px 10px; }
+  .testbar .rrow { display: flex; gap: 8px; align-items: center; }
+  .testbar .rrow .spacer { flex: 0 0 auto; }
+  /* ---------- overlays ---------- */
+  #overlay { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+  .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.5); pointer-events: auto; }
+  .dialog {
+    position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%);
+    width: 82%; background: var(--card2); border-radius: 24px; padding: 22px;
+    pointer-events: auto; box-shadow: 0 12px 40px rgba(0,0,0,.5); color: var(--text);
+  }
+  .dialog h3 { font-size: 17px; margin-bottom: 10px; font-weight: 600; }
+  .dialog .dtext { font-size: 13.5px; line-height: 1.5; color: var(--text); }
+  .dialog .dbtns { display: flex; justify-content: flex-end; gap: 4px; margin-top: 18px; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; background: var(--card2);
+    border-radius: 24px 24px 0 0; padding: 20px 20px 28px; pointer-events: auto;
+    color: var(--text); box-shadow: 0 -8px 32px rgba(0,0,0,.4);
+    animation: rise .25s ease-out;
+  }
+  @keyframes rise { from { transform: translateY(40px); opacity: .4; } }
+  .toast {
+    position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+    background: #333; color: #eee; font-size: 12.5px; padding: 9px 16px;
+    border-radius: 8px; pointer-events: none; white-space: nowrap;
+    animation: fade .25s; z-index: 40;
+  }
+  @keyframes fade { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
+  .menu {
+    position: absolute; top: 30px; right: 14px; background: var(--card2);
+    border-radius: 12px; padding: 6px 0; min-width: 180px; pointer-events: auto;
+    box-shadow: 0 8px 28px rgba(0,0,0,.5); color: var(--text);
+  }
+  .menu .mi { padding: 11px 16px; font-size: 13.5px; cursor: pointer; }
+  .menu .mi:hover { background: rgba(128,128,128,.15); }
+  /* ---------- test screens ---------- */
+  .colorbox { position: absolute; inset: 0; cursor: pointer; }
+  .colorcard {
+    position: absolute; top: 14px; left: 14px; right: 14px;
+    background: var(--card); border-radius: 12px; padding: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.35);
+  }
+  .gridcanvas { position: absolute; inset: 0 0 0 0; touch-action: none; cursor: crosshair; }
+  .tg-cell { position: absolute; }
+  .mt-dot { position: absolute; border-radius: 50%; opacity: .8; pointer-events: none; transform: translate(-50%,-50%); }
+  .camview {
+    border-radius: 12px; flex: 1; margin: 0 16px; min-height: 280px;
+    background: linear-gradient(135deg,#3a4a5a,#1c2733 40%,#2e3d2a 75%,#141b24);
+    background-size: 300% 300%; animation: cam 9s ease-in-out infinite;
+    display: flex; align-items: flex-end; padding: 12px; color: #cfd8e3; font-size: 12px;
+  }
+  @keyframes cam { 0%,100% { background-position: 0% 40%; } 50% { background-position: 100% 60%; } }
+  .torch-on { box-shadow: 0 0 90px 30px rgba(255,240,140,.55) inset; }
+  .sensorbar { height: 4px; background: var(--card2); border-radius: 2px; margin: 2px 0 6px; overflow: hidden; }
+  .sensorbar > div { height: 100%; background: var(--primary); }
+  /* ---------- flow map ---------- */
+  .flowmap {
+    width: 330px; flex: none; border-left: 1px solid #262b34;
+    overflow-y: auto; padding: 14px 14px 30px;
+  }
+  .flowmap h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: #8a93a5; margin: 16px 0 6px; }
+  .flowmap h2:first-child { margin-top: 0; }
+  .fnode {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: #151a20; border: 1px solid #232933; border-radius: 8px;
+    padding: 7px 10px; margin-bottom: 5px; color: #c6cdd9; font-size: 12.5px;
+  }
+  .fnode:hover { border-color: #3d4b63; }
+  .fnode.active { border-color: #a8c7fa; background: #1b2436; color: #d6e4ff; }
+  .fnode .rt { display: block; font: 10.5px Consolas, monospace; color: #6b768c; margin-top: 2px; }
+  .fnode.lvl1 { margin-left: 16px; }
+  .fnode.lvl2 { margin-left: 32px; }
+  .flegend { font-size: 11px; color: #6b768c; margin-top: 4px; }
+  @media (max-width: 900px) { .flowmap { display: none; } .phone-col { min-width: 0; } }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>DroidKit — interactive UI mockup</h1>
+  <span class="hint">Static replica of the Compose app. Click the phone or the flow map — no build, no device.</span>
+</header>
+<div class="layout">
+  <div class="phone-col">
+    <div class="route-bar" id="routebar">route: home</div>
+    <div class="phone" id="phone" data-theme="dark">
+      <div class="statusbar"><span id="clock">9:41</span>
+        <span class="sicons">
+          <svg width="15" height="12" viewBox="0 0 16 12"><path d="M8 10.6 0 3.4 1.4 2 8 7.9 14.6 2 16 3.4z" fill="#ccc"/></svg>
+          <svg width="20" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="2" fill="none" stroke="#ccc"/><rect x="2" y="2" width="12" height="7" fill="#ccc"/><rect x="19" y="3.5" width="3" height="4" rx="1" fill="#ccc"/></svg>
+        </span>
+      </div>
+      <div id="appbar"></div>
+      <div class="progress-line" id="progline" style="display:none"><div id="progfill"></div></div>
+      <div id="body"></div>
+      <div id="testbar"></div>
+      <nav class="bottomnav" id="bottomnav"></nav>
+      <div class="gesturebar">
+        <span class="g" id="gback" title="Back">◁</span>
+        <span class="g" id="ghome" title="Home" style="font-size:11px">●</span>
+        <span class="g" id="grecent" title="Recents" style="font-size:11px">■</span>
+      </div>
+      <div id="overlay"></div>
+    </div>
+  </div>
+  <aside class="flowmap" id="flowmap"></aside>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   MOCK DEVICE STATE — a Pixel-8-Pro-ish phone, mid-setup:
+   CAMERA granted; RECORD_AUDIO / BLUETOOTH_CONNECT / BLUETOOTH_SCAN not
+   granted; SHIZUKU + ROOT unavailable; ADB needs pairing. Everything
+   else ready, so V2 tools show real Blocked badges.
+   ===================================================================== */
+const DEVICE = {
+  manufacturer: "Google", model: "Pixel 8 Pro", device: "husky", product: "husky",
+  androidRelease: "15", sdkInt: 35, securityPatch: "2026-09-05",
+  abis: "arm64-v8a, armeabi-v7a", appVersion: "0.1.0",
+  ramTotalMb: 12228, ramAvailMb: 6114, ramThresholdMb: 220,
+  storageTotal: 137438953472, storageFree: 73400320000,
+  display: { w: 1344, h: 2992, dpi: 480, refresh: "120.0 Hz", modes: "60.0 Hz, 120.0 Hz" },
+  cameras: { total: 3, back: 2, front: 1, external: 0 },
+  features: {
+    "android.hardware.nfc": true, "android.hardware.bluetooth": true,
+    "android.hardware.bluetooth_le": true, "android.hardware.usb.host": true,
+    "android.hardware.usb.accessory": true, "android.hardware.telephony": true,
+    "android.hardware.location": true, "android.hardware.camera.any": true,
+    "android.hardware.camera.flash": true, "android.hardware.wifi": true,
+  },
+  battery: { level: 72, status: "Discharging", plug: "Unplugged", tempC: 31.4, voltageMv: 4132, tech: "Li-ion", health: "Good", currentMa: "-412", saver: false },
+};
+const PROVIDERS = {
+  STANDARD: { status: "ready" },
+  SHIZUKU:  { status: "unavailable", reason: "Shizuku service not running" },
+  ADB:      { status: "setup", instructions: "enable wireless debugging in Developer options, then pair" },
+  ROOT:     { status: "unavailable", reason: "No root provider registered" },
+};
+const S = {
+  stack: ["home"], tab: "home",
+  perms: {
+    "android.permission.INTERNET": true, "android.permission.ACCESS_NETWORK_STATE": true,
+    "android.permission.VIBRATE": true, "android.permission.WAKE_LOCK": true,
+    "android.permission.FOREGROUND_SERVICE": true, "android.permission.NFC": true,
+    "android.permission.POST_NOTIFICATIONS": true, "android.permission.CAMERA": true,
+    "android.permission.RECORD_AUDIO": false, "android.permission.BLUETOOTH_CONNECT": false,
+    "android.permission.BLUETOOTH_SCAN": false, "android.permission.ACCESS_FINE_LOCATION": true,
+  },
+  btEnabled: false,
+  favorites: new Set(["battery.lab"]),
+  recentTools: [],
+  toolsQuery: "", toolsCategory: null,
+  appsQuery: "", appsFilter: "ALL",
+  reportsFilter: "ALL",
+  sessions: [], sessionResults: {},
+  engine: null,           // guided run state
+  theme: "dark",
+  usbPerm: {},            // deviceName -> granted
+  usbPermPending: {},
+  nfc: { scanning: false, armed: null, tag: null, result: null },
+  timers: [],
+};
+/* ---------------- tools (mirrors every *Feature.kt tools list) ------- */
+const CAT = { DEVICE:"DEVICE", DIAGNOSTICS:"DIAGNOSTICS", APPS:"APPS", CONNECTIVITY:"CONNECTIVITY", HARDWARE:"HARDWARE", DEVELOPER:"DEVELOPER", REPORTS:"REPORTS" };
+const SAFE=0, MINOR=1, SYSCHG=2, HIGH=3, ADV=4;
+const CAP = { STD:"STANDARD_API", RUNTIME:"RUNTIME_PERMISSION", SHIZUKU:"SHIZUKU_SERVICE", ADB:"ADB_SHELL", ROOT:"ROOT" };
+const P = {
+  INTERNET:"android.permission.INTERNET", ANS:"android.permission.ACCESS_NETWORK_STATE",
+  REC:"android.permission.RECORD_AUDIO", CAM:"android.permission.CAMERA",
+  VIB:"android.permission.VIBRATE", NFC:"android.permission.NFC",
+  BTC:"android.permission.BLUETOOTH_CONNECT", BTS:"android.permission.BLUETOOTH_SCAN",
+};
+const NETP = [P.INTERNET, P.ANS];
+const TOOLS = [
+  t("dashboard.overview","Device Overview","Summary of this device and its capabilities",CAT.DEVICE,"home"),
+  t("deviceinfo.overview","Device Inspector","Identity, OS, hardware, memory, storage, display, battery, capabilities",CAT.DEVICE,"deviceinfo"),
+  t("deviceinfo.storage","Storage Lab","Volumes, capacity, free space, storage warnings",CAT.DEVICE,"deviceinfo/storage"),
+  t("battery.lab","Battery Lab","Charge level, status, temperature, voltage, power draw",CAT.DEVICE,"battery"),
+  t("sensors.lab","Sensor Lab","Full sensor inventory with vendor, power and range details",CAT.DEVICE,"sensors"),
+  t("diagnostics.full","Full Diagnostic","Guided end-to-end hardware check with a saved report",CAT.DIAGNOSTICS,"diagnose/guided"),
+  t("diagnostics.quick","Quick Tests","Jump straight to a single hardware test",CAT.DIAGNOSTICS,"diagnose"),
+  t("sensors.live","Live Sensor Monitor","Stream live readings from supported sensors",CAT.DIAGNOSTICS,"sensors/live/1"),
+  t("display.deadpixel","Dead Pixel Test","Full-screen color slides to spot dead pixels",CAT.DIAGNOSTICS,"display"),
+  t("display.touch","Touch Test","Count simultaneous touch points",CAT.DIAGNOSTICS,"display"),
+  t("audio.speaker","Speaker Test","Play test tones through each output",CAT.DIAGNOSTICS,"audio"),
+  t("audio.microphone","Microphone Test","Record and meter microphone input",CAT.DIAGNOSTICS,"audio",{perms:[P.REC]}),
+  t("audio.vibration","Vibration Test","Run haptic patterns and confirm motor response",CAT.DIAGNOSTICS,"audio",{perms:[P.VIB]}),
+  t("camera.capture","Camera Test","Preview each camera and capture a test frame",CAT.DIAGNOSTICS,"camera",{perms:[P.CAM],feats:["android.hardware.camera.any"]}),
+  t("camera.flash","Flash Test","Toggle torch on each camera unit",CAT.DIAGNOSTICS,"camera",{feats:["android.hardware.camera.flash"]}),
+  t("apps.installed","App Inspector","Visible installed apps with package metadata",CAT.APPS,"apps"),
+  t("apps.components","Component Explorer","Activities, services, receivers and providers per app",CAT.APPS,"apps"),
+  t("apps.permissions","Permission Inspector","Requested permissions grouped by grant state",CAT.APPS,"apps"),
+  t("permissions.center","Permission Center","DroidKit's own declared and runtime permissions",CAT.APPS,"permissions"),
+  t("permissions.inspector","Permission Inspector","Per-app granted/declared permissions and runtime state",CAT.APPS,"permissions",{caps:[CAP.SHIZUKU],phase:"V2"}),
+  t("appops.view","AppOps Viewer","Per-app AppOps modes (usage access, overlays, background)",CAT.APPS,"appops",{caps:[CAP.SHIZUKU],phase:"V2"}),
+  t("appops.set","AppOps Controls","Change AppOps modes — modifies system permission state",CAT.APPS,"appops",{safety:SYSCHG,caps:[CAP.SHIZUKU],phase:"V2"}),
+  t("packages.disable","Disable Package","Enable/disable packages — bloatware control",CAT.APPS,"packages",{safety:HIGH,caps:[CAP.ADB],phase:"V2"}),
+  t("packages.clear","Clear App Data","Wipe an app's data — irreversible",CAT.APPS,"packages",{safety:HIGH,caps:[CAP.ADB],phase:"V2"}),
+  t("packages.uninstall","Uninstall for User","Uninstall package for current user profile",CAT.APPS,"packages",{safety:HIGH,caps:[CAP.ADB],phase:"V2"}),
+  t("network.inspector","Connection Inspector","Active transports, capabilities and link properties",CAT.CONNECTIVITY,"network",{perms:NETP}),
+  t("network.ping","Ping","ICMP reachability probe with latency samples",CAT.CONNECTIVITY,"network",{perms:NETP}),
+  t("network.dns","DNS Lookup","Resolve hostnames via the device resolver",CAT.CONNECTIVITY,"network",{perms:NETP}),
+  t("network.diagnostics","Connectivity Diagnostics","Per-layer checks: network, internet, DNS, reachability",CAT.CONNECTIVITY,"network",{perms:NETP}),
+  t("bluetooth.status","Bluetooth Status","Adapter state, classic/LE capability, bonded devices",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTC],feats:["android.hardware.bluetooth"],minSdk:31}),
+  t("bluetooth.scan","BLE Scan","Scan for nearby BLE devices (post-V1)",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTS],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
+  t("nfc.read","NFC Tag Read","Tag technologies, NDEF records and Tag Doctor",CAT.HARDWARE,"nfc",{perms:[P.NFC],feats:["android.hardware.nfc"]}),
+  t("nfc.write","NFC Write / Erase","Write text/URI NDEF records or erase writable tags",CAT.HARDWARE,"nfc/write",{safety:MINOR,perms:[P.NFC],feats:["android.hardware.nfc"]}),
+  t("usb.host","USB Host Check","Detect USB host capability and connected devices",CAT.HARDWARE,"usb",{feats:["android.hardware.usb.host"]}),
+  t("usb.descriptors","USB Descriptors","VID/PID, interfaces and endpoints for attached devices",CAT.HARDWARE,"usb",{feats:["android.hardware.usb.host"]}),
+  t("developer.intents","Intent Launcher","Jump to Developer options, system settings screens and custom intents",CAT.DEVELOPER,"developer",{safety:MINOR}),
+  t("developer.display","Display Metrics","Resolution, density, refresh rate and HDR capabilities",CAT.DEVELOPER,"developer"),
+  t("developer.logs","Log Viewer","Read device logs where authorized",CAT.DEVELOPER,"developer",{safety:ADV,caps:[CAP.ADB],phase:"V2"}),
+  t("adb.pairing","Wireless ADB Pairing","Pair with the device's own wireless debugging service",CAT.DEVELOPER,"adb",{safety:SYSCHG,caps:[CAP.ADB],phase:"V2"}),
+  t("adb.shell","ADB Shell","Run shell commands through the wireless ADB provider",CAT.DEVELOPER,"adb",{safety:ADV,caps:[CAP.ADB],phase:"V2"}),
+  t("reports.export","Export Report","Share a diagnostic report as text",CAT.REPORTS,"reports",{safety:MINOR}),
+];
+function t(id,title,description,category,route,o={}) {
+  return { id,title,description,category,route,
+    safety:o.safety??SAFE, caps:o.caps??[CAP.STD], perms:o.perms??[],
+    feats:o.feats??[], minSdk:o.minSdk??null, phase:o.phase??"V1", keywords:o.keywords??[] };
+}
+const CAP2KIND = { STANDARD_API:"STANDARD", RUNTIME_PERMISSION:"STANDARD", SHIZUKU_SERVICE:"SHIZUKU", ADB_SHELL:"ADB", ROOT:"ROOT" };
+function resolve(tool) {
+  const reasons = [];
+  if (tool.minSdk && DEVICE.sdkInt < tool.minSdk) reasons.push(`Requires Android API ${tool.minSdk}+`);
+  tool.feats.forEach(f => { if (!DEVICE.features[f]) reasons.push(`Hardware missing: ${f}`); });
+  tool.perms.forEach(p => { if (!S.perms[p]) reasons.push(`Permission required: ${p}`); });
+  tool.caps.forEach(c => {
+    const kind = CAP2KIND[c], p = PROVIDERS[kind];
+    if (!p || p.status !== "ready") {
+      const d = !p ? "No provider registered"
+        : p.status === "setup" ? `setup required — ${p.instructions}` : p.reason;
+      reasons.push(`Needs ${kind} provider: ${d}`);
+    }
+  });
+  return reasons.length ? { blocked: reasons } : { ready: true };
+}
+/* ---------------- phone-doctor test catalog ------------------------- */
+const TESTS = [
+  {id:"display.color",title:"Display colors",cat:"Display",instr:"Tap to cycle red, green, blue, white and black. Check each color for uniform coverage, banding, tint shifts or dim patches."},
+  {id:"display.dead_pixel",title:"Dead-pixel check",cat:"Display",instr:"Tap through every color and inspect the whole panel. Look for pixels stuck on one color, always-dark dots, or bright specks."},
+  {id:"touch.grid",title:"Touch grid",cat:"Touch",instr:"Drag your finger across every grid cell. Cells fill where touch registers. Any cell that refuses to fill is a dead zone."},
+  {id:"touch.multitouch",title:"Multitouch",cat:"Touch",instr:"Place several fingers on the screen at once. Each finger should appear as its own marker. Count the simultaneous points."},
+  {id:"haptics.vibration",title:"Vibration",cat:"Haptics",instr:"Tap Vibrate and confirm the device buzzes. Repeat to check consistency. A weak or absent buzz usually means a motor or flex issue."},
+  {id:"sensor.accelerometer",title:"Accelerometer",cat:"Sensors",instr:"Tilt the phone slowly in every direction. The X/Y/Z values should change smoothly with orientation.",sensor:1},
+  {id:"sensor.gyroscope",title:"Gyroscope",cat:"Sensors",instr:"Rotate the phone around each axis. Values should track rotation speed and settle near zero when still.",sensor:4},
+  {id:"sensor.proximity",title:"Proximity sensor",cat:"Sensors",instr:"Cover and uncover the area near the earpiece. The reading should switch between near and far values.",sensor:8},
+  {id:"sensor.light",title:"Light sensor",cat:"Sensors",instr:"Hold the phone under a lamp, then shade the sensor. The lux value should rise and fall with the lighting.",sensor:5},
+  {id:"sensor.magnetometer",title:"Magnetometer",cat:"Sensors",instr:"Rotate the phone or move a magnet nearby. Field strength values should respond to orientation and magnets.",sensor:2},
+  {id:"audio.speaker",title:"Speaker",cat:"Audio",instr:"Tap Play and confirm a clear tone comes from the speaker. Repeat to check consistency. Distortion, crackle or silence are failures."},
+  {id:"audio.microphone",title:"Microphone",cat:"Audio",instr:"Record a few seconds of speech, then play it back. Confirm your voice is audible and clear. This test needs microphone permission.",perm:P.REC},
+  {id:"camera.front",title:"Front camera",cat:"Camera",instr:"Check the front camera preview renders a live image. Cover the lens briefly to confirm the feed is real.",perm:P.CAM},
+  {id:"camera.rear",title:"Rear camera",cat:"Camera",instr:"Check the rear camera preview renders a live image. Cover the lens briefly to confirm the feed is real.",perm:P.CAM},
+  {id:"camera.flash",title:"Flash",cat:"Camera",instr:"Toggle the torch on and off while watching the rear of the device. The LED should light clearly.",perm:P.CAM},
+  {id:"connectivity.wifi",title:"Wi-Fi",cat:"Connectivity",instr:"Checks Wi-Fi hardware capability and whether the radio is enabled. The capability result records automatically.",capKey:"wifi"},
+  {id:"connectivity.bluetooth",title:"Bluetooth",cat:"Connectivity",instr:"Checks Bluetooth hardware capability and adapter state. The capability result records automatically.",capKey:"bluetooth"},
+  {id:"connectivity.location",title:"Location / GPS",cat:"Connectivity",instr:"Checks GNSS location capability and whether location is enabled. The capability result records automatically.",capKey:"location"},
+  {id:"connectivity.nfc",title:"NFC",cat:"Connectivity",instr:"Checks NFC hardware capability and adapter state. The capability result records automatically.",capKey:"nfc"},
+  {id:"connectivity.usb",title:"USB",cat:"Connectivity",instr:"Checks USB host/accessory capability. The capability result records automatically.",capKey:"usb"},
+  {id:"power.charging",title:"Charging / battery",cat:"Power",instr:"Review the battery readings. Plug in a charger and confirm the charging state changes to charging and the plug source appears."},
+];
+const TEST = id => TESTS.find(x => x.id === id);
+/* ---------------- mock content -------------------------------------- */
+const SENSORS = [
+  {name:"LSM6DSR Accelerometer",vendor:"STMicro",type:1,stype:"android.sensor.accelerometer",ver:1,range:78.4532,res:"0.0023956299",power:0.25,wake:false,live:true,axes:["x","y","z"],unit:"m/s²"},
+  {name:"LSM6DSR Gyroscope",vendor:"STMicro",type:4,stype:"android.sensor.gyroscope",ver:1,range:34.9066,res:"0.0010681152",power:0.55,wake:false,live:true,axes:["x","y","z"],unit:"rad/s"},
+  {name:"AK09918 Magnetometer",vendor:"AKM",type:2,stype:"android.sensor.magnetic_field",ver:1,range:4912,res:"0.15",power:0.24,wake:false,live:true,axes:["x","y","z"],unit:"µT"},
+  {name:"TMD3719 Ambient Light",vendor:"ams-OSRAM",type:5,stype:"android.sensor.light",ver:1,range:61440,res:"1.0",power:0.45,wake:false,live:true,axes:["value"],unit:"lx"},
+  {name:"TMD3719 Proximity",vendor:"ams-OSRAM",type:8,stype:"android.sensor.proximity",ver:1,range:5,res:"1.0",power:0.75,wake:false,live:true,axes:["value"],unit:"cm"},
+  {name:"BMP380 Barometer",vendor:"Bosch",type:6,stype:"android.sensor.pressure",ver:1,range:1100,res:"0.0002",power:0.4,wake:false,live:true,axes:["value"],unit:"hPa"},
+  {name:"LSM6DSR Gravity",vendor:"STMicro",type:9,stype:"android.sensor.gravity",ver:1,range:78.4532,res:"0.0023956299",power:0.25,wake:false,live:true,axes:["x","y","z"],unit:"m/s²"},
+  {name:"LSM6DSR Linear Acceleration",vendor:"STMicro",type:10,stype:"android.sensor.linear_acceleration",ver:1,range:78.4532,res:"0.0023956299",power:0.25,wake:false,live:true,axes:["x","y","z"],unit:"m/s²"},
+  {name:"Game Rotation Vector",vendor:"Google",type:11,stype:"android.sensor.game_rotation_vector",ver:1,range:1,res:"0.000001",power:0.9,wake:false,live:true,axes:["x","y","z","w"],unit:""},
+  {name:"Step Counter",vendor:"Google",type:19,stype:"android.sensor.step_counter",ver:1,range:1,res:"1.0",power:0.06,wake:true,live:false,axes:[],unit:""},
+  {name:"Significant Motion",vendor:"Google",type:17,stype:"android.sensor.significant_motion",ver:1,range:1,res:"1.0",power:0.08,wake:true,live:false,axes:[],unit:""},
+];
+const APPS = [
+  {label:"Android System WebView",pkg:"com.google.android.webview",ver:"141.0.7390.43",sys:true},
+  {label:"Chrome",pkg:"com.android.chrome",ver:"141.0.7390.90",sys:false},
+  {label:"DroidKit",pkg:"io.github.droidkit",ver:"0.1.0",sys:false,self:true},
+  {label:"Files",pkg:"com.google.android.documentsui",ver:"16",sys:true},
+  {label:"Gmail",pkg:"com.google.android.gm",ver:"2025.10.05",sys:false},
+  {label:"Google",pkg:"com.google.android.googlequicksearchbox",ver:"16.40.19",sys:false},
+  {label:"Google Play services",pkg:"com.google.android.gms",ver:"25.38.32",sys:true},
+  {label:"Maps",pkg:"com.google.android.apps.maps",ver:"25.42.04",sys:false},
+  {label:"Messages",pkg:"com.google.android.apps.messaging",ver:"20251001_00",sys:false},
+  {label:"Photos",pkg:"com.google.android.apps.photos",ver:"7.49.0",sys:false},
+  {label:"Settings",pkg:"com.android.settings",ver:"15",sys:true},
+  {label:"Spotify",pkg:"com.spotify.music",ver:"9.0.84.1236",sys:false},
+  {label:"WhatsApp",pkg:"com.whatsapp",ver:"2.25.28.74",sys:false},
+  {label:"YouTube",pkg:"com.google.android.youtube",ver:"20.42.35",sys:false},
+];
+const USB_DEVS = [
+  {name:"/dev/bus/usb/001/002",product:"USB2.0 Flash Disk",vid:0x090C,pid:0x1000,cls:0,sub:0,proto:0,
+   ver:"2.00",mfr:"Generic",serial:"A9F31B7C",ifaceCount:1},
+];
+const NFC_TAG = { idHex:"04:A3:22:9A:4B:61:80", techs:"Ndef, NfcA, MifareUltralight", ndefCapable:true,
+  writable:"true", capacity:"144 bytes", type:"NFC Forum Type 2", formatable:false,
+  records:[{tnf:"TNF_WELL_KNOWN",type:"55 (U)",kind:"uri",decoded:"https://droidkit.dev"}],
+  checks:[
+    {name:"Tag readable",detail:"Tag ID and technology list received",v:"PASS"},
+    {name:"NDEF formatted",detail:"Contains a valid NDEF message",v:"PASS"},
+    {name:"Writable",detail:"Tag accepts writes — content can be overwritten",v:"WARNING"},
+    {name:"NDEF capacity",detail:"144 bytes — enough for text or a URI",v:"PASS"},
+    {name:"Secure element",detail:"Bank, transit and access-control applets cannot be read",v:"UNSUPPORTED"},
+  ]};
+const INTENT_PRESETS = [
+  ["Developer options","android.settings.APPLICATION_DEVELOPMENT_SETTINGS"],
+  ["Device info","android.settings.DEVICE_INFO_SETTINGS"],
+  ["System settings","android.settings.SETTINGS"],
+  ["Display settings","android.settings.DISPLAY_SETTINGS"],
+  ["Battery saver","android.settings.BATTERY_SAVER_SETTINGS"],
+  ["Battery optimization","android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS"],
+  ["Wi-Fi settings","android.settings.WIFI_SETTINGS"],
+  ["Bluetooth settings","android.settings.BLUETOOTH_SETTINGS"],
+  ["NFC settings","android.settings.NFC_SETTINGS"],
+  ["Location settings","android.settings.LOCATION_SOURCE_SETTINGS"],
+  ["Date & time","android.settings.DATE_SETTINGS"],
+  ["Usage access","android.settings.USAGE_ACCESS_SETTINGS"],
+  ["Accessibility","android.settings.ACCESSIBILITY_SETTINGS"],
+  ["Storage","android.settings.INTERNAL_STORAGE_SETTINGS"],
+];
+const DECLARED_PERMS = [
+  "android.permission.INTERNET","android.permission.ACCESS_NETWORK_STATE",
+  "android.permission.POST_NOTIFICATIONS","android.permission.NFC",
+  "android.permission.VIBRATE","android.permission.WAKE_LOCK",
+  "android.permission.FOREGROUND_SERVICE","android.permission.CAMERA",
+  "android.permission.RECORD_AUDIO","android.permission.BLUETOOTH_CONNECT",
+  "android.permission.BLUETOOTH_SCAN","android.permission.ACCESS_FINE_LOCATION",
+];
+const INSTALL_TIME = new Set(["android.permission.INTERNET","android.permission.ACCESS_NETWORK_STATE","android.permission.NFC","android.permission.VIBRATE","android.permission.WAKE_LOCK","android.permission.FOREGROUND_SERVICE"]);
+/* ---------------- seeded report (yesterday's session) ---------------- */
+(function seed(){
+  const id = "s-seeded-1";
+  const res = {};
+  const seq = ["display.color","display.dead_pixel","touch.grid","touch.multitouch","haptics.vibration",
+    "sensor.accelerometer","sensor.gyroscope","sensor.proximity","sensor.light","sensor.magnetometer",
+    "audio.speaker","audio.microphone","camera.front","camera.rear","camera.flash",
+    "connectivity.wifi","connectivity.bluetooth","connectivity.location","connectivity.nfc","connectivity.usb","power.charging"];
+  seq.forEach(tid => res[tid] = { state:"PASS", note:null });
+  res["touch.grid"] = { state:"FAIL", note:"dead zone top-left; Coverage 74/96 (77%)" };
+  res["sensor.proximity"] = { state:"NOT_SUPPORTED", note:"No proximity sensor reported" };
+  res["power.charging"] = { state:"NOT_TESTED", note:null };
+  S.sessions.push({ id, started: Date.parse("2026-10-18T16:42:00"), status:"COMPLETED",
+    version:"0.1.0", notes:"Customer reports dead touch zone top-left — confirmed on grid test.",
+    results: res });
+})();
+/* ============================== helpers ============================== */
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const cur = () => S.stack[S.stack.length-1];
+function later(fn, ms){ const id = setTimeout(fn, ms); S.timers.push({type:"t",id}); return id; }
+function every(fn, ms){ const id = setInterval(fn, ms); S.timers.push({type:"i",id}); return id; }
+function clearTimers(){ S.timers.forEach(t => t.type==="t" ? clearTimeout(t.id) : clearInterval(t.id)); S.timers = []; }
+function toast(msg){
+  const ov = $("#overlay");
+  ov.insertAdjacentHTML("beforeend", `<div class="toast">${esc(msg)}</div>`);
+  setTimeout(()=>{ const el = ov.querySelector(".toast"); if(el) el.remove(); }, 1800);
+}
+function fmtBytes(b){ const u=["B","KB","MB","GB","TB"]; let i=0; while(b>=1024&&i<u.length-1){b/=1024;i++;} return b.toFixed(i?1:0)+" "+u[i]; }
+function fmtDT(ms){ return new Date(ms).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}); }
+function providerLabel(k){ const p=PROVIDERS[k]; if(!p) return "Unavailable";
+  return p.status==="ready" ? "Ready" : p.status==="setup" ? `Setup required — ${p.instructions}` : p.reason; }
+function providerLabelHome(k){ const p=PROVIDERS[k]; if(!p) return "unavailable";
+  return p.status==="ready" ? "ready" : p.status==="setup" ? "setup required" : p.reason; }
+let AC=null; function tone(freq=440,dur=1,gain=0.18){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.frequency.value=freq; g.gain.value=gain; o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+/* ============================== widgets ============================== */
+function infoRow(k,v,copy=true){
+  const na = v==null;
+  return `<div class="inforow"><span class="k">${esc(k)}</span>
+    <span class="v ${na?"na":""}">${na?"Not exposed":esc(v)}</span>
+    ${copy && !na ? `<span class="copybtn" data-copy="${esc(k)}: ${esc(v)}">Copy</span>` : ``}</div>`;
+}
+function sectionCard(title, inner){ return `<div class="card"><div class="sec-head" style="padding:0 0 6px">${esc(title)}</div>${inner}</div>`; }
+function toolCard(tool,{fav=false}={}){
+  const r = resolve(tool);
+  const chips = [`<span class="chip">${tool.category}</span>`];
+  if (tool.safety!==SAFE) chips.push(`<span class="chip">L${tool.safety}</span>`);
+  if (tool.phase!=="V1") chips.push(`<span class="chip">${tool.phase}</span>`);
+  return `<div class="card clickable" data-nav="${tool.route}" data-tool="${tool.id}" style="display:flex;align-items:center;gap:8px">
+    <div class="grow">
+      <div style="font-size:15px;font-weight:600">${esc(tool.title)}</div>
+      <div class="t-mini sub" style="margin:2px 0 4px">${esc(tool.description)}</div>
+      <div>${chips.join("")}</div>
+    </div>
+    <span class="badge ${r.ready?"ready":"blocked"}">${r.ready?"Ready":"Blocked"}</span>
+    ${fav!==undefined?`<span class="star ${fav?"on":""}" data-fav="${tool.id}" title="Favorite">${fav?"★":"☆"}</span>`:""}
+  </div>`;
+}
+function appbar(title, actions=""){
+  $("#appbar").innerHTML = title==null ? "" : `<span class="title">${esc(title)}</span>${actions?`<span class="actions">${actions}</span>`:""}`;
+  $("#appbar").style.display = title==null ? "none":"flex";
+}
+function testResultBar(opts={}){
+  return `<div class="testbar">
+    ${opts.note?`<input class="field" id="tnote" placeholder="Note (optional)" style="margin-bottom:8px">`:`<div style="text-align:right"><button class="textbtn" data-act="note-toggle">Note</button></div>`}
+    <div class="rrow">
+      <button class="btn-outline grow" style="color:var(--error)" data-result="FAIL">Fail</button>
+      <button class="textbtn spacer" data-result="NOT_TESTED">Skip</button>
+      <button class="btn grow" data-result="PASS" ${opts.passEnabled===false?"disabled":""} id="passbtn">Pass</button>
+    </div></div>`;
+}
+function dialog({title, text, confirm="OK", cancel=null, onConfirm, danger=false}){
+  const ov = $("#overlay");
+  ov.innerHTML = `<div class="scrim" data-act="dlg-close"></div>
+    <div class="dialog"><h3>${esc(title)}</h3><div class="dtext">${text}</div>
+      <div class="dbtns">
+        ${cancel?`<button class="textbtn" data-act="dlg-close">${esc(cancel)}</button>`:""}
+        <button class="textbtn" style="${danger?"color:var(--error)":""}" data-act="dlg-ok">${esc(confirm)}</button>
+      </div></div>`;
+  ov.dataset.dlgOk = onConfirm || "";
+}
+function closeOverlay(){ $("#overlay").innerHTML=""; delete $("#overlay").dataset.dlgOk; }
+function sysPermDialog(perm, cb){
+  dialog({ title:"Allow DroidKit to " + (perm===P.REC?"record audio?":perm===P.CAM?"take pictures and record video?":perm.includes("BLUETOOTH")?"find, connect to, and determine the relative position of nearby devices?":"access this device's location?"),
+    text:`<span class="mono t-mini">${esc(perm)}</span>`,
+    confirm:"While using the app", cancel:"Don't allow",
+    onConfirm:"grant:"+perm });
+  $("#overlay").dataset.grantCb = cb ? "1" : "";
+}
+/* ============================== router ============================== */
+function nav(route){ S.stack.push(route); clearTimers(); closeOverlay(); render(); }
+function replace(route){ S.stack[S.stack.length-1]=route; clearTimers(); closeOverlay(); render(); }
+function goBack(){ if(S.stack.length>1){ S.stack.pop(); clearTimers(); closeOverlay(); render(); } }
+function goTab(tab){ S.tab=tab; S.stack=[tab]; clearTimers(); closeOverlay(); render(); }
+function recordRecent(toolId){
+  S.recentTools = [toolId, ...S.recentTools.filter(x=>x!==toolId)].slice(0,5);
+}
+/* ============================== screens ============================== */
+function render(){
+  clearTimers();
+  const r = cur();
+  $("#routebar").textContent = "route: " + r;
+  $("#progline").style.display = "none";
+  $("#testbar").innerHTML = "";
+  renderBNav(); renderFlow();
+  const parts = r.split("/");
+  const base = parts[0];
+  let body = "", title = "", actions = "";
+  switch(base){
+    /* ---------- tabs ---------- */
+    case "home": body = scrHome(); title="DroidKit"; break;
+    case "tools": body = scrTools(); title="Tools"; break;
+    case "diagnose":
+      if (parts[1]==="guided") return renderGuided();
+      if (parts[1]==="review") { body = scrReview(); title="Diagnostic review"; break; }
+      if (parts[1]==="test") return renderTest(parts.slice(2).join("/"));
+      body = scrDiagnose(); title="Diagnose"; break;
+    case "settings": body = scrSettings(); title="Settings"; break;
+    /* ---------- device labs ---------- */
+    case "deviceinfo":
+      if(parts[1]==="storage"){ body=scrStorage(); title="Storage Lab"; }
+      else { body=scrDeviceInfo(); title="Device Inspector"; actions=`<span class="iconbtn" data-act="share-device" title="Share summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L8.9 12.7a3.2 3.2 0 0 0 0-1.4l7-4a3 3 0 1 0-.9-1.7l-7 4a3 3 0 1 0 0 4.8l7.1 4.1A3 3 0 1 0 18 16z"/></svg></span>`; }
+      break;
+    case "battery": body = scrBattery(); title="Battery Lab"; break;
+    case "display": body = labIndex("Display & Touch",
+        "Standalone display and touch checks from Phone Doctor. Results here are not saved — run Full Diagnostic to persist them.",
+        [["display.color","Display colors","Cycle solid colors and check coverage, banding and tint."],
+         ["display.dead_pixel","Dead-pixel check","Inspect the whole panel for stuck or dead pixels."],
+         ["touch.grid","Touch grid","Fill every grid cell to expose dead touch zones."],
+         ["touch.multitouch","Multitouch","Count simultaneous touch points with several fingers."]]); title="Display & Touch"; break;
+    case "audio": body = labIndex("Audio & Haptics",
+        "Standalone audio and haptics checks from Phone Doctor. Results here are not saved — run Full Diagnostic to persist them.",
+        [["audio.speaker","Speaker","Play a test tone and confirm clear, consistent output."],
+         ["audio.microphone","Microphone","Record a few seconds of speech and play it back. Needs microphone permission."],
+         ["haptics.vibration","Vibration","Buzz the haptic motor and confirm the response."]]); title="Audio & Haptics"; break;
+    case "camera": body = labIndex("Camera & Flash",
+        "Standalone camera checks from Phone Doctor. Results here are not saved — run Full Diagnostic to persist them.",
+        [["camera.front","Front camera","Confirm the front preview renders a live image. Needs camera permission."],
+         ["camera.rear","Rear camera","Confirm the rear preview renders a live image. Needs camera permission."],
+         ["camera.flash","Flash","Toggle the torch and confirm the LED lights. Needs camera permission."]]); title="Camera & Flash"; break;
+    case "sensors":
+      if(parts[1]==="live"){ body = scrLiveSensor(parseInt(parts[2]||"1")); title = SENSORS.find(s=>s.type===parseInt(parts[2]))?.name || "Live Sensor"; }
+      else { body = scrSensors(); title="Sensor Lab"; }
+      break;
+    case "network": body = scrNetwork(); title="Network Lab"; break;
+    case "bluetooth": body = scrBluetooth(); title="Bluetooth Lab"; break;
+    case "usb":
+      if(parts[1]==="device"){ body=scrUsbDetail(decodeURIComponent(parts.slice(2).join("/"))); title="USB2.0 Flash Disk"; }
+      else { body=scrUsb(); title="USB Lab"; }
+      break;
+    case "nfc":
+      if(parts[1]==="write"){ body=scrNfcWrite(); title="NFC Write"; }
+      else { body=scrNfc(); title="NFC Lab"; }
+      break;
+    case "apps":
+      if(parts[1]==="detail"){ body=scrAppDetail(parts.slice(2).join("/")); title="App detail"; }
+      else { body=scrApps(); title="App Inspector"; }
+      break;
+    case "permissions": body = scrPermCenter(); title="Permission Center"; break;
+    case "appops": body = stub("AppOps","Requires the Shizuku provider — post-V1 journey J18.",
+        ["appops.view","appops.set"]); title="AppOps"; break;
+    case "packages": body = stub("Package Controls","High-impact package operations gated on wireless ADB — post-V1 journeys J18/J19. Each action will show its exact consequence before running.",
+        ["packages.disable","packages.clear","packages.uninstall"]); title="Package Controls"; break;
+    case "adb": body = stub("Wireless ADB","Pairing/session provider — post-V1 journey J19.",
+        ["adb.pairing","adb.shell"]); title="Wireless ADB"; break;
+    case "developer": body = scrDeveloper(); title="Developer Lab"; break;
+    case "reports":
+      if(parts[1]==="detail"){ body=scrReportDetail(parts.slice(2).join("/")); title="Report detail"; }
+      else { body=scrReports(); title="Reports"; actions=`<button class="textbtn" data-act="reports-menu" style="font-size:18px;padding:2px 8px">⋮</button>`; }
+      break;
+    default: body = `<div class="pad empty">Unknown route: ${esc(r)}</div>`;
+  }
+  appbar(title, actions);
+  $("#body").innerHTML = body;
+  afterRender(r);
+}
+function renderBNav(){
+  const items = [
+    ["home","Home",`<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>`],
+    ["tools","Tools",`<svg viewBox="0 0 24 24"><path d="M21.7 18.3 13.4 10a5.5 5.5 0 0 0-7-7L9.9 6.5 6.5 9.9 3 6.4a5.5 5.5 0 0 0 7 7l8.3 8.3a1.5 1.5 0 0 0 2.1 0l1.3-1.3a1.5 1.5 0 0 0 0-2.1z"/></svg>`],
+    ["diagnose","Diagnose",`<svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z"/><path d="M7 12h3l1.5-4 2 8L15 12h2"/></svg>`],
+    ["settings","Settings",`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/></svg>`],
+  ];
+  $("#bottomnav").innerHTML = items.map(([r,l,ic]) =>
+    `<div class="bnav ${cur()===r?"sel":""}" data-tab="${r}"><span class="pill">${ic}</span><span>${l}</span></div>`).join("");
+}
+/* ---------- home ---------- */
+function scrHome(){
+  const prov = Object.keys(PROVIDERS).map(k =>
+    `<div class="t-mini" style="margin:2px 0">${k}: ${providerLabelHome(k)}</div>`).join("");
+  const recents = S.recentTools.map(id => TOOLS.find(x=>x.id===id)).filter(Boolean);
+  const quick = TOOLS.filter(x => resolve(x).ready).slice(0,6);
+  return `<div class="pad col">
+    <div class="card"><div class="t-small">This device</div>
+      <div class="t-body" style="margin-top:4px">${DEVICE.manufacturer} ${DEVICE.model} · Android ${DEVICE.androidRelease} (API ${DEVICE.sdkInt}) · ${fmtBytes(DEVICE.storageFree)} free</div></div>
+    <div class="card"><div class="t-small">Elevated access</div><div style="margin-top:4px">${prov}</div></div>
+    <button class="btn full" data-nav="diagnose/guided">Start Full Diagnostic</button>
+    <div class="sec-head">Recent tools</div>
+    ${recents.length ? recents.map(x=>toolCard(x)).join("") : `<div class="empty">No recent tools yet — browse the Tools tab.</div>`}
+    <div class="sec-head">Ready now</div>
+    ${quick.map(x=>toolCard(x)).join("")}
+  </div>`;
+}
+/* ---------- tools ---------- */
+function scrTools(){
+  const cats = ["All",...Object.values(CAT)];
+  return `<div class="pad col">
+    <input class="field" id="toolSearch" placeholder="Search tools" value="${esc(S.toolsQuery)}">
+    <div class="chiprow" id="catRow">${cats.map(c =>
+      `<button class="fchip ${ (c==="All"&& !S.toolsCategory)||S.toolsCategory===c?"sel":""}" data-cat="${c}">${c.charAt(0)+c.slice(1).toLowerCase()}</button>`).join("")}</div>
+    <div id="toolList" class="col"></div>
+  </div>`;
+}
+function renderToolList(){
+  const q = S.toolsQuery.trim().toLowerCase();
+  const list = TOOLS.filter(x =>
+    (!S.toolsCategory || x.category===S.toolsCategory) &&
+    (!q || x.title.toLowerCase().includes(q) || x.description.toLowerCase().includes(q) || x.id.includes(q)));
+  const el = $("#toolList"); if(!el) return;
+  el.innerHTML = list.length ? list.map(x=>toolCard(x,{fav:S.favorites.has(x.id)})).join("")
+    : `<div class="empty">No tools match.</div>`;
+}
+/* ---------- diagnose hub ---------- */
+function scrDiagnose(){
+  const byCat = {};
+  TESTS.forEach(t => (byCat[t.cat] = byCat[t.cat]||[]).push(t));
+  return `<div class="pad col">
+    <button class="btn full" data-nav="diagnose/guided">Start Full Diagnostic</button>
+    <button class="btn-outline full" data-nav="reports" style="display:block;width:100%">Saved reports</button>
+    <div class="sec-head">Quick tests</div>
+    ${Object.entries(byCat).map(([c,ts]) =>
+      `<div class="t-small sub" style="padding-top:4px">${c}</div>` +
+      ts.map(x=>`<div class="card clickable" data-nav="diagnose/test/${x.id}"><div class="t-med">${x.title}</div></div>`).join("")
+    ).join("")}
+    <div class="sec-head">History</div>
+    ${S.sessions.length ? S.sessions.map(s =>
+      `<div class="card clickable" data-nav="reports/detail/${s.id}">
+        <div class="t-small">${fmtDT(s.started)}</div>
+        <div class="t-mini sub">${s.status}</div>
+        <div class="t-mini sub">v${s.version}</div></div>`).join("")
+      : `<div class="empty">No diagnostic sessions yet.</div>`}
+  </div>`;
+}
+/* ---------- guided session ---------- */
+function renderGuided(){
+  if(!S.engine){
+    const id = "s-"+Date.now();
+    S.sessions.unshift({ id, started:Date.now(), status:"IN_PROGRESS", version:DEVICE.appVersion, notes:null, results:{} });
+    S.engine = { sessionId:id, queue:TESTS, index:0, results:{}, notes:{} };
+  }
+  const e = S.engine;
+  if(e.index >= e.queue.length){ // done → review
+    S.stack[S.stack.length-1] = "diagnose/review"; render(); return;
+  }
+  const test = e.queue[e.index];
+  appbar(`Test ${e.index+1} of ${e.queue.length}: ${test.title}`);
+  $("#progline").style.display="block";
+  $("#progfill").style.width = (e.index/e.queue.length*100)+"%";
+  renderBNav(); renderFlow();
+  $("#routebar").textContent = "route: diagnose/guided";
+  $("#body").innerHTML = testBody(test, "guided");
+  if(!test.capKey){ $("#testbar").innerHTML = testResultBar(testUIState(test)); bindResultBar(test, "guided"); }
+  bindTest(test, "guided");
+}
+function scrReview(){
+  const e = S.engine;
+  if(!e) return `<div class="pad empty">No active session — start a Full Diagnostic from the Diagnose tab first.</div>`;
+  const counts = {};
+  Object.values(e.results).forEach(st => counts[st]=(counts[st]||0)+1);
+  const order = [["PASS","PASS"],["FAIL","FAIL"],["NOT_TESTED","SKIPPED"],["NOT_SUPPORTED","NOT SUPPORTED"],["PERMISSION_REQUIRED","PERMISSION"],["UNKNOWN","UNKNOWN"]];
+  const summary = order.filter(([k])=>counts[k]).map(([k,l])=>`${l} ${counts[k]}`).join(" · ") || "No results recorded";
+  const groups = {};
+  Object.keys(e.results).forEach(tid => { const c = TEST(tid)?.cat||"Other"; (groups[c]=groups[c]||[]).push(tid); });
+  const retryable = Object.entries(e.results).filter(([,st])=>st==="FAIL"||st==="NOT_TESTED").map(([k])=>k);
+  return `<div class="pad col">
+    <div class="card"><div class="t-small">${summary}</div></div>
+    ${Object.entries(groups).map(([c,ids]) =>
+      `<div class="sec-head">${c}</div>` + ids.map(tid => {
+        const st = e.results[tid];
+        const col = st==="PASS"?"pri":st==="FAIL"?"err":"sub";
+        const note = e.notes[tid] ? `<div class="t-mini sub" style="margin-top:2px">${esc(e.notes[tid])}</div>` : "";
+        return `<div class="card"><div class="row"><span class="grow t-med">${TEST(tid)?.title||tid}</span>
+          <span class="t-mini ${col}" style="font-weight:700">${st.replace(/_/g," ")}</span></div>${note}</div>`;
+      }).join("")).join("")}
+    <input class="field" id="reviewNotes" placeholder="Technician notes" style="margin-top:8px">
+    ${retryable.length?`<button class="btn-outline full" style="display:block;width:100%" data-act="retry-tests">Retry ${retryable.length} failed/skipped test(s)</button>`:""}
+    <button class="btn full" data-act="save-session">Save session</button>
+  </div>`;
+}
+/* ---------- individual test host ---------- */
+function renderTest(testId){
+  const test = TEST(testId);
+  renderBNav(); renderFlow();
+  $("#routebar").textContent = "route: diagnose/test/"+testId;
+  if(!test){ appbar(null); $("#body").innerHTML = `<div class="pad empty">Unknown test: ${esc(testId)}</div>`; return; }
+  appbar(null); // standalone tests draw no app bar
+  if(test.perm && !S.perms[test.perm]){ renderPermGate(test, "standalone"); return; }
+  $("#body").innerHTML = testBody(test, "standalone");
+  if(!test.capKey){ $("#testbar").innerHTML = testResultBar(testUIState(test)); bindResultBar(test, "standalone"); }
+  bindTest(test, "standalone");
+}
+function renderPermGate(test, mode){
+  $("#body").innerHTML = `<div class="pad col" style="gap:12px">
+    <div class="t-med" style="font-weight:600">Permission required</div>
+    <div class="t-body">This test needs ${test.perm} to run. DroidKit never requests permissions in the background — it asks only when you start the test.</div>
+    <button class="btn full" data-act="req-perm" data-perm="${test.perm}">Grant permission</button>
+  </div>`;
+  $("#testbar").innerHTML = testResultBar({});
+  bindResultBar(test, mode);
+}
+function testUIState(test){
+  if(test.id==="touch.grid") return {passEnabled:false};
+  return {};
+}
+function testBody(test, mode){
+  switch(true){
+    case test.id.startsWith("display."):
+      return `<div id="colorwrap" style="position:absolute;inset:0">
+        <div class="colorbox" id="colorbox" style="background:#ff0000"></div>
+        <div class="colorcard" id="colorcard">
+          <div class="t-med" style="font-weight:600">${test.title}</div>
+          <div class="t-body" style="margin-top:4px">${test.instr}</div>
+          <div class="t-mini" id="colorlabel" style="margin-top:8px">Showing Red (1/5) — ${test.id==="display.dead_pixel"?"inspect every pixel before tapping":"tap to switch color"}</div>
+          <div class="t-mini sub" style="margin-top:4px">Tap screen to cycle colors and hide this card</div>
+        </div></div>`;
+    case test.id==="touch.grid":
+      return `<div class="t-small" style="padding:16px" id="tglabel">Touch grid — 0/96 cells covered</div>
+        <div id="tgwrap" style="position:absolute;left:16px;right:16px;top:64px;bottom:0"><div class="gridcanvas" id="tgcanvas"></div></div>`;
+    case test.id==="touch.multitouch":
+      return `<div class="t-small" style="padding:16px" id="mtlabel">Multitouch — active: 0, max seen: 0</div>
+        <div id="mtwrap" style="position:absolute;left:16px;right:16px;top:64px;bottom:0;touch-action:none"></div>`;
+    case test.id==="haptics.vibration":
+      return std(test, `<button class="btn full" data-act="vibrate">Vibrate (400 ms)</button>`);
+    case test.sensor!==undefined:
+      return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
+        <div class="t-body" style="margin-top:4px">${test.instr}</div></div>
+        <div class="card" style="margin:0 16px"><div class="t-small">Live readings</div>
+          <div id="sread" style="margin-top:8px" class="t-body">Waiting for first sensor event…</div>
+          <div class="t-mini sub" style="margin-top:6px">Reported accuracy: High</div></div>`;
+    case test.id==="audio.speaker":
+      return std(test, `<button class="btn full" data-act="playtone">Play 440 Hz tone (1 s)</button>
+        <div class="t-mini" id="playcount" style="margin-top:8px"></div>`);
+    case test.id==="audio.microphone":
+      return std(test, `<div class="row">
+        <button class="btn grow" data-act="mic-rec" id="micrec">Record 3s+</button>
+        <button class="btn-outline grow" data-act="mic-play" id="micplay" disabled>Play back</button></div>
+        <div class="t-mini" id="micstate" style="margin-top:8px"></div>`);
+    case test.id==="camera.front"||test.id==="camera.rear":
+      return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
+        <div class="t-body" style="margin-top:4px">${test.instr}</div></div>
+        <div class="camview">Live preview (${test.id==="camera.front"?"front":"rear"} lens) — simulated</div>`;
+    case test.id==="camera.flash":
+      return std(test, `<button class="btn full" data-act="torch" id="torchbtn">Turn torch ON</button>
+        <div class="t-mini" id="torchstate" style="margin-top:8px"></div>`);
+    case test.capKey: {
+      const r = capReading(test.capKey);
+      return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
+        <div class="t-body" style="margin-top:4px">${test.instr}</div>
+        <div class="card" style="margin-top:16px">
+          <div class="row"><span class="grow t-body">Hardware capability</span><span class="t-body">${r.supported?"Present":"Absent"}</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">${r.label}</span><span class="t-body">${r.value??"Not applicable"}</span></div>
+          <div class="t-mini sub" style="margin-top:8px">${r.supported?"Result recorded: PASS":"Result recorded: NOT SUPPORTED"}</div>
+        </div></div>`;
+    }
+    case test.id==="power.charging":
+      return std(test, `<div class="card" id="chargeread">${chargeReading()}</div>`);
+    default: return `<div class="pad empty">Test screen not yet wired: ${test.id}</div>`;
+  }
+}
+function std(test, inner){
+  return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
+    <div class="t-body" style="margin-top:4px">${test.instr}</div></div>
+    <div style="padding:0 16px;display:flex;flex-direction:column;justify-content:center;min-height:200px">${inner}</div>`;
+}
+function capReading(key){
+  switch(key){
+    case "wifi": return {supported:true,label:"Radio enabled",value:"yes"};
+    case "bluetooth": return {supported:true,label:"Adapter enabled",value:S.btEnabled?"yes":"no"};
+    case "location": return {supported:true,label:"Location enabled",value:"yes"};
+    case "nfc": return {supported:true,label:"NFC enabled",value:"yes"};
+    case "usb": return {supported:true,label:"USB modes",value:"host, accessory"};
+    default: return {supported:false,label:"State",value:null};
+  }
+}
+function chargeReading(){
+  const b=DEVICE.battery;
+  return `<div class="row"><span class="grow t-body">Level</span><span class="t-body">${b.level}%</span></div>
+    <div class="row" style="margin-top:8px"><span class="grow t-body">Status</span><span class="t-body">${b.status}</span></div>
+    <div class="row" style="margin-top:8px"><span class="grow t-body">Plug</span><span class="t-body">${b.plug}</span></div>
+    <button class="btn" style="margin-top:10px" data-act="charge-refresh">Refresh reading</button>`;
+}
+/* ---------- test interactions ---------- */
+function bindResultBar(test, mode){
+  $("#testbar").querySelectorAll("[data-result]").forEach(b =>
+    b.addEventListener("click", () => emitResult(test, b.dataset.result)));
+}
+function bindTest(test, mode){
+  const body = $("#body");
+  if(test.id.startsWith("display.")){
+    const colors=["#ff0000","#00ff00","#0000ff","#ffffff","#000000"];
+    const names=["Red","Green","Blue","White","Black"];
+    let i=0, hidden=false;
+    const box=$("#colorbox"), card=$("#colorcard"), label=$("#colorlabel");
+    card.addEventListener("click",e=>e.stopPropagation());
+    $("#colorwrap").addEventListener("click",()=>{
+      if(!hidden){hidden=true;card.style.display="none";}
+      else if(i<colors.length-1){i++;box.style.background=colors[i];label.textContent=`Showing ${names[i]} (${i+1}/5) — ${test.id==="display.dead_pixel"?"inspect every pixel before tapping":"tap to switch color"}`;}
+      else {hidden=false;card.style.display="block";}
+    });
+  }
+  if(test.id==="touch.grid"){
+    const wrap=$("#tgcanvas"), label=$("#tglabel"), pass=$("#passbtn");
+    const covered=new Set(); let down=false;
+    const rect=()=>wrap.getBoundingClientRect();
+    function mark(e){ const r=rect();
+      const col=Math.min(7,Math.floor((e.clientX-r.left)/(r.width/8)));
+      const row=Math.min(11,Math.floor((e.clientY-r.top)/(r.height/12)));
+      if(col<0||row<0)return;
+      const cell=row*8+col;
+      if(covered.has(cell))return;
+      covered.add(cell);
+      const d=document.createElement("div"); d.className="tg-cell";
+      d.style.cssText=`left:${col/8*100}%;top:${row/12*100}%;width:${100/8}%;height:${100/12}%;background:rgba(76,175,80,.4)`;
+      wrap.appendChild(d);
+      label.textContent=`Touch grid — ${covered.size}/96 cells covered`;
+      if(covered.size/96>=0.9) pass.disabled=false;
+    }
+    // draw grid lines
+    let lines="";
+    for(let c=1;c<8;c++) lines+=`<div class="tg-cell" style="left:${c/8*100}%;top:0;width:1px;height:100%;background:rgba(128,128,128,.5)"></div>`;
+    for(let rr=1;rr<12;rr++) lines+=`<div class="tg-cell" style="top:${rr/12*100}%;left:0;height:1px;width:100%;background:rgba(128,128,128,.5)"></div>`;
+    wrap.innerHTML=lines;
+    wrap.addEventListener("pointerdown",e=>{down=true;wrap.setPointerCapture(e.pointerId);mark(e);});
+    wrap.addEventListener("pointermove",e=>{if(down)mark(e);});
+    wrap.addEventListener("pointerup",()=>down=false);
+    // stash coverage for the note
+    S.tgCoverage = () => `Coverage ${covered.size}/96 (${Math.round(covered.size/96*100)}%)`;
+  }
+  if(test.id==="touch.multitouch"){
+    const wrap=$("#mtwrap"), label=$("#mtlabel");
+    const colors=["#E91E63","#3F51B5","#009688","#FF9800","#9C27B0","#4CAF50","#FFC107","#00BCD4","#795548","#607D8B"];
+    const active=new Map(); let max=0;
+    function draw(){
+      wrap.querySelectorAll(".mt-dot").forEach(d=>d.remove());
+      active.forEach((p,id)=>{
+        const c=colors[id%colors.length];
+        const d=document.createElement("div"); d.className="mt-dot";
+        d.style.cssText=`left:${p.x}px;top:${p.y}px;width:90px;height:90px;background:${c}59;border:3px solid ${c}`;
+        wrap.appendChild(d);
+      });
+      label.textContent=`Multitouch — active: ${active.size}, max seen: ${max}`;
+    }
+    function pos(e){ const r=wrap.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+    wrap.addEventListener("pointerdown",e=>{ active.set(e.pointerId,pos(e)); if(active.size>max)max=active.size; draw(); });
+    wrap.addEventListener("pointermove",e=>{ if(active.has(e.pointerId)){active.set(e.pointerId,pos(e));draw();} });
+    const up=e=>{active.delete(e.pointerId);draw();};
+    wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",up);
+    S.mtMax = () => `Max simultaneous pointers: ${max}`;
+  }
+  if(test.sensor!==undefined){
+    const s=SENSORS.find(x=>x.type===test.sensor);
+    const el=$("#sread");
+    let n=0;
+    every(()=>{ n++;
+      el.innerHTML = s.axes.map(ax=>{
+        const base={x:0.4,y:9.4,z:0.8,value:s.type===5?Math.abs(Math.sin(n/6))*400+40:s.type===8?(n%20<10?0:5):1013.2,w:0.5}[ax]??0;
+        const v = base + Math.sin(n/4 + ax.charCodeAt(0))* (ax==="value"&&s.type===5?30:0.25);
+        return `<div class="row"><span class="grow t-body">${ax}</span><span class="t-body">${v.toFixed(3)} ${s.unit}</span></div>`;
+      }).join("");
+    },300);
+  }
+  if(test.capKey){
+    const r=capReading(test.capKey);
+    later(()=>emitResult(test, r.supported?"PASS":"NOT_SUPPORTED", r.supported?`${r.label}: ${r.value}`:r.label),1100);
+  }
+}
+function emitResult(test, state){
+  const note = $("#tnote")?.value?.trim() || null;
+  let full = note;
+  if(test.id==="touch.grid" && S.tgCoverage) full=[note,S.tgCoverage()].filter(Boolean).join("; ");
+  if(test.id==="touch.multitouch" && S.mtMax) full=[note,S.mtMax()].filter(Boolean).join("; ");
+  if(S.engine && S.stack.includes("diagnose/guided") || cur()==="diagnose/guided"){
+    const e=S.engine;
+    e.results[test.id]=state; if(full)e.notes[test.id]=full;
+    const sess=S.sessions.find(x=>x.id===e.sessionId);
+    if(sess){ sess.results[test.id]={state,note:full}; }
+    e.index++;
+    if(e.index>=e.queue.length){ replace("diagnose/review"); } else render();
+  } else {
+    goBack();
+  }
+}
+/* ---------- settings ---------- */
+function scrSettings(){
+  const modes=["SYSTEM","DARK","LIGHT"];
+  const sel = S.theme==="dark"?"DARK":S.theme==="light"?"LIGHT":"SYSTEM";
+  return `<div class="pad col">
+    <div class="sec-head">Appearance</div>
+    <div class="card">${modes.map(m=>`
+      <label class="row" style="padding:4px 0;cursor:pointer">
+        <input type="radio" name="theme" value="${m}" ${m===sel?"checked":""} data-theme-opt="${m}" style="accent-color:var(--primary)">
+        <span class="t-body">${m.charAt(0)+m.slice(1).toLowerCase()}</span></label>`).join("")}</div>
+    <div class="sec-head">Advanced access</div>
+    <div class="card">${Object.keys(PROVIDERS).map(k=>`<div class="t-body" style="margin:4px 0">${k} — ${providerLabel(k)}</div>`).join("")}</div>
+    <div class="sec-head">Safety</div>
+    <div class="card"><div class="t-body">High-impact actions always show their exact consequence and ask for explicit confirmation. DroidKit never performs security or credential bypass operations.</div></div>
+    <div class="sec-head">About</div>
+    <div class="card"><div class="t-small">DroidKit ${DEVICE.appVersion}</div><div class="t-body">Android technician &amp; power toolkit.</div></div>
+  </div>`;
+}
+/* ---------- device inspector / storage / battery ---------- */
+function scrDeviceInfo(){
+  const f = n => DEVICE.features[n].toString();
+  const provs = Object.keys(PROVIDERS).map(k=>infoRow(k,providerLabel(k),false)).join("");
+  return `<div class="pad col">
+    ${sectionCard("Identity", infoRow("Manufacturer",DEVICE.manufacturer)+infoRow("Model",DEVICE.model)+infoRow("Device",DEVICE.device)+infoRow("Product",DEVICE.product)+infoRow("App version",DEVICE.appVersion)+copyBar("Identity"))}
+    ${sectionCard("OS", infoRow("Android release",DEVICE.androidRelease)+infoRow("API level",DEVICE.sdkInt)+infoRow("Security patch",DEVICE.securityPatch)+copyBar("OS"))}
+    ${sectionCard("Hardware", infoRow("Supported ABIs",DEVICE.abis)+infoRow("Cameras",`${DEVICE.cameras.total} (back ${DEVICE.cameras.back}, front ${DEVICE.cameras.front}, external ${DEVICE.cameras.external})`)+infoRow("Sensors",SENSORS.length)+copyBar("Hardware","sensors","Sensor inventory"))}
+    ${sectionCard("Memory & Storage", infoRow("Total RAM",DEVICE.ramTotalMb+" MB")+infoRow("Available RAM",DEVICE.ramAvailMb+" MB")+infoRow("Low-memory threshold",DEVICE.ramThresholdMb+" MB")+infoRow("Internal storage total",fmtBytes(DEVICE.storageTotal))+infoRow("Internal storage free",fmtBytes(DEVICE.storageFree))+copyBar("Memory & Storage","deviceinfo/storage","Storage Lab"))}
+    ${sectionCard("Display", infoRow("Resolution",DEVICE.display.w+" x "+DEVICE.display.h)+infoRow("Density",DEVICE.display.dpi+" dpi")+infoRow("Current refresh rate",DEVICE.display.refresh)+infoRow("Supported modes",DEVICE.display.modes)+copyBar("Display"))}
+    ${sectionCard("Battery", infoRow("Charge level",DEVICE.battery.level+"%")+infoRow("Status",DEVICE.battery.status)+infoRow("Source",DEVICE.battery.plug)+infoRow("Temperature",DEVICE.battery.tempC+" °C")+copyBar("Battery","battery","Battery Lab"))}
+    ${sectionCard("Hardware features", infoRow("NFC",f("android.hardware.nfc"),false)+infoRow("Bluetooth",f("android.hardware.bluetooth"),false)+infoRow("Bluetooth LE",f("android.hardware.bluetooth_le"),false)+infoRow("USB host",f("android.hardware.usb.host"),false)+infoRow("Telephony",f("android.hardware.telephony"),false)+infoRow("Location",f("android.hardware.location"),false)+copyBar("Hardware features"))}
+    ${sectionCard("Access providers", provs+copyBar("Access providers"))}
+  </div>`;
+}
+function copyBar(name,route,label){
+  return `<div class="row" style="margin-top:4px"><button class="textbtn" data-act="copy-section" data-sec="${esc(name)}">Copy section</button>
+    ${route?`<button class="textbtn" data-nav="${route}">${esc(label)}</button>`:""}</div>`;
+}
+function scrStorage(){
+  const vols=[
+    {name:"Internal (data)",path:"/data",state:"mounted",total:DEVICE.storageTotal,free:DEVICE.storageFree},
+    {name:"External #0",path:"/storage/emulated/0/Android/data/io.github.droidkit/files",state:"mounted",total:DEVICE.storageTotal,free:DEVICE.storageFree},
+  ];
+  return `<div class="pad col">
+    <div class="t-mini sub" style="padding:0 4px">Free space is filesystem-visible space — not NAND health.</div>
+    ${vols.map(v=>sectionCard(v.name,
+      infoRow("Path",v.path)+infoRow("State",v.state,false)+infoRow("Total",fmtBytes(v.total))+infoRow("Free",fmtBytes(v.free))+infoRow("Used",fmtBytes(v.total-v.free)))).join("")}
+    ${sectionCard("DroidKit directories", infoRow("App files","/data/user/0/io.github.droidkit/files")+infoRow("Cache","/data/user/0/io.github.droidkit/cache"))}
+  </div>`;
+}
+function scrBattery(){
+  const b=DEVICE.battery;
+  return `<div class="pad col">
+    ${sectionCard("Charge", infoRow("Level",b.level+"%",false)+infoRow("Status",b.status,false)+infoRow("Source",b.plug,false))}
+    ${sectionCard("Conditions", infoRow("Temperature",b.tempC.toFixed(1)+" °C",false)+infoRow("Voltage",b.voltageMv+" mV",false)+infoRow("Technology",b.tech,false)+infoRow("Health (as reported)",b.health,false))}
+    ${sectionCard("Power", infoRow("Current now",b.currentMa+" mA (instantaneous)",false)+infoRow("Battery saver",String(b.saver),false))}
+  </div>`;
+}
+function labIndex(title, subtitle, entries){
+  return `<div class="pad col">
+    <div class="t-body">${subtitle}</div>
+    ${entries.map(([id,t2,b])=>`<div class="card clickable" data-nav="diagnose/test/${id}">
+      <div class="t-small">${t2}</div><div class="t-mini sub">${b}</div></div>`).join("")}
+  </div>`;
+}
+/* ---------- sensors ---------- */
+function scrSensors(){
+  return `<div class="pad col">
+    ${SENSORS.map(s=>`<div class="card ${s.live?"clickable":""}" ${s.live?`data-nav="sensors/live/${s.type}"`:""}>
+      <div class="sec-head" style="padding:0 0 6px">${s.name}</div>
+      ${infoRow("Vendor",s.vendor)}${infoRow("Type",`${s.stype} (${s.type})`,false)}
+      ${infoRow("Version",String(s.ver),false)}${infoRow("Max range",(s.range+" "+s.unit).trim(),false)}
+      ${infoRow("Resolution",s.res,false)}${infoRow("Power",s.power+" mA",false)}
+      ${infoRow("Wake-up",String(s.wake),false)}
+      ${s.live?`<div class="t-mini pri" style="margin-top:4px">Tap card to open live monitor</div>`:""}
+    </div>`).join("")}
+  </div>`;
+}
+function scrLiveSensor(type){
+  const s=SENSORS.find(x=>x.type===type);
+  if(!s||!s.live) return `<div class="empty">This sensor type is not in the live-monitor safe list.</div>`;
+  later(()=>{ // start fake stream after mount
+    let n=0;
+    every(()=>{ n++;
+      s.axes.forEach((ax,i)=>{
+        const v={x:0.4+Math.sin(n/5)*1.2,y:9.4+Math.cos(n/6)*.8,z:0.8+Math.sin(n/4)*.4,
+          value:s.type===5?Math.abs(Math.sin(n/7))*500+60:s.type===8?(n%16<8?0:5):s.type===6?1013+Math.sin(n/9)*2:0.5,w:0.5+Math.sin(n/8)*.1}[ax]??0;
+        const cell=$("#lv"+i); if(cell) cell.textContent=v.toFixed(3)+" "+s.unit;
+        const bar=$("#lb"+i); if(bar) bar.style.width=Math.min(100,Math.abs(v)/s.range*100)+"%";
+      });
+      const u=$("#lvupdates"); if(u)u.textContent=n;
+    },250);
+  },50);
+  return `<div class="pad col">
+    ${sectionCard("Live values", s.axes.map((ax,i)=>`
+      <div class="inforow"><span class="k">${ax}</span><span class="v" id="lv${i}">—</span></div>
+      <div class="sensorbar"><div id="lb${i}" style="width:0%"></div></div>`).join("")+
+      `<div class="inforow"><span class="k">Updates</span><span class="v" id="lvupdates">0</span></div>`)}
+    ${sectionCard("Sensor", infoRow("Vendor",s.vendor)+infoRow("Type",s.stype,false)+infoRow("Max range",(s.range+" "+s.unit).trim(),false)+infoRow("Resolution",s.res,false))}
+  </div>`;
+}
+/* ---------- network ---------- */
+function scrNetwork(){
+  return `<div class="pad col">
+    ${sectionCard("Active connection",
+      infoRow("Transports","Wi-Fi",false)+infoRow("Internet capable","true",false)+infoRow("Validated","true",false)+
+      infoRow("Metered","false",false)+infoRow("Downstream","866666 kbps",false)+infoRow("Upstream","866666 kbps",false)+
+      infoRow("Interface","wlan0")+infoRow("Local addresses","192.168.1.37/24, fe80::a41f:72ff:fe2a:9c31/64")+
+      infoRow("DNS servers","192.168.1.1, 8.8.8.8")+infoRow("Routes","0.0.0.0/0 -> 192.168.1.1",false)+
+      infoRow("MTU","1500",false)+infoRow("Private DNS","off",false)+infoRow("Captive portal","false",false)+
+      `<div class="t-mini sub" style="margin-top:8px">SSID/BSSID/MAC require location permission and are not read here.</div>`)}
+    ${sectionCard("Diagnostics", `<div id="netdiag">${netLayers()}</div>
+      <button class="btn-outline" style="margin-top:8px" data-act="netdiag">Re-run</button>`)}
+    ${sectionCard("Ping", `
+      <input class="field" id="pinghost" placeholder="Host or IP">
+      <button class="btn-outline" style="margin-top:8px" data-act="ping">Run</button>
+      <div id="pingout" style="margin-top:8px"></div>`)}
+    ${sectionCard("DNS lookup", `
+      <input class="field" id="dnshost" placeholder="Hostname">
+      <button class="btn-outline" style="margin-top:8px" data-act="dns">Run</button>
+      <div id="dnsout" style="margin-top:8px"></div>`)}
+  </div>`;
+}
+function netLayers(){
+  const rows=[["Network present","Wi-Fi transport active","PASS"],["Internet capable","NET_CAPABILITY_INTERNET set","PASS"],
+    ["Validated","OS reports validated connectivity","PASS"],["DNS resolution","Resolver answered in 21 ms","PASS"],
+    ["HTTPS reachability","443 handshake ok","PASS"]];
+  return rows.map(([n,d,s])=>`<div class="row" style="padding:4px 0"><div class="grow"><div class="t-body">${n}</div><div class="t-mini sub">${d}</div></div><span class="t-mini ${s==="PASS"?"pri":"err"}" style="font-weight:700">${s}</span></div>`).join("");
+}
+/* ---------- bluetooth ---------- */
+function scrBluetooth(){
+  const hasPerm = S.perms[P.BTC];
+  return `<div class="pad col">
+    ${sectionCard("Adapter",
+      infoRow("Adapter present","true",false)+infoRow("Classic Bluetooth","true",false)+infoRow("Bluetooth LE","true",false)+
+      infoRow("Adapter enabled",String(S.btEnabled),false)+
+      (!S.btEnabled?`<button class="btn-outline" data-act="bt-enable" ${hasPerm?"":"disabled"}>Ask to enable Bluetooth</button>`:""))}
+    ${sectionCard("Bonded devices", !hasPerm?
+      `<div class="t-body">BLUETOOTH_CONNECT permission required to list bonded devices.</div>
+       <button class="btn-outline" style="margin-top:8px" data-act="req-perm" data-perm="${P.BTC}">Grant permission</button>`
+      : !S.btEnabled?`<div class="t-body">Enable Bluetooth to read bonded devices.</div>`
+      : `<div class="t-mini sub">2 bonded device(s) — names/addresses shown as Android permits.</div>`)}
+    ${hasPerm&&S.btEnabled?`
+      <div class="card"><div class="t-med">WH-1000XM5</div><div class="t-mini sub">70:26:05:XX:XX:7A · Dual · Bonded</div></div>
+      <div class="card"><div class="t-med">MX Master 3S</div><div class="t-mini sub">D4:3B:04:XX:XX:91 · LE-only · Bonded</div></div>`:""}
+    ${sectionCard("BLE scan", `<div class="t-body">BLE scanning is a POST-V1 feature. Nearby-device scans are privacy-sensitive and will require explicit, time-bounded, user-initiated scans when shipped.</div>`)}
+  </div>`;
+}
+/* ---------- usb ---------- */
+function scrUsb(){
+  return `<div class="pad col">
+    ${sectionCard("Capability", `<div class="t-body">USB Host mode supported — attach a device to inspect it.</div>`)}
+    ${USB_DEVS.map(d=>`<div class="card clickable" data-nav="usb/device/${encodeURIComponent(d.name)}">
+      <div class="t-med">${d.product}</div>
+      <div class="t-mini sub">VID:PID ${hex4(d.vid)}:${hex4(d.pid)} · Defined at interface</div></div>`).join("")}
+  </div>`;
+}
+function hex4(n){return n.toString(16).padStart(4,"0");}
+function hex2(n){return n.toString(16).padStart(2,"0");}
+function scrUsbDetail(name){
+  const d=USB_DEVS.find(x=>x.name===name); if(!d) return `<div class="empty">Device disconnected.</div>`;
+  const has=S.usbPerm[d.name], pend=S.usbPermPending[d.name];
+  return `<div class="pad col">
+    ${sectionCard("Identity",
+      infoRow("Device path",d.name,false)+infoRow("Vendor ID",hex4(d.vid))+infoRow("Product ID",hex4(d.pid))+
+      infoRow("USB version",d.ver)+infoRow("Manufacturer",d.mfr)+infoRow("Product",d.product)+
+      (has?infoRow("Serial",d.serial):
+        `<div class="inforow"><span class="k">Serial</span>
+         ${pend?`<span class="t-body">Requesting…</span>`:`<button class="textbtn" data-act="usb-perm" data-dev="${esc(d.name)}">Request USB permission</button>`}</div>`))}
+    ${sectionCard("Classification",
+      infoRow("Class","Defined at interface (00)",false)+infoRow("Subclass","00",false)+infoRow("Protocol","00",false))}
+    ${sectionCard("Interfaces", `
+      <div class="t-body" style="margin-top:8px">Interface 0 — Mass Storage (08/06/50)</div>
+      <div class="t-mini sub">USB Mass Storage</div>
+      <div class="t-mini" style="margin-left:8px;margin-top:2px">ep 81 — IN, bulk, max packet 512</div>
+      <div class="t-mini" style="margin-left:8px;margin-top:2px">ep 02 — OUT, bulk, max packet 512</div>`)}
+    ${sectionCard("Configurations", `
+      <div class="t-body" style="margin-top:8px">Configuration 1</div>
+      <div class="t-mini sub">self-powered=false, remote-wakeup=false, maxPower=500 mA</div>`)}
+    ${sectionCard("Status & limits",
+      infoRow("USB permission",has?"granted":"not granted",false)+
+      `<div class="t-mini sub" style="margin-top:8px">Android USB APIs cannot expose flash-controller model, NAND Flash ID, bad blocks, or firmware. Tools claiming ChipGenius-style internals on Android are not possible through these APIs.</div>
+      <div class="row" style="margin-top:12px"><button class="btn-outline" data-act="copy-usb">Copy summary</button>
+      <button class="btn-outline" data-act="share-usb">Share</button></div>`)}
+  </div>`;
+}
+/* ---------- nfc ---------- */
+function scrNfc(){
+  const n=S.nfc;
+  return `<div class="pad col">
+    ${sectionCard("Capability",
+      infoRow("NFC hardware","true",false)+infoRow("Adapter present","true",false)+
+      `<div class="t-body">Ready — hold a tag to the back of the device.</div>`)}
+    ${sectionCard("Scan", `
+      <div class="row">
+        <button class="btn-outline" data-act="nfc-scan">${n.scanning||n.armed?"Stop":"Start scan"}</button>
+        <button class="btn-outline" data-nav="nfc/write">Write / erase</button>
+        ${n.tag?`<button class="btn-outline" data-act="nfc-erase">Erase</button>`:""}
+      </div>
+      <div class="t-mini sub" style="margin-top:8px">${n.armed?"Armed — present the target tag now":n.scanning?"Scanning…":"Not scanning"}</div>`)}
+    ${n.tag?`
+      ${sectionCard("Tag",
+        infoRow("Tag ID",NFC_TAG.idHex)+infoRow("Technologies",NFC_TAG.techs,false)+
+        infoRow("NDEF capable","true",false)+infoRow("Writable",NFC_TAG.writable,false)+
+        infoRow("Capacity",NFC_TAG.capacity,false)+infoRow("NDEF type",NFC_TAG.type,false)+
+        infoRow("Formatable","false",false))}
+      ${sectionCard("NDEF records (1)", NFC_TAG.records.map((r,i)=>`
+        <div style="padding:6px 0"><div class="t-body">#${i+1} · ${r.tnf} · type ${r.type}</div>
+        ${infoRow(r.kind,r.decoded)}</div>`).join(""))}
+      ${sectionCard("Tag Doctor — WARNING", NFC_TAG.checks.map(c=>`
+        <div class="row" style="padding:4px 0"><div class="grow"><div class="t-body">${c.name}</div>
+        <div class="t-mini sub">${c.detail}</div></div>
+        <span class="t-mini" style="font-weight:700;color:${c.v==="PASS"?"var(--primary)":c.v==="WARNING"?"#e6b86e":"var(--error)"}">${c.v}</span></div>`).join("")+
+        `<div class="t-mini sub" style="margin-top:8px">Bank, transit, access-control and secure-element credentials cannot be cloned or read.</div>`)}
+    `:`<div class="empty">No tag scanned yet.</div>`}
+    ${n.result?sectionCard("Result",`<div class="t-body ${n.result.startsWith("Failed")?"err":""}">${n.result}</div>`):""}
+  </div>`;
+}
+function scrNfcWrite(){
+  const n=S.nfc;
+  return `<div class="pad col">
+    ${sectionCard("Record", `
+      <div class="chiprow">
+        <button class="fchip ${S.nfcKind!=="uri"?"sel":""}" data-nfckind="text">Text</button>
+        <button class="fchip ${S.nfcKind==="uri"?"sel":""}" data-nfckind="uri">URI</button>
+      </div>
+      <input class="field" id="nfcinput" placeholder="${S.nfcKind==="uri"?"URI (e.g. https://example.com)":"Text content"}" value="${esc(S.nfcInput||"")}" style="margin-top:8px">`)}
+    ${sectionCard("Preview",
+      infoRow("Record type",S.nfcKind==="uri"?"RTD_URI":"RTD_TEXT",false)+
+      infoRow("Message size",((S.nfcInput||"").length+7)+" bytes",false)+
+      `<div class="t-mini sub">The write replaces all NDEF content on the presented tag.</div>
+      <button class="btn-outline" style="margin-top:8px" data-act="nfc-write" ${(S.nfcInput||"").trim()&&!n.armed?"":"disabled"}>Write to tag</button>`)}
+    ${n.armed?sectionCard("Armed",`<div class="t-body">Present the target tag to the back of the device now.</div>
+      <button class="btn-outline" style="margin-top:8px" data-act="nfc-disarm">Cancel</button>`):""}
+    ${n.result?sectionCard("Result",`<div class="t-body ${n.result.startsWith("Failed")?"err":""}">${n.result}</div>`):""}
+  </div>`;
+}
+/* ---------- apps ---------- */
+function scrApps(){
+  const filters=["ALL","USER","SYSTEM"];
+  return `<div class="pad col" style="padding-top:4px">
+    <input class="field" id="appSearch" placeholder="Search apps" value="${esc(S.appsQuery)}">
+    <div class="chiprow" style="padding:6px 0">${filters.map(f=>
+      `<button class="fchip ${S.appsFilter===f?"sel":""}" data-appfilter="${f}">${f.charAt(0)+f.slice(1).toLowerCase()}</button>`).join("")}</div>
+    <div class="t-mini sub" id="appcount"></div>
+    <div id="appList" class="col"></div>
+  </div>`;
+}
+function renderAppList(){
+  const q=S.appsQuery.trim().toLowerCase();
+  const list=APPS.filter(a=>(S.appsFilter==="ALL"||(S.appsFilter==="SYSTEM")===a.sys)&&(!q||a.label.toLowerCase().includes(q)||a.pkg.includes(q)));
+  const el=$("#appList"); if(!el)return;
+  $("#appcount").textContent=`Android 11+ limits package visibility — ${list.length} app(s) visible`;
+  el.innerHTML=list.length?list.map(a=>`<div class="card clickable" data-nav="apps/detail/${a.pkg}">
+    <div class="row"><div class="grow"><div class="t-med">${a.label}</div>
+    <div class="t-mini sub">${a.pkg}</div></div><span class="t-mini">${a.ver||"—"}</span></div></div>`).join("")
+    :`<div class="empty">No apps match the current filter.</div>`;
+}
+function scrAppDetail(pkg){
+  const a=APPS.find(x=>x.pkg===pkg);
+  if(!a) return `<div class="pad empty">Package not visible to DroidKit: ${esc(pkg)}</div>`;
+  const granted=["INTERNET","ACCESS_NETWORK_STATE","POST_NOTIFICATIONS","CAMERA","WAKE_LOCK","VIBRATE","RECEIVE_BOOT_COMPLETED"];
+  const denied=["RECORD_AUDIO","ACCESS_FINE_LOCATION","BLUETOOTH_CONNECT","READ_CONTACTS"];
+  const acts=["MainActivity (exported)","SettingsActivity","ShareReceiverActivity"]; 
+  const svcs=["FirebaseMessagingService","SyncService"];
+  const rcv=["BootReceiver","AlarmReceiver (exported)"];
+  const prv=["FileProvider (exported)","InitProvider"];
+  const grp=(n,arr)=>`<div class="t-small" style="margin-top:6px">${n} (${arr?arr.length:0})</div>`+
+    (arr?arr.map(c=>`<div class="t-mini sub">${c}</div>`).join(""):`<div class="t-mini sub">Not exposed by this package</div>`);
+  return `<div class="pad col">
+    <div class="row">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--card2));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--on-primary);font-size:18px;margin-right:12px">${a.label[0]}</div>
+      <div><div class="t-med" style="font-weight:600">${a.label}</div><div class="t-mini sub">${a.pkg}</div></div>
+    </div>
+    <div class="row">
+      <button class="btn-outline grow" data-act="launch-app" data-app="${a.label}">Launch</button>
+      <button class="btn-outline grow" data-act="app-settings" data-app="${a.label}">App settings</button>
+    </div>
+    <div class="sec-head">Package</div>
+    <div class="card">
+      ${infoRow("Version",a.ver)}${infoRow("Version code","15400871")}
+      ${infoRow("Target SDK","API 35",false)}${infoRow("Min SDK","API 26",false)}
+      ${infoRow("Installed","Mar 14, 2025",false)}${infoRow("Updated","Oct 2, 2026",false)}
+      ${infoRow("APK path",`/data/app/~~kL2f/${a.pkg}-x9/base.apk`)}
+    </div>
+    <div class="sec-head">Permissions</div>
+    <div class="card">
+      <div class="t-small">Granted (${granted.length})</div>
+      ${granted.map(p=>`<div class="t-mini">${p}</div>`).join("")}
+      <div class="t-small" style="margin-top:8px">Not granted (${denied.length})</div>
+      ${denied.map(p=>`<div class="t-mini">${p}</div>`).join("")}
+    </div>
+    <div class="sec-head">Components</div>
+    <div class="card">${grp("Activities",acts)}${grp("Services",svcs)}${grp("Receivers",rcv)}${grp("Providers",prv)}</div>
+  </div>`;
+}
+/* ---------- permission center ---------- */
+function scrPermCenter(){
+  return `<div class="pad col">
+    <div class="t-mini sub">Permissions DroidKit declares. Runtime permissions are requested only when you start a test that needs them.</div>
+    ${DECLARED_PERMS.map(p=>{
+      const inst=INSTALL_TIME.has(p); const granted=S.perms[p]===true;
+      const st=inst?["Install-time","sub"]:granted?["Granted","pri"]:["Not granted","err"];
+      return `<div class="card"><div class="row"><div class="grow">
+        <div class="t-med">${p.split(".").pop()}</div><div class="t-mini sub">${p}</div></div>
+        <span class="t-small ${st[1]}">${st[0]}</span></div></div>`;
+    }).join("")}
+    <button class="btn-outline full" style="display:block;width:100%;margin-top:8px" data-act="app-settings" data-app="DroidKit">Open system app settings</button>
+  </div>`;
+}
+/* ---------- stub screens ---------- */
+function stub(title, subtitle, toolIds){
+  const tools=toolIds.map(id=>TOOLS.find(x=>x.id===id));
+  return `<div class="pad col"><div class="t-body">${subtitle}</div>
+    ${tools.map(x=>`<div data-stub="${x.id}">${toolCard(x)}</div>`).join("")}</div>`;
+}
+/* ---------- developer lab ---------- */
+function scrDeveloper(){
+  return `<div class="pad col">
+    <div class="t-body">Launch common system screens and inspect display metrics. Log access and shell actions arrive post-V1 with the wireless ADB provider.</div>
+    <div id="devErr" class="t-mini err"></div>
+    <div class="sec-head">Display metrics</div>
+    <div class="card">
+      ${infoRow("Resolution","1344 × 2992 px")}${infoRow("Size (dp)","411 × 917 dp")}
+      ${infoRow("Density","480 dpi (×3.0)",false)}${infoRow("Scaled density","×3.0",false)}
+      ${infoRow("Physical dpi (x/y)","498 / 502",false)}${infoRow("Refresh rate","120.0 Hz",false)}
+      ${infoRow("Supported modes","1344×2992@60, 1344×2992@120",false)}${infoRow("HDR","HDR10, HLG, HDR10+",false)}
+    </div>
+    <div class="sec-head">Intent launcher</div>
+    ${INTENT_PRESETS.map(([l,a])=>`<div class="card clickable" data-act="intent" data-intent="${a}" data-label="${l}">
+      <div class="t-small">${l}</div><div class="t-mini sub">${a}</div></div>`).join("")}
+    <div class="card"><div class="t-small">Custom intent</div>
+      <div class="col" style="margin-top:8px">
+        <input class="field" id="ci-action" placeholder="Action (e.g. android.intent.action.VIEW)">
+        <input class="field" id="ci-data" placeholder="Data URI (optional)">
+        <input class="field" id="ci-pkg" placeholder="Package (optional)">
+        <div class="t-mini sub" id="ci-preview">Intent(action=…)</div>
+        <button class="btn full" data-act="custom-intent" id="ci-launch" disabled>Launch</button>
+      </div></div>
+  </div>`;
+}
+/* ---------- reports ---------- */
+function scrReports(){
+  const filters=[["ALL","All"],["IN_PROGRESS","In progress"],["COMPLETED","Completed"],["ABANDONED","Abandoned"]];
+  const rows=S.sessions.filter(s=>S.reportsFilter==="ALL"||s.status===S.reportsFilter);
+  return `<div class="pad col" style="padding-top:4px">
+    <div class="chiprow" style="padding:2px 0 6px">${filters.map(([v,l])=>
+      `<button class="fchip ${S.reportsFilter===v?"sel":""}" data-repfilter="${v}">${l}</button>`).join("")}</div>
+    ${rows.length?rows.map(s=>{
+      const counts={};Object.values(s.results).forEach(r=>counts[r.state]=(counts[r.state]||0)+1);
+      const cstr=Object.keys(counts).length?Object.entries(counts).map(([k,v])=>`${k}: ${v}`).join(", "):"No test results recorded";
+      return `<div class="card clickable" data-nav="reports/detail/${s.id}">
+        <div class="t-small">${fmtDT(s.started)}</div>
+        <div class="t-mini">${s.status} — app v${s.version}</div>
+        <div class="t-mini sub">${cstr}</div></div>`;}).join("")
+    :`<div class="empty">${S.reportsFilter==="ALL"?"No saved reports. Run a diagnostic first.":"No "+S.reportsFilter.toLowerCase().replace(/_/g," ")+" reports."}</div>`}
+  </div>`;
+}
+function scrReportDetail(id){
+  const s=S.sessions.find(x=>x.id===id);
+  if(!s) return `<div class="pad empty">Loading report…</div>`;
+  const groups={}; Object.keys(s.results).forEach(tid=>{(groups[TEST(tid)?.cat||"Other"]=groups[TEST(tid)?.cat||"Other"]||[]).push(tid);});
+  return `<div class="pad col">
+    <div class="card"><div class="t-med" style="font-weight:600">${fmtDT(s.started)}</div>
+      <div class="t-mini sub">${s.status} — app v${s.version}</div></div>
+    <div class="sec-head">Device</div>
+    <div class="card">
+      ${infoRow("Device",`${DEVICE.manufacturer} ${DEVICE.model}`)}
+      ${infoRow("Android",`${DEVICE.androidRelease} (API ${DEVICE.sdkInt}), patch ${DEVICE.securityPatch}`)}
+      ${infoRow("RAM",DEVICE.ramTotalMb+" MB")}${infoRow("Display",`${DEVICE.display.w}x${DEVICE.display.h} ${DEVICE.display.dpi}dpi 120Hz`)}
+      ${infoRow("Providers","STANDARD ready; SHIZUKU unavailable; ADB setup required; ROOT unavailable")}
+    </div>
+    <div class="sec-head">Results</div>
+    ${Object.keys(s.results).length?Object.entries(s.results).map(([tid,r])=>{
+      const st=r.state, col=st==="FAIL"?"err":st==="PASS"?"":"sub";
+      return `<div class="card"><div class="row"><span class="grow t-med">${tid}</span>
+        <span class="t-small ${col}">${st.replace(/_/g," ")}</span></div>
+        ${r.note?`<div class="t-mini sub" style="margin-top:2px">${esc(r.note)}</div>`:""}</div>`;}).join("")
+      :`<div class="t-body">No test results recorded.</div>`}
+    ${s.notes?`<div class="sec-head">Technician notes</div><div class="card"><div class="t-body">${esc(s.notes)}</div></div>`:""}
+    <div class="row">
+      <button class="btn-outline grow" data-act="copy-summary">Copy summary</button>
+      <button class="btn grow" data-act="export">Export</button>
+      <button class="btn-outline grow" data-act="delete-report">Delete</button>
+    </div>
+  </div>`;
+}
+/* ============================== post-render binding ============================== */
+function afterRender(r){
+  if(r==="tools") renderToolList();
+  if(r==="apps") renderAppList();
+}
+/* ============================== flow map ============================== */
+const FLOW = [
+  {h:"Top-level tabs", nodes:[["Home","home"],["Tools","tools"],["Diagnose","diagnose"],["Settings","settings"]]},
+  {h:"Diagnostics flow", nodes:[
+    ["Full Diagnostic (guided runner)","diagnose/guided",1],
+    ["Phone Doctor test host ×21","diagnose/test/{testId}",2],
+    ["Session review","diagnose/review",1],
+    ["Reports","reports",1],
+    ["Report detail","reports/detail/{sessionId}",2],
+  ]},
+  {h:"Device labs", nodes:[
+    ["Device Inspector","deviceinfo"],["Storage Lab","deviceinfo/storage",1],
+    ["Battery Lab","battery"],["Sensor Lab","sensors"],["Live Sensor Monitor","sensors/live/1",1],
+  ]},
+  {h:"Hardware & connectivity", nodes:[
+    ["Display & Touch","display"],["Audio & Haptics","audio"],["Camera & Flash","camera"],
+    ["Network Lab","network"],["Bluetooth Lab","bluetooth"],
+    ["USB Lab","usb"],["USB device detail","usb/device/{deviceName}",1],
+    ["NFC Lab","nfc"],["NFC Write","nfc/write",1],
+  ]},
+  {h:"Apps & system", nodes:[
+    ["App Inspector","apps"],["App detail","apps/detail/{packageName}",1],
+    ["Permission Center","permissions"],["Developer Lab","developer"],
+    ["AppOps (stub, V2)","appops"],["Package Controls (stub, V2)","packages"],["Wireless ADB (stub, V2)","adb"],
+  ]},
+];
+function renderFlow(){
+  const r=cur();
+  $("#flowmap").innerHTML = FLOW.map(g=>`<h2>${g.h}</h2>`+
+    g.nodes.map(([l,rt,lvl=0])=>{
+      const active = r===rt || (rt.includes("{") && r.startsWith(rt.split("{")[0]));
+      return `<button class="fnode ${lvl?"lvl"+lvl:""} ${active?"active":""}" data-fnav="${rt}">${l}<span class="rt">${rt}</span></button>`;
+    }).join("")+
+    `<div class="flegend"> </div>`).join("") +
+    `<h2>Legend</h2><div class="flegend">
+      Indentation = parent/child navigation.<br>
+      {param} routes resolve to a real item (e.g. first app, first USB device).<br>
+      (stub, V2) screens are placeholders in the real app too.</div>`;
+}
+/* ============================== events ============================== */
+document.addEventListener("click", e => {
+  const st = e.target.closest("[data-stub]"); if(st){ const tool=TOOLS.find(x=>x.id===st.dataset.stub);
+    const r=resolve(tool);
+    dialog({title:tool.title, text: r.ready?`Available — implementation lands in phase ${tool.phase}.`
+      :`<b>Why this is blocked</b><br>`+r.blocked.map(x=>"• "+esc(x)).join("<br>")}); return; }
+  const nv = e.target.closest("[data-nav]");
+  if(nv){ const tool=nv.dataset.tool; if(tool)recordRecent(tool); nav(nv.dataset.nav); return; }
+  const tb = e.target.closest("[data-tab]"); if(tb){ goTab(tb.dataset.tab); return; }
+  const fn = e.target.closest("[data-fnav]");
+  if(fn){ let rt=fn.dataset.fnav;
+    if(rt==="apps/detail/{packageName}") rt="apps/detail/com.spotify.music";
+    if(rt==="usb/device/{deviceName}") rt="usb/device/"+encodeURIComponent(USB_DEVS[0].name);
+    if(rt==="reports/detail/{sessionId}") rt="reports/detail/"+S.sessions[0].id;
+    if(rt==="diagnose/test/{testId}") rt="diagnose/test/display.color";
+    nav(rt); return; }
+  const cat = e.target.closest("[data-cat]"); if(cat){ S.toolsCategory = cat.dataset.cat==="All"?null:cat.dataset.cat; render(); return; }
+  const af = e.target.closest("[data-appfilter]"); if(af){ S.appsFilter=af.dataset.appfilter; render(); return; }
+  const rf = e.target.closest("[data-repfilter]"); if(rf){ S.reportsFilter=rf.dataset.repfilter; render(); return; }
+  const fv = e.target.closest("[data-fav]"); if(fv){ e.stopPropagation();
+    const id=fv.dataset.fav; S.favorites.has(id)?S.favorites.delete(id):S.favorites.add(id); renderToolList(); return; }
+  const cp = e.target.closest("[data-copy]"); if(cp){ e.stopPropagation(); navigator.clipboard?.writeText(cp.dataset.copy).catch(()=>{}); toast("Copied"); return; }
+  const ac = e.target.closest("[data-act]");
+  if(ac){ handleAct(ac.dataset.act, ac, e); return; }
+});
+function handleAct(act, el, e){
+  switch(act){
+    case "dlg-close": closeOverlay(); break;
+    case "dlg-ok": { const cb=$("#overlay").dataset.dlgOk||""; closeOverlay(); dlgOk(cb); break; }
+    case "req-perm": sysPermDialog(el.dataset.perm, true); break;
+    case "note-toggle": {
+      const tb=$("#testbar");
+      tb.insertAdjacentHTML("afterbegin",`<input class="field" id="tnote" placeholder="Note (optional)" style="margin-bottom:8px">`);
+      $("#tnote").focus(); break; }
+    case "vibrate": navigator.vibrate?.(400); tone(180,.12,.08); toast("Buzz (simulated on desktop)"); break;
+    case "playtone": { tone(440,1); const c=$("#playcount"); c.dataset.n=(+c.dataset.n||0)+1; c.textContent=`Played ${c.dataset.n} time(s)`; break; }
+    case "mic-rec": { const b=$("#micrec"),st=$("#micstate");
+      if(b.dataset.rec){ b.dataset.rec="";b.textContent="Record 3s+";st.textContent="Recording saved (3.0 s)";$("#micplay").disabled=false; }
+      else { b.dataset.rec="1";b.textContent="Stop";st.textContent="Recording…"; 
+        later(()=>{ if($("#micrec")?.dataset.rec){$("#micrec").dataset.rec="";$("#micrec").textContent="Record 3s+";$("#micstate").textContent="Recording saved (3.0 s)";$("#micplay").disabled=false;} },3000); }
+      break; }
+    case "mic-play": tone(330,.5); later(()=>tone(392,.5),400); toast("Playing back recording"); break;
+    case "torch": { const b=$("#torchbtn"),on=b.dataset.on==="1";b.dataset.on=on?"":"1";
+      b.textContent=on?"Turn torch ON":"Turn torch OFF";
+      $("#torchstate").textContent=on?"":"Torch is ON — check the LED on the back.";
+      $(".camview, .phone").classList?.toggle?.("torch-on",!on); break; }
+    case "charge-refresh": $("#chargeread").innerHTML=chargeReading(); toast("Reading refreshed"); break;
+    case "netdiag": $("#netdiag").innerHTML=`<div class="t-body">Running…</div>`;
+      later(()=>{ if($("#netdiag"))$("#netdiag").innerHTML=netLayers(); },800); break;
+    case "ping": { const h=$("#pinghost").value.trim(); if(!h)break;
+      $("#pingout").innerHTML=`<div class="t-body">Probing…</div>`;
+      later(()=>{ if($("#pingout"))$("#pingout").innerHTML=
+        infoRow("Resolved","142.250.72.14")+infoRow("Replies","4/4 (0% loss)",false)+
+        infoRow("Min / Avg / Max","11.8 ms / 14.2 ms / 19.5 ms",false)+
+        `<div class="t-mini sub">ICMP echo is often filtered — no reply does not prove the host is down.</div>`; },900); break; }
+    case "dns": { const h=$("#dnshost").value.trim(); if(!h)break;
+      $("#dnsout").innerHTML=`<div class="t-body">Resolving…</div>`;
+      later(()=>{ if($("#dnsout"))$("#dnsout").innerHTML=
+        infoRow("Address","142.250.72.14")+infoRow("Address","2607:f8b0:4006:80e::200e")+infoRow("Elapsed","18 ms",false); },600); break; }
+    case "bt-enable": dialog({title:"Enable Bluetooth?",text:"An app wants to turn Bluetooth on.",confirm:"Allow",cancel:"Deny",onConfirm:"bt-on"}); break;
+    case "nfc-scan": { const n=S.nfc;
+      if(n.scanning||n.armed){ n.scanning=false;n.armed=null; }
+      else { n.scanning=true; n.result=null;
+        later(()=>{ if(S.nfc.scanning){ S.nfc.tag={...NFC_TAG}; S.nfc.scanning=false; if(cur()==="nfc")render(); } },1600); }
+      render(); break; }
+    case "nfc-erase": dialog({title:"Erase tag?",text:"This writes an empty NDEF message to the next presented tag, removing its current content. Present the tag after confirming.",confirm:"Erase next tag",cancel:"Cancel",onConfirm:"nfc-arm-erase"}); break;
+    case "nfc-disarm": S.nfc.armed=null; render(); break;
+    case "nfc-write": { const size=(S.nfcInput||"").length+7;
+      dialog({title:"Write to tag?",text:`This writes a ${size}-byte NDEF message to the next presented tag, replacing its current content. The tag must be writable and have enough capacity.`,confirm:"Arm write",cancel:"Cancel",onConfirm:"nfc-arm-write"}); break; }
+    case "usb-perm": S.usbPermPending[el.dataset.dev]=true; render();
+      later(()=>{ S.usbPermPending={}; S.usbPerm[el.dataset.dev]=true; if(cur().startsWith("usb/"))render(); },1200); break;
+    case "copy-usb": navigator.clipboard?.writeText("USB2.0 Flash Disk 090C:1000 Mass Storage").catch(()=>{}); toast("USB summary copied"); break;
+    case "share-usb": toast("Sharesheet would open (mock)"); break;
+    case "copy-section": navigator.clipboard?.writeText("["+el.dataset.sec+"]").catch(()=>{}); toast("Section copied"); break;
+    case "share-device": toast("Sharesheet would open (mock)"); break;
+    case "launch-app": toast(`Would launch ${el.dataset.app} (mock)`); break;
+    case "app-settings": toast(`Would open system settings for ${el.dataset.app}`); break;
+    case "intent": toast(`Would launch intent ${el.dataset.intent}`); break;
+    case "custom-intent": toast("Would launch custom intent"); break;
+    case "reports-menu": {
+      const ov=$("#overlay");
+      ov.innerHTML=`<div class="scrim" data-act="dlg-close"></div>
+        <div class="menu"><div class="mi" data-act="del-all">Delete all reports</div></div>`; break; }
+    case "del-all": dialog({title:"Delete all reports?",text:"Every diagnostic session, result and saved report entry is deleted permanently.",confirm:"Delete all",cancel:"Cancel",danger:true,onConfirm:"del-all"}); break;
+    case "copy-summary": navigator.clipboard?.writeText("DroidKit report summary").catch(()=>{}); toast("Summary copied"); break;
+    case "export": { const ov=$("#overlay"); let fmt="TEXT";
+      ov.innerHTML=`<div class="scrim" data-act="dlg-close"></div>
+        <div class="sheet"><div class="t-med" style="font-weight:600">Export preview</div>
+          <div class="t-mini" style="margin:6px 0 8px">This report contains:</div>
+          <div class="t-mini">• Session ID, date and app version</div>
+          <div class="t-mini">• Device manufacturer, model, Android release, security patch</div>
+          <div class="t-mini">• RAM, storage, display and provider capability summary</div>
+          <div class="t-mini">• Every test result, state and technician note</div>
+          <div class="chiprow" style="margin-top:12px">
+            <button class="fchip sel" data-fmt="TEXT">Text (.txt)</button>
+            <button class="fchip" data-fmt="PDF">PDF (.pdf)</button></div>
+          <button class="btn full" style="margin-top:14px" data-act="share-report">Share <span id="fmtLbl">TEXT</span> report</button>
+        </div>`; break; }
+    case "share-report": closeOverlay(); toast("Report exported & sharesheet opened (mock)"); break;
+    case "delete-report": { const id=cur().split("/").pop(); const s=S.sessions.find(x=>x.id===id);
+      dialog({title:"Delete report?",text:`This session and its ${s?Object.keys(s.results).length:0} results are deleted permanently.`,confirm:"Delete",cancel:"Cancel",danger:true,onConfirm:"del-report:"+id}); break; }
+    case "retry-tests": { const e=S.engine;
+      const retryable=Object.entries(e.results).filter(([,st])=>st==="FAIL"||st==="NOT_TESTED").map(([k])=>k);
+      e.queue=TESTS.filter(x=>retryable.includes(x.id)); e.index=0;
+      replace("diagnose/guided"); break; }
+    case "save-session": { const e=S.engine;
+      const sess=S.sessions.find(x=>x.id===e.sessionId);
+      if(sess){ sess.status="COMPLETED"; sess.notes=$("#reviewNotes")?.value?.trim()||null; }
+      S.engine=null; S.tab="diagnose"; S.stack=["diagnose"]; closeOverlay(); render(); toast("Session saved"); break; }
+  }
+}
+function dlgOk(cb){
+  if(!cb)return;
+  if(cb.startsWith("grant:")){ const p=cb.slice(6); S.perms[p]=true; render(); return; }
+  switch(true){
+    case cb==="bt-on": S.btEnabled=true; render(); break;
+    case cb==="del-all": S.sessions=[]; S.engine=null; render(); break;
+    case cb.startsWith("del-report:"): { const id=cb.split(":")[1];
+      S.sessions=S.sessions.filter(x=>x.id!==id); goBack(); break; }
+    case cb==="nfc-arm-erase": S.nfc.armed="erase"; S.nfc.tag=null;
+      later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="Tag erased — empty NDEF message written.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
+    case cb==="nfc-arm-write": S.nfc.armed="write";
+      later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="NDEF message written successfully.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
+  }
+}
+/* inputs (delegated, no re-render to preserve focus) */
+document.addEventListener("input", e=>{
+  if(e.target.id==="toolSearch"){ S.toolsQuery=e.target.value; renderToolList(); }
+  if(e.target.id==="appSearch"){ S.appsQuery=e.target.value; renderAppList(); }
+  if(e.target.id==="nfcinput"){ S.nfcInput=e.target.value;
+    const b=$("#body [data-act='nfc-write']"); if(b) b.disabled=!e.target.value.trim(); }
+  if(e.target.id==="ci-action"||e.target.id==="ci-data"||e.target.id==="ci-pkg"){
+    const a=$("#ci-action").value.trim(),d=$("#ci-data").value.trim(),p=$("#ci-pkg").value.trim();
+    $("#ci-preview").textContent=`Intent(action=${a||"…"}${d?", data="+d:""}${p?", package="+p:""})`;
+    $("#ci-launch").disabled=!a; }
+});
+document.addEventListener("click", e=>{
+  const fc=e.target.closest("[data-fmt]");
+  if(fc){ document.querySelectorAll("[data-fmt]").forEach(x=>x.classList.remove("sel"));
+    fc.classList.add("sel"); $("#fmtLbl").textContent=fc.dataset.fmt; }
+  const nk=e.target.closest("[data-nfckind]");
+  if(nk){ S.nfcKind=nk.dataset.nfckind; render(); }
+  const th=e.target.closest("[data-theme-opt]");
+  if(th){ S.theme=th.dataset.themeOpt==="LIGHT"?"light":th.dataset.themeOpt==="SYSTEM"?"dark":"dark";
+    $("#phone").dataset.theme=S.theme; }
+});
+/* gesture bar */
+$("#gback").addEventListener("click",goBack);
+$("#ghome").addEventListener("click",()=>goTab("home"));
+$("#grecent").addEventListener("click",()=>toast("Recents (mock)"));
+/* clock */
+setInterval(()=>{ const d=new Date(); $("#clock").textContent=`${d.getHours()%12||12}:${String(d.getMinutes()).padStart(2,"0")}`; },1000);
+render();
+</script>
+</body>
+</html>
