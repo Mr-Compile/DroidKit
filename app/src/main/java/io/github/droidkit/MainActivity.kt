@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
             }
             DroidKitTheme(darkTheme = darkTheme) {
-                DroidKitScaffold(capabilityManager)
+                DroidKitScaffold(capabilityManager, settings)
             }
         }
     }
@@ -70,33 +70,48 @@ private val topLevelDestinations = listOf(
 )
 
 @Composable
-private fun DroidKitScaffold(capabilityManager: CapabilityManager) {
+private fun DroidKitScaffold(
+    capabilityManager: CapabilityManager,
+    settings: SettingsRepository,
+) {
     val nav = rememberNavController()
     val backStackEntry by nav.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    // null = still reading DataStore; keep the first frame blank rather
+    // than flashing Home before the onboarding redirect.
+    val onboardingDone by settings.onboardingCompleted.collectAsState(initial = null)
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                topLevelDestinations.forEach { dest ->
-                    NavigationBarItem(
-                        selected = currentRoute == dest.route,
-                        onClick = {
-                            nav.navigate(dest.route) {
-                                popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(dest.icon, contentDescription = dest.label) },
-                        label = { Text(dest.label) },
-                    )
+            if (currentRoute != "onboarding") {
+                NavigationBar {
+                    topLevelDestinations.forEach { dest ->
+                        NavigationBarItem(
+                            selected = currentRoute == dest.route,
+                            onClick = {
+                                nav.navigate(dest.route) {
+                                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(dest.icon, contentDescription = dest.label) },
+                            label = { Text(dest.label) },
+                        )
+                    }
                 }
             }
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            DroidKitNavHost(nav, capabilityManager)
+            onboardingDone?.let { done ->
+                DroidKitNavHost(
+                    nav = nav,
+                    capabilityManager = capabilityManager,
+                    settings = settings,
+                    startDestination = if (done) "home" else "onboarding",
+                )
+            }
         }
     }
 }

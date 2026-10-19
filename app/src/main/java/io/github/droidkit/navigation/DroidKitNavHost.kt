@@ -3,7 +3,10 @@ package io.github.droidkit.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.privileges.CapabilityManager
+import io.github.droidkit.onboarding.OnboardingScreen
 import io.github.droidkit.feature.adb.adbGraph
 import io.github.droidkit.feature.appops.appOpsGraph
 import io.github.droidkit.feature.apps.appsGraph
@@ -30,8 +33,17 @@ import io.github.droidkit.feature.usb.usbGraph
 fun DroidKitNavHost(
     nav: NavHostController,
     capabilityManager: CapabilityManager,
+    settings: SettingsRepository,
+    startDestination: String = "home",
 ) {
-    NavHost(navController = nav, startDestination = "home") {
+    NavHost(navController = nav, startDestination = startDestination) {
+        composable("onboarding") {
+            OnboardingScreen(settings = settings) {
+                nav.navigate("home") {
+                    popUpTo("onboarding") { inclusive = true }
+                }
+            }
+        }
         dashboardGraph(nav)
         toolsGraph(nav)
         diagnosticsGraph(nav)

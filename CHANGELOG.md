@@ -60,6 +60,9 @@
   discovery with on-demand resolve
 - Sensor Lab: orientation helper (azimuth/pitch/roll + reported accuracy
   from the rotation-vector sensor, NOT_SUPPORTED when absent)
+- Onboarding: one-time 4-page intro (Welcome → honest-results → optional
+  capabilities → local-first privacy) gated by a DataStore flag, per the
+  J03 screen spec
 
 ### Fixed
 - Audio/camera/display tool entries previously opened stale placeholder
