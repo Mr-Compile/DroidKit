@@ -403,25 +403,25 @@ Release gate:
 
 # Journey 12 - v0.7.0 USB Lab
 
-- [ ] USB Host support detection
-- [ ] Device attach/detach handling
-- [ ] USB permission flow
-- [ ] VID
-- [ ] PID
-- [ ] Manufacturer where exposed
-- [ ] Product where exposed
-- [ ] Serial where authorized/exposed
-- [ ] Interfaces
-- [ ] Endpoints
-- [ ] Accessible descriptors
-- [ ] Copy/export summary
-- [ ] Unsupported-device handling
-- [ ] Test with multiple USB device classes
+- [x] USB Host support detection — capability card; absent host → NOT_SUPPORTED state
+- [x] Device attach/detach handling — system-broadcast receiver (NOT_EXPORTED), list refreshes
+- [x] USB permission flow — `requestPermission` + response receiver; serial gated on grant
+- [x] VID
+- [x] PID
+- [x] Manufacturer where exposed — null → `Not exposed`
+- [x] Product where exposed — null → `Not exposed`
+- [x] Serial where authorized/exposed — read only after grant; SecurityException-safe
+- [x] Interfaces — class/subclass/protocol + endpoint count per interface
+- [x] Endpoints — address, direction, transfer type, max packet
+- [x] Accessible descriptors — configurations with power flags; honest empty hints when permission withheld
+- [x] Copy/export summary — clipboard copy + share-sheet summary
+- [x] Unsupported-device handling — no host feature → NOT_SUPPORTED card, never FAIL
+- [ ] Test with multiple USB device classes — requires attached hardware; device run pending
 
 Release gate:
-- [ ] USB Lab does not claim ChipGenius-level NAND/controller access
-- [ ] `v0.7.0` tagged
-- [ ] CHANGELOG updated
+- [x] USB Lab does not claim ChipGenius-level NAND/controller access — limitation stated on detail screen
+- [ ] `v0.7.0` tagged — version bumped (`0.7.0`/`7`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 

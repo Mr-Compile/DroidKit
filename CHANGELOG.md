@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0] - Unreleased
+
+### Added
+- USB Lab: host-mode capability card, live attach/detach device list,
+  per-device detail (device path, VID/PID, USB version, manufacturer,
+  product), classification names per USB-IF class codes
+- Interfaces → endpoints tree (class codes, endpoint address, direction,
+  transfer type, max packet) and configurations (power flags)
+- USB permission flow: system request with result receiver; serial number
+  gated behind granted permission, descriptor hints when withheld
+- Copy/share device summary; explicit note that flash-controller/NAND/
+  firmware internals are not exposed by Android USB APIs
+- `UsbDescriptors` helpers with unit tests (5 tests)
+
 ## [0.6.0] - Unreleased
 
 ### Added
