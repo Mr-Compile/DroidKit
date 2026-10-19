@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.8.0] - Unreleased
+
+### Added
+- NFC Lab: hardware/enabled detection with settings shortcut, reader-mode
+  tag scan, technology list, NDEF read (text/URI decode), writable/capacity
+  reads, Tag Doctor verdicts (PASS/WARNING/UNSUPPORTED) with
+  secure-credential honesty note
+- NDEF Writer: text/URI record builder with byte-size preview, armed
+  present-tag write with confirmation, and erase-to-empty-NDEF flow;
+  NdefFormatable fallback for unformatted tags
+- Network Lab: connection inspector (transports, capabilities, link
+  properties, DNS servers, MTU, private DNS), ping probe with ICMP-filtering
+  caveat, DNS lookup, and per-layer connectivity diagnostics (no aggregate
+  "health score"); live network callback refresh
+- Bluetooth Lab (V1 basic): adapter presence/enabled, classic+BLE feature
+  detection, BLUETOOTH_CONNECT permission gate, bonded-device list
+  (name/address/type/bond as permitted), system enable prompt
+- `NetTools`, `NfcTagParser`, `BtNames` helpers with unit tests
+  (4 + 9 + 2 tests)
+
 ## [0.7.0] - Unreleased
 
 ### Added

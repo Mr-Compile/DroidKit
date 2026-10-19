@@ -1,5 +1,12 @@
 # J13 NFC + Network + Bluetooth (v0.8.0) Implementation Plan
 
+> **STATUS: IMPLEMENTED** — all 4 tasks executed on branch `feature/j13-nfc-network`
+> (2026-10-19). `:app:compileDebugKotlin` green; unit tests pass (NetTools 4,
+> BtNames 2, NfcTagParser 9). Open gate items: real NFC tag runs + device run of
+> ping/DNS, `v0.8.0` tag at merge to `main`. Deviation: ping via
+> `InetAddress.isReachable` (no extra deps) with on-screen ICMP caveat; BLE scan
+> tool kept in registry at `ToolPhase.V2`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the NFC, Network and Bluetooth stubs with real V1 labs. NFC: hardware/enabled state, reader-mode tag scan with technology list, NDEF parse (text/URI), Tag Doctor verdicts, NDEF write + erase with preview/confirmation. Network: connection inspector, link properties, ping, DNS lookup, layer-by-layer diagnostics. Bluetooth (V1 OPTIONAL basic only): adapter/capability state, permission-gated bonded devices. Tag `v0.8.0`.
@@ -30,9 +37,9 @@
 - Modify: `feature/network/.../NetworkFeature.kt` — real tools (inspector, ping, dns, diagnostics), drop stub
 - Create: `feature/network/src/test/.../NetToolsTest.kt`
 
-- [ ] **Step 1: VM + tools + manifest**
-- [ ] **Step 2: Screen + routes**
-- [ ] **Step 3: Compile + commit** `feat(network): connection inspector, ping, dns lookup, layer diagnostics`
+- [x] **Step 1: VM + tools + manifest**
+- [x] **Step 2: Screen + routes**
+- [x] **Step 3: Compile + commit** `feat(network): connection inspector, ping, dns lookup, layer diagnostics`
 
 ---
 
@@ -45,9 +52,9 @@
 - Create: `feature/bluetooth/.../BluetoothScreen.kt` — capability card, permission-gated bonded list (name/address/type/bond state), enable-prompt UX (no silent enable), BLE-scan marked POST-V1
 - Modify: `feature/bluetooth/.../BluetoothFeature.kt` — status tool real; scan tool `phase = V2`
 
-- [ ] **Step 1: VM + manifest**
-- [ ] **Step 2: Screen + permission request (ActivityResult BLUETOOTH_CONNECT on 31+)**
-- [ ] **Step 3: Compile + commit** `feat(bluetooth): adapter state and bonded-device inspector`
+- [x] **Step 1: VM + manifest**
+- [x] **Step 2: Screen + permission request (ActivityResult BLUETOOTH_CONNECT on 31+)**
+- [x] **Step 3: Compile + commit** `feat(bluetooth): adapter state and bonded-device inspector`
 
 ---
 
@@ -63,18 +70,18 @@
 - Modify: `feature/nfc/.../NfcFeature.kt` — routes `nfc`, `nfc/write`
 - Create: `feature/nfc/src/test/.../NfcTagParserTest.kt`
 
-- [ ] **Step 1: Parser + VM + manifest**
-- [ ] **Step 2: Scan/doctor screen + writer screen**
-- [ ] **Step 3: Compile + commit** `feat(nfc): tag scan, ndef read/write, tag doctor`
+- [x] **Step 1: Parser + VM + manifest**
+- [x] **Step 2: Scan/doctor screen + writer screen**
+- [x] **Step 3: Compile + commit** `feat(nfc): tag scan, ndef read/write, tag doctor`
 
 ---
 
 ### Task 4: Release gate — 0.8.0, changelog, checklist, plan, queue
 
-- [ ] **Step 1: `0.8.0`/`8` + CHANGELOG**
-- [ ] **Step 2: J13 ticks + banner + Q15 DONE; hardware-dependent rows → device notes**
-- [ ] **Step 3: `:app:assembleDebug` green**
-- [ ] **Step 4: Commit + push**
+- [x] **Step 1: `0.8.0`/`8` + CHANGELOG**
+- [x] **Step 2: J13 ticks + banner + Q15 DONE; hardware-dependent rows → device notes**
+- [x] **Step 3: `:app:assembleDebug` green**
+- [x] **Step 4: Commit + push**
 
 ## Execution notes
 

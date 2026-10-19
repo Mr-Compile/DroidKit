@@ -428,30 +428,36 @@ Release gate:
 # Journey 13 - v0.8.0 NFC and Network Lab
 
 ## NFC
-- [ ] NFC hardware detection
-- [ ] NFC enabled-state flow
-- [ ] Tag scan
-- [ ] Technology detection
-- [ ] NDEF parsing
-- [ ] URI/text record display
-- [ ] Supported NDEF writing
-- [ ] Supported erase/format behavior
-- [ ] Confirmation before mutating a tag
-- [ ] Export/copy record details
+- [x] NFC hardware detection — `hasSystemFeature(FEATURE_NFC)` + adapter presence
+- [x] NFC enabled-state flow — off-state card with link to system NFC settings
+- [x] Tag scan — `enableReaderMode` with lifecycle-scoped start/stop
+- [x] Technology detection — `tag.techList` rendered per tag
+- [x] NDEF parsing — records with TNF name, type/payload hex
+- [x] URI/text record display — RTD_TEXT (UTF-8/16) and RTD_URI prefix-table decode
+- [x] Supported NDEF writing — text/URI records, capacity+writable checks, armed write
+- [x] Supported erase/format behavior — erase writes empty-TNF message; NdefFormatable fallback
+- [x] Confirmation before mutating a tag — write and erase behind explicit confirm dialogs
+- [x] Export/copy record details — per-record copy via `InfoRow` copy action
 
 ## Network
-- [ ] Connection information
-- [ ] IP information allowed by Android
-- [ ] Ping
-- [ ] DNS lookup
-- [ ] Basic connectivity diagnostics
-- [ ] Wi-Fi restrictions handled by API/version
+- [x] Connection information — active transports, capabilities, link properties
+- [x] IP information allowed by Android — local addresses, DNS servers, MTU, private DNS
+- [x] Ping — `InetAddress.isReachable` samples with ICMP-filtering caveat
+- [x] DNS lookup — `getAllByName` with elapsed time
+- [x] Basic connectivity diagnostics — per-layer results, no aggregate score
+- [x] Wi-Fi restrictions handled by API/version — SSID/BSSID/MAC not read; restriction noted
+
+## Bluetooth (V1 OPTIONAL basic)
+- [x] Adapter support/state — presence, enabled, classic+LE features
+- [x] Permission handling — BLUETOOTH_CONNECT gate on API 31+, request in-context
+- [x] Bonded devices — name/address/type/bond as Android permits
+- [x] BLE scanner deferred — POST-V1, `ToolPhase.V2` in registry
 
 Release gate:
-- [ ] NFC operations tested with representative tags
-- [ ] Network tools do not overpromise restricted identifiers
-- [ ] `v0.8.0` tagged
-- [ ] CHANGELOG updated
+- [ ] NFC operations tested with representative tags — requires hardware; device run pending
+- [x] Network tools do not overpromise restricted identifiers — documented on screen
+- [ ] `v0.8.0` tagged — version bumped (`0.8.0`/`8`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
