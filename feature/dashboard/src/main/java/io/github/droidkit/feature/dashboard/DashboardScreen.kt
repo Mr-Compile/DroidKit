@@ -36,6 +36,8 @@ fun DashboardScreen(
 ) {
     val recents by viewModel.recentToolIds.collectAsState(initial = emptyList())
     val recentTools = recents.mapNotNull { viewModel.toolById(it) }
+    val favorites by viewModel.favoriteToolIds.collectAsState(initial = emptySet())
+    val pinnedTools = viewModel.pinned(favorites)
 
     Scaffold(topBar = { TopAppBar(title = { Text("DroidKit") }) }) { padding ->
         LazyColumn(
@@ -77,6 +79,17 @@ fun DashboardScreen(
             item {
                 Button(onClick = onNavigateToDiagnose, modifier = Modifier.fillMaxWidth()) {
                     Text("Start Full Diagnostic")
+                }
+            }
+
+            if (pinnedTools.isNotEmpty()) {
+                item { SectionHeader("Pinned tools") }
+                items(pinnedTools, key = { "pin_${it.id}" }) { tool ->
+                    ToolCard(
+                        tool = tool,
+                        resolution = viewModel.resolve(tool),
+                        onClick = { onOpenTool(tool.route) },
+                    )
                 }
             }
 

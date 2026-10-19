@@ -23,6 +23,9 @@ class DashboardViewModel @Inject constructor(
 
     val recentToolIds: Flow<List<String>> = settings.recentToolIds
 
+    /** User-pinned tools — starred in the Tools tab surface here. */
+    val favoriteToolIds: Flow<Set<String>> = settings.favoriteToolIds
+
     fun providerStatuses(): Map<ProviderKind, ProviderStatus> =
         capabilityManager.providerStatuses()
 
@@ -32,4 +35,7 @@ class DashboardViewModel @Inject constructor(
     fun resolve(tool: Tool): ToolResolution = capabilityManager.resolve(tool)
 
     fun toolById(id: String): Tool? = registry.byId(id)
+
+    /** Pinned tools in registry order — stable across sessions. */
+    fun pinned(ids: Set<String>): List<Tool> = registry.tools.filter { it.id in ids }
 }
