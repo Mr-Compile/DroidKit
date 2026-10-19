@@ -12,15 +12,32 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.droidkit.core.common.DLog
+import io.github.droidkit.core.database.NfcTagScanDao
+import io.github.droidkit.core.database.NfcTagScanEntity
+import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class NfcViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val scanDao: NfcTagScanDao,
 ) : ViewModel() {
+
+    /** Reader callbacks arrive off the main executor — persists them safely. */
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    val history: StateFlow<List<NfcTagScanEntity>> =
+        scanDao.observeRecent()
+            .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
 
     enum class Verdict { PASS, WARNING, UNSUPPORTED }
 
@@ -68,9 +85,13 @@ class NfcViewModel @Inject constructor(
                 _armed.value = null
                 eraseTag(tag)
             }
-            null -> _tag.value = runCatching { NfcTagParser.parse(tag) }
-                .onFailure { DLog.w(TAG, "tag parse failed", it) }
-                .getOrNull()
+            null -> {
+                val parsed = runCatching { NfcTagParser.parse(tag) }
+                    .onFailure { DLog.w(TAG, "tag parse failed", it) }
+                    .getOrNull()
+                _tag.value = parsed
+                parsed?.let { recordScan(it) }
+            }
         }
     }
 
@@ -107,6 +128,31 @@ class NfcViewModel @Inject constructor(
 
     fun setScanning(enabled: Boolean) {
         _scanning.value = enabled
+    }
+
+    fun clearHistory() {
+        ioScope.launch { scanDao.deleteAll() }
+    }
+
+    /** Logs a scan locally — only the last 4 bytes of the tag ID are kept. */
+    private fun recordScan(info: NfcTagInfo) {
+        ioScope.launch {
+            runCatching {
+                scanDao.insert(
+                    NfcTagScanEntity(
+                        id = UUID.randomUUID().toString(),
+                        scannedAtEpochMs = System.currentTimeMillis(),
+                        tagIdTail = info.idHex?.takeLast(8),
+                        techList = info.techList.joinToString(","),
+                        recordSummary = info.records
+                            .mapNotNull { it.decoded ?: it.tnfName }
+                            .joinToString(" · ")
+                            .take(200)
+                            .ifBlank { null },
+                    ),
+                )
+            }
+        }
     }
 
     private fun writeMessage(tag: Tag, message: NdefMessage) {

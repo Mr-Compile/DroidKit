@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -84,6 +86,43 @@ fun NfcWriteScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     )
+                    Text(
+                        "Presets",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    ) {
+                        if (kind == RecordKind.URI) {
+                            listOf(
+                                "Web" to "https://",
+                                "Call" to "tel:",
+                                "Email" to "mailto:",
+                                "SMS" to "sms:",
+                                "Map" to "geo:",
+                            ).forEach { (label, prefix) ->
+                                FilterChip(
+                                    selected = false,
+                                    onClick = { if (!input.startsWith(prefix)) input = prefix },
+                                    label = { Text(label) },
+                                )
+                            }
+                        } else {
+                            listOf(
+                                "Asset tag" to "ASSET-",
+                                "Inspection" to "INSPECTED-BY: ",
+                                "Serial" to "SN: ",
+                            ).forEach { (label, template) ->
+                                FilterChip(
+                                    selected = false,
+                                    onClick = { if (input.isBlank()) input = template },
+                                    label = { Text(label) },
+                                )
+                            }
+                        }
+                    }
                 }
             }
 

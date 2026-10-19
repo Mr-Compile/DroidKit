@@ -52,6 +52,7 @@ fun NfcScreen(
     val tag by viewModel.tag.collectAsState()
     val armed by viewModel.armed.collectAsState()
     val actionResult by viewModel.actionResult.collectAsState()
+    val history by viewModel.history.collectAsState()
     var confirmErase by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(Unit) {
@@ -223,6 +224,33 @@ fun NfcScreen(
                 }
             } else if (viewModel.adapterPresent && adapterEnabled) {
                 item { EmptyState("No tag scanned yet.") }
+            }
+
+            if (history.isNotEmpty()) {
+                item {
+                    SectionCard(title = "Recent scans") {
+                        val df = java.text.DateFormat.getTimeInstance()
+                        history.take(10).forEach { scan ->
+                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                Text(
+                                    df.format(java.util.Date(scan.scannedAtEpochMs)) +
+                                        (scan.tagIdTail?.let { " · …$it" } ?: ""),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                Text(
+                                    scan.techList +
+                                        (scan.recordSummary?.let { " — $it" } ?: ""),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                )
+                            }
+                        }
+                        TextButton(onClick = { viewModel.clearHistory() }) {
+                            Text("Clear history")
+                        }
+                    }
+                }
             }
 
             actionResult?.let { r ->
