@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/branding/droidkit-logo.svg" alt="DroidKit" width="260" />
+  <img src="docs/03_design_system/branding/droidkit-logo.svg" alt="DroidKit" width="260" />
   <br/>
   <em>Tools for a healthier Android</em>
 </p>
@@ -26,7 +26,7 @@ and propose allow-listed actions — the app works fully without it.
   pairing, TLS/plain sessions, RSA-2048 identity in AndroidKeyStore), root
   `su` executor, AppOps viewer/controls, Package Controls, ADB Lab, and
   DroidKit Intelligence (`core:ai`).
-- Journey state and remaining gates: `docs/superpowers/specs/10_DroidKit_Master_Journey_Checklist.md`.
+- Journey state and remaining gates: `docs/01_plans/10_DroidKit_Master_Journey_Checklist.md`.
 
 ## Features
 
@@ -143,8 +143,9 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # Windows/git-b
 ## Docs
 
 - `AGENTS.md` — contributor/agent rules and architecture contracts
-- `docs/superpowers/specs/` — playbook journeys (J01–J21) and feature specs
-- `docs/release/` — release notes drafts
+- `docs/00_specs/` — playbook journeys (J01–J21) and feature specs
+- `docs/01_plans/` — execution queue, per-journey plans, journey checklist
+- `docs/05_release/` — release notes drafts
 - `CHANGELOG.md` — per-version changes
 
 License: Apache-2.0 (see `LICENSE`).

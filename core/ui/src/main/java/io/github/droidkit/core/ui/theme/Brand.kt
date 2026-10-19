@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Brand tokens for the DroidKit mark (Candidate 4 — abstract/geometric).
- * Source of truth and usage rules: docs/branding/README.md.
+ * Source of truth and usage rules: docs/03_design_system/branding/README.md.
  */
 object DroidKitBrand {
     val Green = Color(0xFF3CE88A)
@@ -25,7 +25,7 @@ object DroidKitBrand {
 /**
  * The DroidKit mark as a Compose vector: a rounded hexagonal ring, open at
  * the bottom vertex, around a vertical capsule "tool bit". 108-unit
- * viewport, same geometry as docs/branding/droidkit-mark.svg.
+ * viewport, same geometry as docs/03_design_system/branding/droidkit-mark.svg.
  */
 val DroidKitMark: ImageVector by lazy(LazyThreadSafetyMode.NONE) {
     ImageVector.Builder(

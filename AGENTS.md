@@ -4,18 +4,18 @@
 Build DroidKit incrementally as a safe, native Android technician/power-user toolkit.
 
 ## Read before editing
-1. `docs/superpowers/specs/playbook/01_AI_OPERATING_CONTRACT.md` — session workflow rules
-2. `docs/superpowers/specs/playbook/02_MASTER_JOURNEY.md` — milestone map (J01–J20) + universal gate
-3. Current journey document — `docs/superpowers/specs/playbook/04`–`22`, per active milestone
-4. Feature spec — `docs/superpowers/specs/feature_plans_v2/features/` (authoritative for feature scope/UX)
-5. Progress tracker — `docs/superpowers/specs/10_DroidKit_Master_Journey_Checklist.md`
-6. Relevant architecture/design documents — `docs/superpowers/specs/`, `docs/superpowers/plans/`
-7. Secrets incident runbook — `docs/superpowers/specs/ai_security_addon/10_SECRET_INCIDENT_PLAYBOOK.md`
+1. `docs/00_specs/playbook/01_AI_OPERATING_CONTRACT.md` — session workflow rules
+2. `docs/00_specs/playbook/02_MASTER_JOURNEY.md` — milestone map (J01–J20) + universal gate
+3. Current journey document — `docs/00_specs/playbook/04`–`22`, per active milestone
+4. Feature spec — `docs/00_specs/feature_plans_v2/features/` (authoritative for feature scope/UX)
+5. Progress tracker — `docs/01_plans/10_DroidKit_Master_Journey_Checklist.md`
+6. Relevant architecture/design documents — `docs/00_specs/`, `docs/01_plans/`
+7. Secrets incident runbook — `docs/00_specs/ai_security_addon/10_SECRET_INCIDENT_PLAYBOOK.md`
 
 ## Source-of-truth order
-Verified repo/Android reality > this file + operating contract > `ai_security_addon/` for AI/secret topics > frozen V1 scope (`playbook/03` + `feature_plans_v2/30`) > v2 feature specs > playbook journey gates > current sprint plans > Product Bible > tracker > `planning_package/` (history only).
+Verified repo/Android reality > this file + operating contract > `ai_security_addon/` for AI/secret topics > frozen V1 scope (`playbook/03` + `feature_plans_v2/30`) > v2 feature specs > playbook journey gates > current sprint plans > Product Bible > tracker > `00_specs/planning_package_superseded/` (history only).
 
-Conflicts are classified and logged in `docs/PLAN_MIGRATION_LOG.md` — never silently rewrite an old decision. Full queue: `docs/superpowers/plans/2026-10-18-droidkit-master-execution-plan.md`.
+Conflicts are classified and logged in `docs/02_foundations/PLAN_MIGRATION_LOG.md` — never silently rewrite an old decision. Full queue: `docs/01_plans/2026-10-18-droidkit-master-execution-plan.md`.
 
 ## Mandatory workflow
 AUDIT -> PLAN -> IMPLEMENT -> TARGETED VALIDATION -> SELF-REVIEW -> UPDATE CHECKLIST

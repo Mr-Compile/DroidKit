@@ -81,8 +81,8 @@
   journey names
 
 ### Docs
-- Release notes draft (`docs/release/RELEASE_NOTES_v1.0.0_DRAFT.md`) and
-  privacy policy draft (`docs/PRIVACY_POLICY_DRAFT.md`) for owner review
+- Release notes draft (`docs/05_release/RELEASE_NOTES_v1.0.0_DRAFT.md`) and
+  privacy policy draft (`docs/05_release/PRIVACY_POLICY_DRAFT.md`) for owner review
 - Tracker/J14 status resynced; plan files marked IMPLEMENTED where done
 
 ## [0.8.0] - Unreleased

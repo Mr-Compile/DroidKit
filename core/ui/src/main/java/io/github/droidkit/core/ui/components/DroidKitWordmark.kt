@@ -22,7 +22,7 @@ import io.github.droidkit.core.ui.theme.DroidKitMark
 
 /**
  * Brand lockup for app chrome: the hex mark beside the two-tone
- * "Droid" / "Kit" wordmark. Usage rules: docs/branding/README.md.
+ * "Droid" / "Kit" wordmark. Usage rules: docs/03_design_system/branding/README.md.
  */
 @Composable
 fun DroidKitWordmark(

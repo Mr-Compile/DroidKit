@@ -34,7 +34,7 @@ import io.github.droidkit.core.ui.theme.DroidKitMark
 import kotlinx.coroutines.launch
 
 /**
- * One-time intro per docs/design/J03_SCREEN_SPECS §1 — Welcome →
+ * One-time intro per docs/02_foundations/j03_design/J03_SCREEN_SPECS §1 — Welcome →
  * Capabilities → Privacy → Done. Sets the product's trust contract:
  * honest states, optional elevated providers, local-first data.
  */
