@@ -240,7 +240,7 @@ Target release: `v0.1.0`
 - [ ] Add CI only if useful at this stage — deferred
 - [x] Add CHANGELOG.md
 - [x] Establish versionName/versionCode scheme — `0.1.0` / `1` in convention plugin
-- [ ] Tag first project baseline if desired — pending merge to `main`
+- [x] Tag first project baseline — `v0.1.0` tagged at merge to `main`
 
 ---
 
@@ -273,7 +273,7 @@ Release gate:
 - [x] Foundation architecture reviewed — 31-module graph, DI verified via Hilt compile
 - [x] No feature directly depends on Shizuku/ADB/root — audited: zero `privilege.*` imports in `feature/`
 - [ ] App launches and core navigation works — `assembleDebug` passes; launch needs device
-- [ ] `v0.1.0` tagged — pending merge to `main`
+- [x] `v0.1.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -297,7 +297,7 @@ Release gate:
 Release gate:
 - [ ] Device Inspector works on supported Android versions — requires device run
 - [x] No unavailable values are fabricated — all null/−1 fields render `Not exposed`
-- [ ] `v0.2.0` tagged — version bumped (`0.2.0`/`2`); tag at merge to `main`
+- [x] `v0.2.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -325,7 +325,7 @@ Release gate:
 
 Release gate:
 - [ ] Guided diagnostic flow works end-to-end for core tests — code-complete; needs device run
-- [ ] `v0.3.0` tagged — version bumped (`0.3.0`/`3`); tag at merge to `main`
+- [x] `v0.3.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -349,7 +349,7 @@ Release gate:
 
 Release gate:
 - [ ] Full diagnostic completes without crashes when hardware is missing — designed-in (NOT_SUPPORTED auto-results, no crashes by construction); needs device run
-- [ ] `v0.4.0` tagged — version bumped (`0.4.0`/`4`); tag at merge to `main`
+- [x] `v0.4.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -371,7 +371,7 @@ Release gate:
 
 Release gate:
 - [ ] A complete diagnostic can be saved and exported — pipeline complete; needs device run
-- [ ] `v0.5.0` tagged — version bumped (`0.5.0`/`5`); tag at merge to `main`
+- [x] `v0.5.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -396,7 +396,7 @@ Release gate:
 
 Release gate:
 - [x] Modern Android package-visibility behavior is handled correctly — no QUERY_ALL_PACKAGES; visible-set counted and disclosed
-- [ ] `v0.6.0` tagged — version bumped (`0.6.0`/`6`); tag at merge to `main`
+- [x] `v0.6.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -420,7 +420,7 @@ Release gate:
 
 Release gate:
 - [x] USB Lab does not claim ChipGenius-level NAND/controller access — limitation stated on detail screen
-- [ ] `v0.7.0` tagged — version bumped (`0.7.0`/`7`); tag at merge to `main`
+- [x] `v0.7.0` tagged
 - [x] CHANGELOG updated
 
 ---
@@ -456,7 +456,7 @@ Release gate:
 Release gate:
 - [ ] NFC operations tested with representative tags — requires hardware; device run pending
 - [x] Network tools do not overpromise restricted identifiers — documented on screen
-- [ ] `v0.8.0` tagged — version bumped (`0.8.0`/`8`); tag at merge to `main`
+- [x] `v0.8.0` tagged
 - [x] CHANGELOG updated
 
 ---
