@@ -1,5 +1,6 @@
 package io.github.droidkit.feature.sensors
 
+import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -24,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ui.InfoRow
@@ -31,6 +34,8 @@ import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlin.math.abs
 import kotlin.math.min
+
+private const val MAX_SAMPLES = 2000
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,13 +49,19 @@ fun LiveSensorScreen(
 
     var values by remember { mutableStateOf<FloatArray?>(null) }
     var updates by remember { mutableStateOf(0L) }
+    var recording by remember { mutableStateOf(false) }
+    val samples = remember { mutableListOf<Pair<Long, FloatArray>>() }
+    val context = LocalContext.current
 
-    DisposableEffect(sensor) {
+    DisposableEffect(sensor, recording) {
         if (sensor == null) return@DisposableEffect onDispose {}
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
                 values = event.values.copyOf()
                 updates++
+                if (recording && samples.size < MAX_SAMPLES) {
+                    samples += event.timestamp to event.values.copyOf()
+                }
             }
             override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
         }
@@ -102,6 +113,54 @@ fun LiveSensorScreen(
                                 }
                             }
                             InfoRow("Updates", updates.toString(), copyable = false)
+                        }
+                    }
+                }
+                item {
+                    SectionCard(title = "Session recording") {
+                        Text(
+                            if (recording) {
+                                "Recording… ${samples.size} samples (cap $MAX_SAMPLES)"
+                            } else {
+                                "Record a short live session, then share it as CSV."
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        OutlinedButton(
+                            onClick = {
+                                if (recording) {
+                                    recording = false
+                                } else {
+                                    samples.clear()
+                                    recording = true
+                                }
+                            },
+                            modifier = Modifier.padding(top = 8.dp),
+                        ) { Text(if (recording) "Stop" else "Record") }
+                        if (!recording && samples.isNotEmpty()) {
+                            OutlinedButton(
+                                onClick = {
+                                    val sensorName = sensor.name.replace(" ", "_")
+                                    val csv = buildString {
+                                        appendLine("sensor,${sensor.name}")
+                                        appendLine("unit,${unit}")
+                                        appendLine("timestamp_ns,${axes.joinToString(",")}")
+                                        samples.forEach { (ts, v) ->
+                                            appendLine("$ts," + axes.indices.joinToString(",") {
+                                                "%.6f".format(v.getOrElse(it) { 0f })
+                                            })
+                                        }
+                                    }
+                                    val send = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/csv"
+                                        putExtra(Intent.EXTRA_SUBJECT, "DroidKit sensor session — $sensorName")
+                                        putExtra(Intent.EXTRA_TEXT, csv)
+                                    }
+                                    context.startActivity(Intent.createChooser(send, "Share sensor session"))
+                                },
+                                modifier = Modifier.padding(top = 8.dp),
+                            ) { Text("Share ${samples.size} samples as CSV") }
                         }
                     }
                 }

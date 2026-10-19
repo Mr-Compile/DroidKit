@@ -34,6 +34,13 @@ object DisplayFeature : FeatureContribution {
             category = ToolCategory.DIAGNOSTICS,
             route = "$ROUTE/modes",
         ),
+        Tool(
+            id = "display.motion",
+            title = "Motion Pattern",
+            description = "Moving test pattern to observe judder and refresh behavior",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/motion",
+        ),
     )
 }
 
@@ -70,5 +77,8 @@ fun NavGraphBuilder.displayGraph(nav: NavHostController) {
     }
     composable("${DisplayFeature.ROUTE}/modes") {
         DisplayModesScreen()
+    }
+    composable("${DisplayFeature.ROUTE}/motion") {
+        MotionPatternScreen()
     }
 }
