@@ -190,5 +190,28 @@ object PhoneDoctorTests {
 
     val ALL: List<PhoneDoctorTest> = CORE + HARDWARE
 
+    /**
+     * Curated subset for used-phone intake: the buyer-visible essentials —
+     * screen, touch, audio, cameras, flash, radios and charging — minus the
+     * deeper sensor sweep.
+     */
+    val USED_PHONE: List<PhoneDoctorTest> = ALL.filter {
+        it.id in setOf(
+            "display.color", "display.dead_pixel",
+            "touch.grid", "touch.multitouch",
+            "haptics.vibration",
+            "audio.speaker", "audio.microphone",
+            "camera.front", "camera.rear", "camera.flash",
+            "connectivity.wifi", "connectivity.bluetooth",
+            "connectivity.nfc", "connectivity.usb",
+            "power.charging",
+        )
+    }
+
     fun findById(id: String): PhoneDoctorTest? = ALL.firstOrNull { it.id == id }
+}
+
+enum class DiagnosticPreset(val tests: List<PhoneDoctorTest>, val label: String) {
+    FULL(PhoneDoctorTests.ALL, "Full diagnostic"),
+    USED_PHONE(PhoneDoctorTests.USED_PHONE, "Used-phone check"),
 }

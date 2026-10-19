@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.privileges)
     implementation(projects.core.database)
     implementation(projects.core.system)
+    implementation(projects.core.datastore)
     implementation(projects.core.ui)
     implementation(projects.core.ai)
     implementation(projects.core.permissions)

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.database.DeviceSnapshotDao
 import io.github.droidkit.core.database.DeviceSnapshotEntity
 import io.github.droidkit.core.database.DiagnosticResultDao
@@ -15,6 +16,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -26,6 +28,7 @@ class DiagnosticsViewModel @Inject constructor(
     private val resultDao: DiagnosticResultDao,
     private val snapshotDao: DeviceSnapshotDao,
     private val probe: DeviceSystemProbe,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
 
     val sessions: StateFlow<List<DiagnosticSessionEntity>> =
@@ -37,11 +40,24 @@ class DiagnosticsViewModel @Inject constructor(
     private val _activeSessionId = MutableStateFlow<String?>(null)
     val activeSessionId = _activeSessionId.asStateFlow()
 
+    /** Intake data armed by the picker screen before navigation to the guided flow. */
+    private var pendingPreset = DiagnosticPreset.FULL
+    private var pendingCustomer: String? = null
+    private var pendingDevice: String? = null
+
+    /** Stages intake values for the next guided run. */
+    fun armSession(preset: DiagnosticPreset, customerLabel: String?, deviceLabel: String?) {
+        pendingPreset = preset
+        pendingCustomer = customerLabel?.ifBlank { null }
+        pendingDevice = deviceLabel?.ifBlank { null }
+    }
+
     /** Creates a session + device snapshot and seeds the guided engine. */
     fun startGuided() {
         viewModelScope.launch {
-            _activeSessionId.value = createSession()
-            engine.start()
+            val preset = pendingPreset
+            _activeSessionId.value = createSession(preset)
+            engine.restart(preset.tests.map { it.id })
         }
     }
 
@@ -81,8 +97,9 @@ class DiagnosticsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun createSession(): String {
+    private suspend fun createSession(preset: DiagnosticPreset): String {
         val now = System.currentTimeMillis()
+        val technician = settings.technicianName.first().ifBlank { null }
         val snapshot = DeviceSnapshotEntity(
             id = UUID.randomUUID().toString(),
             capturedAtEpochMs = now,
@@ -111,6 +128,10 @@ class DiagnosticsViewModel @Inject constructor(
                 overallStatus = "IN_PROGRESS",
                 notes = null,
                 appVersion = probe.appVersionName,
+                preset = preset.name,
+                customerLabel = pendingCustomer,
+                deviceLabel = pendingDevice,
+                technicianName = technician,
             ),
         )
         return sessionId
