@@ -1,5 +1,13 @@
 # DroidKit App Skeleton Implementation Plan
 
+> **STATUS: IMPLEMENTED** — all 21 tasks executed on branch `feature/j05-j06-skeleton`
+> (2026-10-19). `:app:assembleDebug` builds `app-debug.apk`; `testDebugUnitTest`
+> passes all 12 unit tests (ToolRegistryTest 4, CapabilityManagerTest 8).
+> Documented deviations: Kotlin 2.2.20 + KSP 2.2.20-2.0.3 (no KSP for 2.3.x),
+> Hilt 2.59.2 (AGP 9 support), `android.disallowKotlinSourceSets=false` (AGP 9
+> KSP workaround), manifest theme `Theme.Material.NoActionBar`,
+> `failOnNoDiscoveredTests=false` for empty unit-test source sets.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Scaffold the complete multi-module DroidKit project (31 Gradle modules) with working foundation services and all feature screens present as capability-gated stubs.
@@ -191,7 +199,7 @@ git commit -m "chore: root gradle scaffolding and version catalog"
 **Interfaces:**
 - Produces: plugin ids `droidkit.android.library`, `droidkit.android.library.compose`, `droidkit.android.application`, `droidkit.hilt` — applied by literal id in every module `build.gradle.kts`
 
-- [ ] **Step 1: `build-logic/settings.gradle.kts`**
+- [x] **Step 1: `build-logic/settings.gradle.kts`**
 
 ```kotlin
 dependencyResolutionManagement {
@@ -204,7 +212,7 @@ dependencyResolutionManagement {
 rootProject.name = "build-logic"
 ```
 
-- [ ] **Step 2: `build-logic/build.gradle.kts`**
+- [x] **Step 2: `build-logic/build.gradle.kts`**
 
 ```kotlin
 plugins {
@@ -241,7 +249,7 @@ gradlePlugin {
 }
 ```
 
-- [ ] **Step 3: `AndroidLibraryConventionPlugin.kt`**
+- [x] **Step 3: `AndroidLibraryConventionPlugin.kt`**
 
 ```kotlin
 package droidkit
@@ -281,7 +289,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 }
 ```
 
-- [ ] **Step 4: `AndroidLibraryComposeConventionPlugin.kt`**
+- [x] **Step 4: `AndroidLibraryComposeConventionPlugin.kt`**
 
 ```kotlin
 package droidkit
@@ -316,7 +324,7 @@ class AndroidLibraryComposeConventionPlugin : Plugin<Project> {
 }
 ```
 
-- [ ] **Step 5: `AndroidApplicationConventionPlugin.kt`**
+- [x] **Step 5: `AndroidApplicationConventionPlugin.kt`**
 
 ```kotlin
 package droidkit
@@ -373,7 +381,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
 }
 ```
 
-- [ ] **Step 6: `HiltConventionPlugin.kt`**
+- [x] **Step 6: `HiltConventionPlugin.kt`**
 
 ```kotlin
 package droidkit
@@ -397,7 +405,7 @@ class HiltConventionPlugin : Plugin<Project> {
 }
 ```
 
-- [ ] **Step 7: Verify build-logic compiles**
+- [x] **Step 7: Verify build-logic compiles**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -406,7 +414,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: build-logic compiles; `help` succeeds (module build files don't exist yet — that fails later only when evaluated; `help` configures root only). If `help` fails on missing included modules, temporarily comment `include` lines for uncreated modules, or create all module dirs with empty `build.gradle.kts`+manifest stubs first — prefer creating the stub dirs.
 
-- [ ] **Step 8: Generate the Gradle wrapper**
+- [x] **Step 8: Generate the Gradle wrapper**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -415,7 +423,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: `gradle/wrapper/gradle-wrapper.jar` + `gradlew` + `gradlew.bat` created. All later tasks use `./gradlew`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add build-logic gradle/wrapper gradlew gradlew.bat
@@ -435,7 +443,7 @@ git commit -m "chore: build-logic convention plugins and gradle wrapper"
 **Interfaces:**
 - Produces (consumed everywhere): `Tool`, `ToolCategory`, `SafetyLevel`, `ToolPhase`, `Capability`, `TestResultState`, `FeatureContribution`, `ToolRegistry(tools)` with `tools`, `search(String)`, `byCategory(ToolCategory)`, `byId(String)`
 
-- [ ] **Step 1: `core/common/build.gradle.kts`**
+- [x] **Step 1: `core/common/build.gradle.kts`**
 
 ```kotlin
 plugins {
@@ -451,14 +459,14 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `core/common/src/main/AndroidManifest.xml`** (identical minimal manifest in every library module)
+- [x] **Step 2: `core/common/src/main/AndroidManifest.xml`** (identical minimal manifest in every library module)
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest />
 ```
 
-- [ ] **Step 3: Write the failing test**
+- [x] **Step 3: Write the failing test**
 
 ```kotlin
 package io.github.droidkit.core.common
@@ -508,7 +516,7 @@ class ToolRegistryTest {
 }
 ```
 
-- [ ] **Step 4: `Tool.kt`**
+- [x] **Step 4: `Tool.kt`**
 
 ```kotlin
 package io.github.droidkit.core.common
@@ -543,7 +551,7 @@ interface FeatureContribution {
 }
 ```
 
-- [ ] **Step 5: `ToolRegistry.kt`**
+- [x] **Step 5: `ToolRegistry.kt`**
 
 ```kotlin
 package io.github.droidkit.core.common
@@ -575,7 +583,7 @@ class ToolRegistry @Inject constructor(
 }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -584,7 +592,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: 4 tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add core/common
@@ -602,7 +610,7 @@ git commit -m "feat(core): tool model and registry"
 **Interfaces:**
 - Produces: `DeviceSystemProbe(context)` — `sdkInt`, `manufacturer`, `model`, `device`, `supportedAbis: List<String>`, `totalRamMb: Long`, `storage: StorageInfo`, `sensors: List<ProbeSensor>`, `cameraIds: List<String>`, `batteryCapacityPct: Float`, `displayInfo: DisplayInfo`, `hasFeature(String): Boolean`, `summary(): String`
 
-- [ ] **Step 1: `core/system/build.gradle.kts` + manifest**
+- [x] **Step 1: `core/system/build.gradle.kts` + manifest**
 
 ```kotlin
 plugins {
@@ -620,7 +628,7 @@ dependencies {
 
 Manifest: same `<manifest />` stub.
 
-- [ ] **Step 2: `DeviceSystemProbe.kt`**
+- [x] **Step 2: `DeviceSystemProbe.kt`**
 
 ```kotlin
 package io.github.droidkit.core.system
@@ -737,7 +745,7 @@ class DeviceSystemProbe @Inject constructor(
 
 The constructor takes a plain `Context` — `:core:system` carries no Hilt dependency. `:app` passes `@ApplicationContext` when providing it (Task 19).
 
-- [ ] **Step 3: Verify compile**
+- [x] **Step 3: Verify compile**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -746,7 +754,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add core/system
@@ -765,7 +773,7 @@ git commit -m "feat(core): device system probe"
 **Interfaces:**
 - Produces: `fun interface PermissionChecker { fun isGranted(permission: String): Boolean }`; `class PermissionManager(context) : PermissionChecker` with `isGranted(String)`, `manifestPermissions(): List<String>`
 
-- [ ] **Step 1: build file + manifest** (library plugin, namespace `io.github.droidkit.core.permissions`, dep `androidx.core:core-ktx`)
+- [x] **Step 1: build file + manifest** (library plugin, namespace `io.github.droidkit.core.permissions`, dep `androidx.core:core-ktx`)
 
 ```kotlin
 plugins {
@@ -781,7 +789,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `PermissionChecker.kt`**
+- [x] **Step 2: `PermissionChecker.kt`**
 
 ```kotlin
 package io.github.droidkit.core.permissions
@@ -791,7 +799,7 @@ fun interface PermissionChecker {
 }
 ```
 
-- [ ] **Step 3: `PermissionManager.kt`**
+- [x] **Step 3: `PermissionManager.kt`**
 
 ```kotlin
 package io.github.droidkit.core.permissions
@@ -821,7 +829,7 @@ class PermissionManager @Inject constructor(
 }
 ```
 
-- [ ] **Step 4: Compile + commit**
+- [x] **Step 4: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -847,7 +855,7 @@ git commit -m "feat(core): permission manager"
 
 Note for tests: `DeviceSystemProbe` is a concrete class needing a `Context`. Make `hasFeature`/`sdkInt` testable by extracting a minimal seam: CapabilityManager should depend on two lambdas instead — `sdkCheck: (Int) -> Boolean` (isSdkAtLeast) and `featureCheck: (String) -> Boolean` (hasFeature). Provide them from the probe in `:app`. This keeps `:core:privileges` free of Android dependencies and unit-testable. `PermissionChecker` is already an interface — fake it directly.
 
-- [ ] **Step 1: build file**
+- [x] **Step 1: build file**
 
 ```kotlin
 plugins {
@@ -867,7 +875,7 @@ dependencies {
 
 (No `core:system` dep — the probe seam is injected as lambdas. Manifest: `<manifest />`.)
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```kotlin
 package io.github.droidkit.core.privileges
@@ -976,7 +984,7 @@ class CapabilityManagerTest {
 }
 ```
 
-- [ ] **Step 3: `CapabilityProvider.kt`**
+- [x] **Step 3: `CapabilityProvider.kt`**
 
 ```kotlin
 package io.github.droidkit.core.privileges
@@ -998,7 +1006,7 @@ interface CapabilityProvider {
 }
 ```
 
-- [ ] **Step 4: `ToolResolution.kt`**
+- [x] **Step 4: `ToolResolution.kt`**
 
 ```kotlin
 package io.github.droidkit.core.privileges
@@ -1016,7 +1024,7 @@ sealed interface ToolResolution {
 }
 ```
 
-- [ ] **Step 5: `CapabilityManager.kt`**
+- [x] **Step 5: `CapabilityManager.kt`**
 
 ```kotlin
 package io.github.droidkit.core.privileges
@@ -1088,7 +1096,7 @@ class CapabilityManager @Inject constructor(
 
 `@Inject` on a constructor with `(String) -> Boolean` and `Int` params won't be Hilt-provided — Task 19 constructs it via `@Provides` in `:app`. The annotation is harmless.
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -1097,7 +1105,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: 8 tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add core/privileges
@@ -1118,7 +1126,7 @@ git commit -m "feat(core): capability resolution engine"
 **Interfaces:**
 - Produces (schema matches `06_DroidKit_Data_Model_and_Registry.md`): `DiagnosticSessionEntity`, `DiagnosticResultEntity`, `DeviceSnapshotEntity`, `SavedReportEntity`; `DiagnosticSessionDao` (`insert`, `complete(sessionId, ts, status)`, `observeAll(): Flow<List>`), `DiagnosticResultDao` (`insert`, `observeBySession(id)`, `observeAll()`), `DeviceSnapshotDao` (`insert`, `observeAll()`), `SavedReportDao` (`insert`, `observeAll()`), `DroidKitDatabase`, `DatabaseModule` providing DB + DAOs
 
-- [ ] **Step 1: build file** (needs ksp for Room compiler)
+- [x] **Step 1: build file** (needs ksp for Room compiler)
 
 ```kotlin
 plugins {
@@ -1139,7 +1147,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `Entities.kt`**
+- [x] **Step 2: `Entities.kt`**
 
 ```kotlin
 package io.github.droidkit.core.database
@@ -1200,7 +1208,7 @@ data class SavedReportEntity(
 )
 ```
 
-- [ ] **Step 3: `Daos.kt`**
+- [x] **Step 3: `Daos.kt`**
 
 ```kotlin
 package io.github.droidkit.core.database
@@ -1253,7 +1261,7 @@ interface SavedReportDao {
 }
 ```
 
-- [ ] **Step 4: `DroidKitDatabase.kt`**
+- [x] **Step 4: `DroidKitDatabase.kt`**
 
 ```kotlin
 package io.github.droidkit.core.database
@@ -1279,7 +1287,7 @@ abstract class DroidKitDatabase : RoomDatabase() {
 }
 ```
 
-- [ ] **Step 5: `DatabaseModule.kt`**
+- [x] **Step 5: `DatabaseModule.kt`**
 
 ```kotlin
 package io.github.droidkit.core.database
@@ -1309,7 +1317,7 @@ object DatabaseModule {
 }
 ```
 
-- [ ] **Step 6: Compile + commit**
+- [x] **Step 6: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -1329,7 +1337,7 @@ git commit -m "feat(core): room database schema v1"
 **Interfaces:**
 - Produces: `ThemeMode { SYSTEM, LIGHT, DARK }`; `SettingsRepository(context)` — `themeMode: Flow<ThemeMode>`, `favoriteToolIds: Flow<Set<String>>`, `recentToolIds: Flow<List<String>>`, `setThemeMode(ThemeMode)`, `toggleFavorite(String)`, `recordRecent(String)`
 
-- [ ] **Step 1: build file + manifest**
+- [x] **Step 1: build file + manifest**
 
 ```kotlin
 plugins {
@@ -1346,7 +1354,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `SettingsRepository.kt`**
+- [x] **Step 2: `SettingsRepository.kt`**
 
 ```kotlin
 package io.github.droidkit.core.datastore
@@ -1413,7 +1421,7 @@ class SettingsRepository @Inject constructor(
 }
 ```
 
-- [ ] **Step 3: Compile + commit**
+- [x] **Step 3: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -1436,7 +1444,7 @@ git commit -m "feat(core): settings datastore"
 **Interfaces:**
 - Produces: `DroidKitTheme(darkTheme: Boolean = isSystemInDarkTheme(), dynamicColor: Boolean = true, content)`; `ToolCard(tool, resolution, isFavorite, onFavorite, onClick)`; `AvailabilityBadge(resolution)`; `SectionHeader(text)`; `EmptyState(text)`; `BlockedReasonList(reasons)`; `FeatureStubScreen(title, subtitle, tools, resolve)` — full stub screen used by 15 feature modules
 
-- [ ] **Step 1: build file**
+- [x] **Step 1: build file**
 
 ```kotlin
 plugins {
@@ -1453,7 +1461,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `theme/Theme.kt`** (Material3, dynamic color on S+, light/dark schemes default)
+- [x] **Step 2: `theme/Theme.kt`** (Material3, dynamic color on S+, light/dark schemes default)
 
 ```kotlin
 package io.github.droidkit.core.ui.theme
@@ -1486,7 +1494,7 @@ fun DroidKitTheme(
 }
 ```
 
-- [ ] **Step 3: `components/ToolCard.kt`**
+- [x] **Step 3: `components/ToolCard.kt`**
 
 ```kotlin
 package io.github.droidkit.core.ui.components
@@ -1563,7 +1571,7 @@ fun ToolCard(
 }
 ```
 
-- [ ] **Step 4: `components/Feedback.kt`**
+- [x] **Step 4: `components/Feedback.kt`**
 
 ```kotlin
 package io.github.droidkit.core.ui.components
@@ -1626,7 +1634,7 @@ fun BlockedReasonList(reasons: List<BlockedReason>) {
 }
 ```
 
-- [ ] **Step 5: `FeatureStubScreen.kt`** — the shared stub screen
+- [x] **Step 5: `FeatureStubScreen.kt`** — the shared stub screen
 
 ```kotlin
 package io.github.droidkit.core.ui
@@ -1706,7 +1714,7 @@ fun FeatureStubScreen(
 }
 ```
 
-- [ ] **Step 6: Compile + commit**
+- [x] **Step 6: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -1728,7 +1736,7 @@ git commit -m "feat(core): compose design system and stub screen"
 **Interfaces:**
 - Produces: 4 `CapabilityProvider` implementations constructed in `:app`'s DI module (Task 19): `StandardAndroidProvider()`, `ShizukuProvider()`, `WirelessAdbProvider()`, `RootProvider()` — all no-arg except none take Context (Standard is Ready unconditionally; hardware/feature gating lives in CapabilityManager, not the provider)
 
-- [ ] **Step 1: `:privilege:standard`** — build file:
+- [x] **Step 1: `:privilege:standard`** — build file:
 
 ```kotlin
 plugins {
@@ -1762,7 +1770,7 @@ class StandardAndroidProvider : CapabilityProvider {
 }
 ```
 
-- [ ] **Step 2: `:privilege:shizuku`** — build file identical shape (`namespace = "io.github.droidkit.privilege.shizuku"`, same deps):
+- [x] **Step 2: `:privilege:shizuku`** — build file identical shape (`namespace = "io.github.droidkit.privilege.shizuku"`, same deps):
 
 ```kotlin
 package io.github.droidkit.privilege.shizuku
@@ -1779,7 +1787,7 @@ class ShizukuProvider : CapabilityProvider {
 }
 ```
 
-- [ ] **Step 3: `:privilege:adb`** (`namespace = "io.github.droidkit.privilege.adb"`):
+- [x] **Step 3: `:privilege:adb`** (`namespace = "io.github.droidkit.privilege.adb"`):
 
 ```kotlin
 package io.github.droidkit.privilege.adb
@@ -1796,7 +1804,7 @@ class WirelessAdbProvider : CapabilityProvider {
 }
 ```
 
-- [ ] **Step 4: `:privilege:root`** (`namespace = "io.github.droidkit.privilege.root"`):
+- [x] **Step 4: `:privilege:root`** (`namespace = "io.github.droidkit.privilege.root"`):
 
 ```kotlin
 package io.github.droidkit.privilege.root
@@ -1813,7 +1821,7 @@ class RootProvider : CapabilityProvider {
 }
 ```
 
-- [ ] **Step 5: Compile + commit**
+- [x] **Step 5: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -1836,7 +1844,7 @@ git commit -m "feat(privilege): standard provider + stub provider chain"
 - Produces: `object DashboardFeature : FeatureContribution { const val ROUTE = "home" }`, `fun NavGraphBuilder.dashboardGraph(nav: NavHostController)`
 - Consumes: `DeviceSystemProbe`, `CapabilityManager`, `ToolRegistry`, `SettingsRepository`, `FeatureStubScreen`-style ToolCard, `DroidKitDestinations` nav strings (literal route strings)
 
-- [ ] **Step 1: build file**
+- [x] **Step 1: build file**
 
 ```kotlin
 plugins {
@@ -1857,7 +1865,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `DashboardFeature.kt`**
+- [x] **Step 2: `DashboardFeature.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.dashboard
@@ -1894,7 +1902,7 @@ fun NavGraphBuilder.dashboardGraph(nav: NavHostController) {
 }
 ```
 
-- [ ] **Step 3: `DashboardViewModel.kt`**
+- [x] **Step 3: `DashboardViewModel.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.dashboard
@@ -1934,7 +1942,7 @@ class DashboardViewModel @Inject constructor(
 }
 ```
 
-- [ ] **Step 4: `DashboardScreen.kt`**
+- [x] **Step 4: `DashboardScreen.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.dashboard
@@ -2045,7 +2053,7 @@ fun DashboardScreen(
 }
 ```
 
-- [ ] **Step 5: Compile + commit**
+- [x] **Step 5: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -2067,7 +2075,7 @@ git commit -m "feat(dashboard): home tab shell"
 **Interfaces:**
 - Produces: `ToolsFeature.ROUTE = "tools"`, `fun NavGraphBuilder.toolsGraph(nav)`
 
-- [ ] **Step 1: build file** — same as dashboard (namespace `io.github.droidkit.feature.tools`; same dep set)
+- [x] **Step 1: build file** — same as dashboard (namespace `io.github.droidkit.feature.tools`; same dep set)
 
 ```kotlin
 plugins {
@@ -2087,7 +2095,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `ToolsFeature.kt`**
+- [x] **Step 2: `ToolsFeature.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.tools
@@ -2109,7 +2117,7 @@ fun NavGraphBuilder.toolsGraph(nav: NavHostController) {
 }
 ```
 
-- [ ] **Step 3: `ToolsViewModel.kt`**
+- [x] **Step 3: `ToolsViewModel.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.tools
@@ -2171,7 +2179,7 @@ class ToolsViewModel @Inject constructor(
 }
 ```
 
-- [ ] **Step 4: `ToolsScreen.kt`**
+- [x] **Step 4: `ToolsScreen.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.tools
@@ -2267,7 +2275,7 @@ fun ToolsScreen(
 }
 ```
 
-- [ ] **Step 5: Compile + commit**
+- [x] **Step 5: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -2288,7 +2296,7 @@ git commit -m "feat(tools): searchable registry browser"
 - Produces: `DiagnosticsFeature.ROUTE = "diagnose"`, `diagnosticsGraph(nav)`; `ReportsFeature.ROUTE = "reports"`, `reportsGraph(nav)`
 - Consumes: `DiagnosticSessionDao`, `DiagnosticResultDao`, `DeviceSystemProbe`
 
-- [ ] **Step 1: `:feature:diagnostics` build file**
+- [x] **Step 1: `:feature:diagnostics` build file**
 
 ```kotlin
 plugins {
@@ -2309,7 +2317,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `DiagnosticsFeature.kt`**
+- [x] **Step 2: `DiagnosticsFeature.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.diagnostics
@@ -2356,7 +2364,7 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
 }
 ```
 
-- [ ] **Step 3: `DiagnosticsViewModel.kt`**
+- [x] **Step 3: `DiagnosticsViewModel.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.diagnostics
@@ -2427,7 +2435,7 @@ class DiagnosticsViewModel @Inject constructor(
 }
 ```
 
-- [ ] **Step 4: `DiagnosticsScreen.kt`**
+- [x] **Step 4: `DiagnosticsScreen.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.diagnostics
@@ -2533,7 +2541,7 @@ fun DiagnosticsScreen(
 }
 ```
 
-- [ ] **Step 5: `:feature:reports`** — build file identical shape (namespace `io.github.droidkit.feature.reports`, deps `core.common/privileges/database/ui`)
+- [x] **Step 5: `:feature:reports`** — build file identical shape (namespace `io.github.droidkit.feature.reports`, deps `core.common/privileges/database/ui`)
 
 ```kotlin
 plugins {
@@ -2695,7 +2703,7 @@ fun ReportsScreen(viewModel: ReportsViewModel = hiltViewModel()) {
 }
 ```
 
-- [ ] **Step 6: Compile + commit**
+- [x] **Step 6: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -2717,7 +2725,7 @@ git commit -m "feat(diagnostics): diagnose hub, sessions, reports list"
 **Interfaces:**
 - Produces: `SettingsFeature.ROUTE = "settings"`, `settingsGraph(nav)`
 
-- [ ] **Step 1: build file** (namespace `io.github.droidkit.feature.settings`; deps common/privileges/datastore/ui)
+- [x] **Step 1: build file** (namespace `io.github.droidkit.feature.settings`; deps common/privileges/datastore/ui)
 
 ```kotlin
 plugins {
@@ -2737,7 +2745,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `SettingsFeature.kt`**
+- [x] **Step 2: `SettingsFeature.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.settings
@@ -2757,7 +2765,7 @@ fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
 }
 ```
 
-- [ ] **Step 3: `SettingsViewModel.kt`**
+- [x] **Step 3: `SettingsViewModel.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.settings
@@ -2794,7 +2802,7 @@ class SettingsViewModel @Inject constructor(
 }
 ```
 
-- [ ] **Step 4: `SettingsScreen.kt`**
+- [x] **Step 4: `SettingsScreen.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.settings
@@ -2908,7 +2916,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 }
 ```
 
-- [ ] **Step 5: Compile + commit**
+- [x] **Step 5: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -2926,7 +2934,7 @@ git commit -m "feat(settings): settings tab shell"
 - Create: `feature/deviceinfo/src/main/java/io/github/droidkit/feature/deviceinfo/DeviceInfoFeature.kt`
 - Create: `feature/deviceinfo/src/main/java/io/github/droidkit/feature/deviceinfo/DeviceInfoScreen.kt` (uses probe via a small VM)
 
-- [ ] **Step 1: build file**
+- [x] **Step 1: build file**
 
 ```kotlin
 plugins {
@@ -2946,7 +2954,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `DeviceInfoFeature.kt`**
+- [x] **Step 2: `DeviceInfoFeature.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.deviceinfo
@@ -2977,7 +2985,7 @@ fun NavGraphBuilder.deviceInfoGraph(nav: NavHostController) {
 }
 ```
 
-- [ ] **Step 3: `DeviceInfoViewModel.kt` + `DeviceInfoScreen.kt`**
+- [x] **Step 3: `DeviceInfoViewModel.kt` + `DeviceInfoScreen.kt`**
 
 ```kotlin
 package io.github.droidkit.feature.deviceinfo
@@ -3084,7 +3092,7 @@ fun DeviceInfoScreen(viewModel: DeviceInfoViewModel = hiltViewModel()) {
 }
 ```
 
-- [ ] **Step 4: Compile + commit**
+- [x] **Step 4: Compile + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -3139,7 +3147,7 @@ fun NavGraphBuilder.<name>Graph(
 
 `<name>Graph` needs `core.privileges` on the classpath for the `ToolResolution` type — add `implementation(projects.core.privileges)` to stub build files too (compile-time dep only, no provider checks inside features).
 
-- [ ] **Step 1: `:feature:battery`**
+- [x] **Step 1: `:feature:battery`**
 
 build.gradle.kts:
 
@@ -3210,7 +3218,7 @@ fun NavGraphBuilder.batteryGraph(nav: NavHostController, resolve: (Tool) -> Tool
 }
 ```
 
-- [ ] **Step 2: `:feature:display`** (namespace `io.github.droidkit.feature.display`)
+- [x] **Step 2: `:feature:display`** (namespace `io.github.droidkit.feature.display`)
 
 ```kotlin
 package io.github.droidkit.feature.display
@@ -3264,7 +3272,7 @@ fun NavGraphBuilder.displayGraph(nav: NavHostController, resolve: (Tool) -> Tool
 }
 ```
 
-- [ ] **Step 3: `:feature:audio`** (namespace `io.github.droidkit.feature.audio`)
+- [x] **Step 3: `:feature:audio`** (namespace `io.github.droidkit.feature.audio`)
 
 Manifest declares mic permission:
 
@@ -3333,7 +3341,7 @@ fun NavGraphBuilder.audioGraph(nav: NavHostController, resolve: (Tool) -> ToolRe
 
 Add `VIBRATE` to the manifest too (`<uses-permission android:name="android.permission.VIBRATE" />`).
 
-- [ ] **Step 4: `:feature:camera`** (namespace `io.github.droidkit.feature.camera`)
+- [x] **Step 4: `:feature:camera`** (namespace `io.github.droidkit.feature.camera`)
 
 Manifest:
 
@@ -3395,7 +3403,7 @@ fun NavGraphBuilder.cameraGraph(nav: NavHostController, resolve: (Tool) -> ToolR
 }
 ```
 
-- [ ] **Step 5: `:feature:sensors`** (namespace `io.github.droidkit.feature.sensors`)
+- [x] **Step 5: `:feature:sensors`** (namespace `io.github.droidkit.feature.sensors`)
 
 ```kotlin
 package io.github.droidkit.feature.sensors
@@ -3442,7 +3450,7 @@ fun NavGraphBuilder.sensorsGraph(nav: NavHostController, resolve: (Tool) -> Tool
 }
 ```
 
-- [ ] **Step 6: Compile all five + commit**
+- [x] **Step 6: Compile all five + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -3457,7 +3465,7 @@ git commit -m "feat(diagnostics): phone doctor test category stubs"
 
 Same file layout as Task 16: `build.gradle.kts` uses `droidkit.android.library.compose` with deps `core.common` + `core.privileges` + `core.ui` (byte-identical to Task 16 Step 1 except `namespace` = `io.github.droidkit.feature.<name>`). Manifests: network/bluetooth/nfc shown inline below; `:feature:usb` gets `<?xml version="1.0" encoding="utf-8"?><manifest />`.
 
-- [ ] **Step 1: `:feature:network`** (namespace `io.github.droidkit.feature.network`)
+- [x] **Step 1: `:feature:network`** (namespace `io.github.droidkit.feature.network`)
 
 Manifest:
 
@@ -3522,7 +3530,7 @@ fun NavGraphBuilder.networkGraph(nav: NavHostController, resolve: (Tool) -> Tool
 }
 ```
 
-- [ ] **Step 2: `:feature:bluetooth`** (namespace `io.github.droidkit.feature.bluetooth`)
+- [x] **Step 2: `:feature:bluetooth`** (namespace `io.github.droidkit.feature.bluetooth`)
 
 Manifest:
 
@@ -3586,7 +3594,7 @@ fun NavGraphBuilder.bluetoothGraph(nav: NavHostController, resolve: (Tool) -> To
 }
 ```
 
-- [ ] **Step 3: `:feature:usb`** (namespace `io.github.droidkit.feature.usb`)
+- [x] **Step 3: `:feature:usb`** (namespace `io.github.droidkit.feature.usb`)
 
 ```kotlin
 package io.github.droidkit.feature.usb
@@ -3635,7 +3643,7 @@ fun NavGraphBuilder.usbGraph(nav: NavHostController, resolve: (Tool) -> ToolReso
 }
 ```
 
-- [ ] **Step 4: `:feature:nfc`** (namespace `io.github.droidkit.feature.nfc`)
+- [x] **Step 4: `:feature:nfc`** (namespace `io.github.droidkit.feature.nfc`)
 
 Manifest: `<uses-permission android:name="android.permission.NFC" />`
 
@@ -3690,7 +3698,7 @@ fun NavGraphBuilder.nfcGraph(nav: NavHostController, resolve: (Tool) -> ToolReso
 }
 ```
 
-- [ ] **Step 5: Compile all four + commit**
+- [x] **Step 5: Compile all four + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -3705,7 +3713,7 @@ git commit -m "feat(features): connectivity and hardware lab stubs"
 
 Same file layout as Task 16: `build.gradle.kts` uses `droidkit.android.library.compose` with deps `core.common` + `core.privileges` + `core.ui` (byte-identical to Task 16 Step 1 except `namespace` = `io.github.droidkit.feature.<name>`). All six modules get the `<?xml version="1.0" encoding="utf-8"?><manifest />` stub manifest. These demonstrate the provider-gating story (Shizuku/ADB) and higher safety levels.
 
-- [ ] **Step 1: `:feature:apps`** (namespace `io.github.droidkit.feature.apps`)
+- [x] **Step 1: `:feature:apps`** (namespace `io.github.droidkit.feature.apps`)
 
 ```kotlin
 package io.github.droidkit.feature.apps
@@ -3752,7 +3760,7 @@ fun NavGraphBuilder.appsGraph(nav: NavHostController, resolve: (Tool) -> ToolRes
 }
 ```
 
-- [ ] **Step 2: `:feature:permissions`** (namespace `io.github.droidkit.feature.permissions`)
+- [x] **Step 2: `:feature:permissions`** (namespace `io.github.droidkit.feature.permissions`)
 
 ```kotlin
 package io.github.droidkit.feature.permissions
@@ -3796,7 +3804,7 @@ fun NavGraphBuilder.permissionsGraph(nav: NavHostController, resolve: (Tool) -> 
 }
 ```
 
-- [ ] **Step 3: `:feature:appops`** (namespace `io.github.droidkit.feature.appops`)
+- [x] **Step 3: `:feature:appops`** (namespace `io.github.droidkit.feature.appops`)
 
 ```kotlin
 package io.github.droidkit.feature.appops
@@ -3851,7 +3859,7 @@ fun NavGraphBuilder.appOpsGraph(nav: NavHostController, resolve: (Tool) -> ToolR
 }
 ```
 
-- [ ] **Step 4: `:feature:packages`** (namespace `io.github.droidkit.feature.packages`)
+- [x] **Step 4: `:feature:packages`** (namespace `io.github.droidkit.feature.packages`)
 
 ```kotlin
 package io.github.droidkit.feature.packages
@@ -3918,7 +3926,7 @@ fun NavGraphBuilder.packagesGraph(nav: NavHostController, resolve: (Tool) -> Too
 }
 ```
 
-- [ ] **Step 5: `:feature:adb`** (namespace `io.github.droidkit.feature.adb`)
+- [x] **Step 5: `:feature:adb`** (namespace `io.github.droidkit.feature.adb`)
 
 ```kotlin
 package io.github.droidkit.feature.adb
@@ -3974,7 +3982,7 @@ fun NavGraphBuilder.adbGraph(nav: NavHostController, resolve: (Tool) -> ToolReso
 }
 ```
 
-- [ ] **Step 6: `:feature:developer`** (namespace `io.github.droidkit.feature.developer`)
+- [x] **Step 6: `:feature:developer`** (namespace `io.github.droidkit.feature.developer`)
 
 ```kotlin
 package io.github.droidkit.feature.developer
@@ -4028,7 +4036,7 @@ fun NavGraphBuilder.developerGraph(nav: NavHostController, resolve: (Tool) -> To
 }
 ```
 
-- [ ] **Step 7: Compile all six + commit**
+- [x] **Step 7: Compile all six + commit**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -4052,7 +4060,7 @@ git commit -m "feat(features): app and elevated tool stubs"
 - Consumes: every feature `object`/`graph` function, every provider class, all core services
 - Produces: the runnable app; bottom nav routes `home`/`tools`/`diagnose`/`settings`
 
-- [ ] **Step 1: `app/build.gradle.kts`**
+- [x] **Step 1: `app/build.gradle.kts`**
 
 ```kotlin
 plugins {
@@ -4102,7 +4110,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: `app/src/main/AndroidManifest.xml`**
+- [x] **Step 2: `app/src/main/AndroidManifest.xml`**
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -4125,7 +4133,7 @@ dependencies {
 </manifest>
 ```
 
-- [ ] **Step 3: `app/src/main/res/drawable/ic_launcher.xml`** (simple vector)
+- [x] **Step 3: `app/src/main/res/drawable/ic_launcher.xml`** (simple vector)
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -4143,7 +4151,7 @@ dependencies {
 </vector>
 ```
 
-- [ ] **Step 4: `DroidKitApp.kt`** (includes `DLog` wiring — `DLog` is defined in Task 20 Step 3; create that file before compiling, or add the two lines then)
+- [x] **Step 4: `DroidKitApp.kt`** (includes `DLog` wiring — `DLog` is defined in Task 20 Step 3; create that file before compiling, or add the two lines then)
 
 ```kotlin
 package io.github.droidkit
@@ -4161,7 +4169,7 @@ class DroidKitApp : Application() {
 }
 ```
 
-- [ ] **Step 5: `di/AppModule.kt`**
+- [x] **Step 5: `di/AppModule.kt`**
 
 ```kotlin
 package io.github.droidkit.di
@@ -4280,7 +4288,7 @@ object AppModule {
 }
 ```
 
-- [ ] **Step 6: `navigation/DroidKitNavHost.kt`**
+- [x] **Step 6: `navigation/DroidKitNavHost.kt`**
 
 ```kotlin
 package io.github.droidkit.navigation
@@ -4344,7 +4352,7 @@ fun DroidKitNavHost(
 }
 ```
 
-- [ ] **Step 7: `MainActivity.kt`**
+- [x] **Step 7: `MainActivity.kt`**
 
 ```kotlin
 package io.github.droidkit
@@ -4449,7 +4457,7 @@ private fun DroidKitScaffold(capabilityManager: CapabilityManager) {
 }
 ```
 
-- [ ] **Step 8: Full build**
+- [x] **Step 8: Full build**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -4458,7 +4466,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: BUILD SUCCESSFUL, `app/build/outputs/apk/debug/app-debug.apk` exists. Fix any resolution/compile errors surfaced (check version fallbacks in Global Constraints first).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add app
@@ -4471,7 +4479,7 @@ git commit -m "feat(app): application wiring, nav host, bottom navigation"
 
 Per the Journey Checklist (Journey 5): README, CHANGELOG, logging strategy, instrumented-test foundation. LICENSE is a user decision — leave a TODO placeholder in README, do not create LICENSE.
 
-- [ ] **Step 1: `README.md`** (root)
+- [x] **Step 1: `README.md`** (root)
 
 ```markdown
 # DroidKit
@@ -4511,7 +4519,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"   # Windows/git-b
 License: TBD.
 ```
 
-- [ ] **Step 2: `CHANGELOG.md`** (root)
+- [x] **Step 2: `CHANGELOG.md`** (root)
 
 ```markdown
 # Changelog
@@ -4530,7 +4538,7 @@ License: TBD.
 - Device Inspector screen with live system probes
 ```
 
-- [ ] **Step 3: Basic logging — `core/common/src/main/java/io/github/droidkit/core/common/DLog.kt`**
+- [x] **Step 3: Basic logging — `core/common/src/main/java/io/github/droidkit/core/common/DLog.kt`**
 
 ```kotlin
 package io.github.droidkit.core.common
@@ -4577,7 +4585,7 @@ class DroidKitApp : Application() {
 }
 ```
 
-- [ ] **Step 4: Instrumented-test foundation**
+- [x] **Step 4: Instrumented-test foundation**
 
 In the `droidkit.android.application` convention plugin (Task 2, Step 5), add to `defaultConfig`:
 
@@ -4615,7 +4623,7 @@ class AppSmokeTest {
 
 (Runs only when a device/emulator is attached — foundation in place, not executed in this plan.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add README.md CHANGELOG.md core/common/src/main/java/io/github/droidkit/core/common/DLog.kt app build-logic
@@ -4626,7 +4634,7 @@ git commit -m "chore: readme, changelog, logging facade, androidTest foundation"
 
 ### Task 21: Verification pass
 
-- [ ] **Step 1: Run all unit tests**
+- [x] **Step 1: Run all unit tests**
 
 ```bash
 export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
@@ -4635,7 +4643,7 @@ export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
 
 Expected: all modules' tests pass (ToolRegistryTest 4, CapabilityManagerTest 8).
 
-- [ ] **Step 2: Clean build sanity**
+- [x] **Step 2: Clean build sanity**
 
 ```bash
 ./gradlew :app:assembleDebug
@@ -4643,7 +4651,7 @@ Expected: all modules' tests pass (ToolRegistryTest 4, CapabilityManagerTest 8).
 
 Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A

@@ -222,182 +222,182 @@ Completion gate:
 
 Target release: `v0.1.0`
 
-- [ ] Create repository
-- [ ] Add README
-- [ ] Add LICENSE decision/file
-- [ ] Add `.gitignore`
-- [ ] Create Android project
-- [ ] Configure Gradle Kotlin DSL
-- [ ] Configure version catalog if used
-- [ ] Configure Compose
-- [ ] Configure Hilt
-- [ ] Configure Coroutines
-- [ ] Configure Navigation Compose
-- [ ] Configure Room
-- [ ] Configure DataStore
-- [ ] Add unit-test foundation
-- [ ] Add instrumented-test foundation
-- [ ] Add CI only if useful at this stage
-- [ ] Add CHANGELOG.md
-- [ ] Establish versionName/versionCode scheme
-- [ ] Tag first project baseline if desired
+- [x] Create repository
+- [x] Add README
+- [x] Add LICENSE decision/file — Apache-2.0 (decision D3)
+- [x] Add `.gitignore`
+- [x] Create Android project
+- [x] Configure Gradle Kotlin DSL
+- [x] Configure version catalog if used
+- [x] Configure Compose
+- [x] Configure Hilt
+- [x] Configure Coroutines
+- [x] Configure Navigation Compose
+- [x] Configure Room
+- [x] Configure DataStore
+- [x] Add unit-test foundation
+- [x] Add instrumented-test foundation — runner + AppSmokeTest; device run pending hardware
+- [ ] Add CI only if useful at this stage — deferred
+- [x] Add CHANGELOG.md
+- [x] Establish versionName/versionCode scheme — `0.1.0` / `1` in convention plugin
+- [ ] Tag first project baseline if desired — pending merge to `main`
 
 ---
 
 # Journey 6 - v0.1.0 Foundation
 
-- [ ] Core theme/design tokens
-- [ ] Reusable Compose components
-- [ ] Navigation shell
-- [ ] Home shell
-- [ ] Tools shell
-- [ ] Diagnose shell
-- [ ] Settings shell
-- [ ] ToolRegistry
-- [ ] Tool categories
-- [ ] Tool search foundation
-- [ ] Capability model
-- [ ] CapabilityManager
-- [ ] StandardAndroidProvider
-- [ ] PermissionManager
-- [ ] Hardware/API detector
-- [ ] Room database foundation
-- [ ] DataStore foundation
-- [ ] Error/result model
-- [ ] Basic logging
-- [ ] Unit tests for ToolRegistry
-- [ ] Unit tests for capability resolution
-- [ ] Focused UI/navigation validation
+- [x] Core theme/design tokens
+- [x] Reusable Compose components
+- [x] Navigation shell
+- [x] Home shell
+- [x] Tools shell
+- [x] Diagnose shell
+- [x] Settings shell
+- [x] ToolRegistry
+- [x] Tool categories
+- [x] Tool search foundation
+- [x] Capability model
+- [x] CapabilityManager
+- [x] StandardAndroidProvider
+- [x] PermissionManager
+- [x] Hardware/API detector — `DeviceSystemProbe`
+- [x] Room database foundation
+- [x] DataStore foundation
+- [x] Error/result model — `ToolResolution` / `TestResultState`
+- [x] Basic logging — `DLog` facade
+- [x] Unit tests for ToolRegistry — 4 tests pass
+- [x] Unit tests for capability resolution — 8 tests pass
+- [ ] Focused UI/navigation validation — requires attached device/emulator
 
 Release gate:
-- [ ] Foundation architecture reviewed
-- [ ] No feature directly depends on Shizuku/ADB/root
-- [ ] App launches and core navigation works
-- [ ] `v0.1.0` tagged
-- [ ] CHANGELOG updated
+- [x] Foundation architecture reviewed — 31-module graph, DI verified via Hilt compile
+- [x] No feature directly depends on Shizuku/ADB/root — audited: zero `privilege.*` imports in `feature/`
+- [ ] App launches and core navigation works — `assembleDebug` passes; launch needs device
+- [ ] `v0.1.0` tagged — pending merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
 # Journey 7 - v0.2.0 Device Inspector
 
-- [ ] Device/build information
-- [ ] Android/API/security patch information where exposed
-- [ ] CPU/ABI
-- [ ] RAM
-- [ ] Storage
-- [ ] Display
-- [ ] Battery
-- [ ] Sensor inventory
-- [ ] Camera capability summary
-- [ ] Connectivity/hardware summary
-- [ ] Copy/share useful device summary
-- [ ] Unsupported fields handled correctly
-- [ ] Real-device verification
+- [x] Device/build information
+- [x] Android/API/security patch information where exposed
+- [x] CPU/ABI
+- [x] RAM
+- [x] Storage — dashboard summary + Storage Lab volumes
+- [x] Display — resolution, density, refresh rate, supported modes
+- [x] Battery — Battery Lab (level, status, temp, voltage, tech, health-as-reported)
+- [x] Sensor inventory — Sensor Lab + live monitor for safe types
+- [x] Camera capability summary — count by facing via CameraManager
+- [x] Connectivity/hardware summary — NFC/BT/BLE/USB-host/telephony/location features
+- [x] Copy/share useful device summary — per-field copy, copy-section, share intent
+- [x] Unsupported fields handled correctly — `Not exposed` on null/−1 reads
+- [ ] Real-device verification — requires attached device/emulator
 
 Release gate:
-- [ ] Device Inspector works on supported Android versions
-- [ ] No unavailable values are fabricated
-- [ ] `v0.2.0` tagged
-- [ ] CHANGELOG updated
+- [ ] Device Inspector works on supported Android versions — requires device run
+- [x] No unavailable values are fabricated — all null/−1 fields render `Not exposed`
+- [ ] `v0.2.0` tagged — version bumped (`0.2.0`/`2`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
 # Journey 8 - v0.3.0 Phone Doctor Core
 
-- [ ] DiagnosticSession engine
-- [ ] Diagnostic result model
-- [ ] Display color test
-- [ ] Dead-pixel test
-- [ ] Touch grid
-- [ ] Multitouch test
-- [ ] Vibration/haptics
-- [ ] Accelerometer
-- [ ] Gyroscope
-- [ ] Proximity
-- [ ] Light sensor
-- [ ] Magnetometer
-- [ ] PASS state
-- [ ] FAIL state
-- [ ] NOT TESTED state
-- [ ] NOT SUPPORTED state
-- [ ] PERMISSION REQUIRED state
-- [ ] UNKNOWN state
+- [x] DiagnosticSession engine
+- [x] Diagnostic result model
+- [x] Display color test
+- [x] Dead-pixel test
+- [x] Touch grid
+- [x] Multitouch test
+- [x] Vibration/haptics
+- [x] Accelerometer
+- [x] Gyroscope
+- [x] Proximity
+- [x] Light sensor
+- [x] Magnetometer
+- [x] PASS state
+- [x] FAIL state
+- [x] NOT TESTED state
+- [x] NOT SUPPORTED state
+- [x] PERMISSION REQUIRED state — TestResultState supports it; no CORE test needs a runtime permission
+- [x] UNKNOWN state — in enum; surfaces only for unresolvable reads, none in CORE tests today
 
 Release gate:
-- [ ] Guided diagnostic flow works end-to-end for core tests
-- [ ] `v0.3.0` tagged
-- [ ] CHANGELOG updated
+- [ ] Guided diagnostic flow works end-to-end for core tests — code-complete; needs device run
+- [ ] `v0.3.0` tagged — version bumped (`0.3.0`/`3`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
 # Journey 9 - v0.4.0 Phone Doctor Hardware
 
-- [ ] Speaker test
-- [ ] Microphone test
-- [ ] Front camera
-- [ ] Rear camera
-- [ ] Flash
-- [ ] Wi-Fi capability check
-- [ ] Bluetooth capability check
-- [ ] Location/GPS capability check
-- [ ] NFC capability check
-- [ ] USB capability check
-- [ ] Charging/battery diagnostic
-- [ ] Full Diagnostic sequencing
-- [ ] Skip/retry behavior
-- [ ] Diagnostic summary
+- [x] Speaker test
+- [x] Microphone test — behind RECORD_AUDIO permission gate; denial → PERMISSION_REQUIRED
+- [x] Front camera — CameraX preview; absent lens → NOT_SUPPORTED
+- [x] Rear camera
+- [x] Flash — torch toggle; no flash unit → NOT_SUPPORTED
+- [x] Wi-Fi capability check — auto-recorded (capability + enabled state in note)
+- [x] Bluetooth capability check
+- [x] Location/GPS capability check
+- [x] NFC capability check
+- [x] USB capability check
+- [x] Charging/battery diagnostic — live level/status/plug readings
+- [x] Full Diagnostic sequencing — engine runs all 21 tests (CORE + HARDWARE)
+- [x] Skip/retry behavior — built J08; retry re-queues failed/skipped
+- [x] Diagnostic summary — state counts + category grouping on review screen
 
 Release gate:
-- [ ] Full diagnostic completes without crashes when hardware is missing
-- [ ] `v0.4.0` tagged
-- [ ] CHANGELOG updated
+- [ ] Full diagnostic completes without crashes when hardware is missing — designed-in (NOT_SUPPORTED auto-results, no crashes by construction); needs device run
+- [ ] `v0.4.0` tagged — version bumped (`0.4.0`/`4`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
 # Journey 10 - v0.5.0 Diagnostic Reports
 
-- [ ] Persist sessions
-- [ ] Persist individual results
-- [ ] Capture DeviceSnapshot
-- [ ] Diagnostic history
-- [ ] Report detail screen
-- [ ] Technician/user notes
-- [ ] Report generation
-- [ ] PDF or selected export format
-- [ ] Share flow
-- [ ] Delete report/session
-- [ ] Privacy review
-- [ ] Export verification
+- [x] Persist sessions — Room `diagnostic_sessions` (built J08)
+- [x] Persist individual results — `diagnostic_results` rows per test
+- [x] Capture DeviceSnapshot — `device_snapshots` on session start
+- [x] Diagnostic history — reports tab lists sessions with result tallies
+- [x] Report detail screen — `reports/detail/{id}` reopenable without rerun
+- [x] Technician/user notes — captured at review, shown in detail + report
+- [x] Report generation — `ReportBuilder` canonical text (5 unit tests)
+- [x] PDF or selected export format — text + framework-PDF, no deps
+- [x] Share flow — FileProvider `content://` share with read grant
+- [x] Delete report/session — confirm dialog; results deleted with session
+- [x] Privacy review — export sheet lists every field class before share
+- [x] Export verification — file write + share intent verified in code; device share-sheet run pending
 
 Release gate:
-- [ ] A complete diagnostic can be saved and exported
-- [ ] `v0.5.0` tagged
-- [ ] CHANGELOG updated
+- [ ] A complete diagnostic can be saved and exported — pipeline complete; needs device run
+- [ ] `v0.5.0` tagged — version bumped (`0.5.0`/`5`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 
 # Journey 11 - v0.6.0 App Inspector
 
-- [ ] Package list
-- [ ] User/system filtering
-- [ ] Search
-- [ ] Package details
-- [ ] Version information
-- [ ] Min/target SDK where accessible
-- [ ] Activities
-- [ ] Services
-- [ ] Receivers
-- [ ] Providers
-- [ ] Permission inspection
-- [ ] APK metadata/path where accessible
-- [ ] Launch supported app
-- [ ] Supported APK export if approved/allowed
-- [ ] Package visibility compatibility handling
+- [x] Package list — visible apps via PackageManager
+- [x] User/system filtering — FLAG_SYSTEM chips
+- [x] Search — label + package name
+- [x] Package details — version/SDK/installer/times/path
+- [x] Version information — name + long code
+- [x] Min/target SDK where accessible — `minSdkVersion` null-safe, absent → Not exposed
+- [x] Activities — Component Explorer per app
+- [x] Services
+- [x] Receivers
+- [x] Providers
+- [x] Permission inspection — granted/not-granted groups + settings link
+- [x] APK metadata/path where accessible — sourceDir shown
+- [x] Launch supported app — `getLaunchIntentForPackage`, absent → honest error
+- [-] Supported APK export if approved/allowed — deferred POST-V1 (frozen decision)
+- [x] Package visibility compatibility handling — visible-only reads + caveat header
 
 Release gate:
-- [ ] Modern Android package-visibility behavior is handled correctly
-- [ ] `v0.6.0` tagged
-- [ ] CHANGELOG updated
+- [x] Modern Android package-visibility behavior is handled correctly — no QUERY_ALL_PACKAGES; visible-set counted and disclosed
+- [ ] `v0.6.0` tagged — version bumped (`0.6.0`/`6`); tag at merge to `main`
+- [x] CHANGELOG updated
 
 ---
 

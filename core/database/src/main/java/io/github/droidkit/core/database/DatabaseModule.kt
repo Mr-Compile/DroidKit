@@ -1,0 +1,25 @@
+package io.github.droidkit.core.database
+
+import android.content.Context
+import androidx.room.Room
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): DroidKitDatabase =
+        Room.databaseBuilder(context, DroidKitDatabase::class.java, "droidkit.db").build()
+
+    @Provides fun sessionDao(db: DroidKitDatabase) = db.sessionDao()
+    @Provides fun resultDao(db: DroidKitDatabase) = db.resultDao()
+    @Provides fun snapshotDao(db: DroidKitDatabase) = db.snapshotDao()
+    @Provides fun reportDao(db: DroidKitDatabase) = db.reportDao()
+}
