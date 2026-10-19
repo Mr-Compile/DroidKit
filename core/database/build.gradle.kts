@@ -7,6 +7,11 @@ android {
     namespace = "io.github.droidkit.core.database"
 }
 
+// Persist Room schemas so upgrade paths are testable via MigrationTestHelper.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
@@ -16,4 +21,8 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.androidx.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+
+    androidTestImplementation(libs.androidx.room.testing)
 }

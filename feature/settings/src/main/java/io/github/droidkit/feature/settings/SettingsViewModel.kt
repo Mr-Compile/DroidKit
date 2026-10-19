@@ -1,15 +1,11 @@
 package io.github.droidkit.feature.settings
 
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import io.github.droidkit.core.ai.AiError
 import io.github.droidkit.core.ai.AiSettingsStore
 import io.github.droidkit.core.ai.AiUseCase
+import io.github.droidkit.core.ai.describe
 import io.github.droidkit.core.database.ElevatedActionLogEntity
 import io.github.droidkit.core.database.ElevatedHistoryRepository
 import io.github.droidkit.core.datastore.SettingsRepository
@@ -28,7 +24,6 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    @ApplicationContext context: Context,
     private val settings: SettingsRepository,
     private val capabilityManager: CapabilityManager,
     private val elevatedOps: ElevatedOps,
@@ -40,15 +35,12 @@ class SettingsViewModel @Inject constructor(
     val themeMode: StateFlow<ThemeMode> =
         settings.themeMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
 
-    /** Recomputed on [refreshProviders]; provider status is read live each time. */
-    private val _providerStatuses = MutableStateFlow(capabilityManager.providerStatuses())
-    val providerStatuses: StateFlow<Map<ProviderKind, ProviderStatus>> = _providerStatuses.asStateFlow()
+    /** Live provider status — reactive, updates on grant/connect/disconnect via the bus. */
+    val providerStatuses: StateFlow<Map<ProviderKind, ProviderStatus>> = capabilityManager.statuses
 
     /** True while a grant/setup flow is in flight — gates the buttons. */
     private val _grantBusy = MutableStateFlow(false)
     val grantBusy: StateFlow<Boolean> = _grantBusy.asStateFlow()
-
-    val versionName: String = readVersionName(context)
 
     fun setTheme(mode: ThemeMode) {
         viewModelScope.launch { settings.setThemeMode(mode) }
@@ -64,7 +56,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun refreshProviders() {
-        _providerStatuses.value = capabilityManager.providerStatuses()
+        capabilityManager.refreshStatuses()
     }
 
     /** Runs the provider's own grant flow (Shizuku prompt, root-manager prompt). */
@@ -79,17 +71,6 @@ class SettingsViewModel @Inject constructor(
             }
         }
     }
-
-    @Suppress("DEPRECATION")
-    private fun readVersionName(context: Context): String = runCatching {
-        val pm = context.packageManager
-        val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
-        } else {
-            pm.getPackageInfo(context.packageName, 0)
-        }
-        info.versionName
-    }.getOrNull() ?: "unknown"
 
     // ---- DroidKit Intelligence ----
 
@@ -134,16 +115,7 @@ class SettingsViewModel @Inject constructor(
     fun testAiConnection() {
         viewModelScope.launch {
             _aiTesting.value = true
-            _aiStatus.value = when (val err = aiUseCase.testConnection()) {
-                null -> "Connected"
-                AiError.NO_KEY -> "No API key — add one first"
-                AiError.OFFLINE -> "Offline — check network"
-                AiError.AUTH_ERROR -> "Authentication failed — check the key"
-                AiError.RATE_LIMITED -> "Rate limited — try later"
-                AiError.MALFORMED_RESPONSE -> "Unexpected response"
-                AiError.PROVIDER_ERROR -> "Provider error"
-                AiError.DISABLED -> "Enable AI first"
-            }
+            _aiStatus.value = aiUseCase.testConnection()?.describe() ?: "Connected"
             _aiTesting.value = false
         }
     }
@@ -156,5 +128,13 @@ class SettingsViewModel @Inject constructor(
 
     fun clearElevatedLog() {
         viewModelScope.launch { elevatedHistory.clear() }
+    }
+
+    /**
+     * Resets appearance, technician name, favorites, recents and use counts to
+     * defaults. AI configuration/key and the onboarding flag are not touched.
+     */
+    fun resetSettings() {
+        viewModelScope.launch { settings.resetAll() }
     }
 }

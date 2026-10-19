@@ -19,14 +19,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.ui.components.DroidKitWordmark
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.components.ToolCard
+import io.github.droidkit.core.ui.components.ToolInfoDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -48,6 +53,10 @@ fun DashboardScreen(
     val recentTools = recents.mapNotNull { viewModel.toolById(it) }
     val favorites by viewModel.favoriteToolIds.collectAsState(initial = emptySet())
     val pinnedTools = viewModel.pinned(favorites)
+    val providerStatuses by viewModel.providerStatuses.collectAsState()
+    // Recomputed when provider status changes — drives the "Ready now" section.
+    val quickTools = remember(providerStatuses) { viewModel.quickTools() }
+    var infoTool by remember { mutableStateOf<Tool?>(null) }
 
     Scaffold(topBar = { TopAppBar(title = { DroidKitWordmark() }) }) { padding ->
         LazyColumn(
@@ -73,7 +82,7 @@ fun DashboardScreen(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Elevated access", style = MaterialTheme.typography.titleSmall)
-                        viewModel.providerStatuses().forEach { (kind, status) ->
+                        providerStatuses.forEach { (kind, status) ->
                             val label = when (status) {
                                 ProviderStatus.Ready -> "ready"
                                 is ProviderStatus.NeedsSetup -> "setup required"
@@ -120,7 +129,8 @@ fun DashboardScreen(
                 items(pinnedTools, key = { "pin_${it.id}" }) { tool ->
                     ToolCard(
                         tool = tool,
-                        resolution = viewModel.resolve(tool),
+                        resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) },
+                        onInfo = { infoTool = tool },
                         onClick = { viewModel.recordOpen(tool); onOpenTool(tool.route) },
                     )
                 }
@@ -133,20 +143,30 @@ fun DashboardScreen(
                 items(recentTools, key = { it.id }) { tool ->
                     ToolCard(
                         tool = tool,
-                        resolution = viewModel.resolve(tool),
+                        resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) },
+                        onInfo = { infoTool = tool },
                         onClick = { viewModel.recordOpen(tool); onOpenTool(tool.route) },
                     )
                 }
             }
 
             item { SectionHeader("Ready now") }
-            items(viewModel.quickTools(), key = { it.id }) { tool ->
+            items(quickTools, key = { it.id }) { tool ->
                 ToolCard(
                     tool = tool,
-                    resolution = viewModel.resolve(tool),
+                    resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) },
+                    onInfo = { infoTool = tool },
                     onClick = { viewModel.recordOpen(tool); onOpenTool(tool.route) },
                 )
             }
         }
+    }
+
+    infoTool?.let { tool ->
+        ToolInfoDialog(
+            tool = tool,
+            resolution = viewModel.resolve(tool),
+            onDismiss = { infoTool = null },
+        )
     }
 }

@@ -101,4 +101,41 @@ class CapabilityManagerTest {
         assertEquals(ProviderStatus.Ready, statuses[ProviderKind.STANDARD])
         assertTrue(statuses[ProviderKind.SHIZUKU] is ProviderStatus.Unavailable)
     }
+
+    @Test
+    fun `statuses flow reflects provider change after notifyChanged`() {
+        val flipper = object : CapabilityProvider {
+            var current: ProviderStatus = ProviderStatus.NeedsSetup("set up")
+            override val kind = ProviderKind.SHIZUKU
+            override val status get() = current
+            override val capabilities = setOf(Capability.SHIZUKU_SERVICE)
+        }
+        val m = CapabilityManager(
+            providers = setOf(standardProvider, flipper),
+            sdkInt = 36,
+            hasFeature = { true },
+            permissionChecker = PermissionChecker { true },
+        )
+        assertTrue(m.statuses.value[ProviderKind.SHIZUKU] is ProviderStatus.NeedsSetup)
+
+        flipper.current = ProviderStatus.Ready
+        ProviderStatusBus.notifyChanged()
+
+        // The bus collects on the manager's Default-dispatcher scope — poll briefly.
+        val deadline = System.currentTimeMillis() + 5_000
+        while (m.statuses.value[ProviderKind.SHIZUKU] !is ProviderStatus.Ready &&
+            System.currentTimeMillis() < deadline
+        ) {
+            Thread.sleep(25)
+        }
+        assertEquals(ProviderStatus.Ready, m.statuses.value[ProviderKind.SHIZUKU])
+    }
+
+    @Test
+    fun `refreshStatuses republishes live provider state synchronously`() {
+        val m = manager()
+        assertTrue(m.statuses.value[ProviderKind.SHIZUKU] is ProviderStatus.Unavailable)
+        m.refreshStatuses()
+        assertEquals(m.providerStatuses(), m.statuses.value)
+    }
 }

@@ -50,8 +50,8 @@ class DashboardViewModel @Inject constructor(
             }
     }
 
-    fun providerStatuses(): Map<ProviderKind, ProviderStatus> =
-        capabilityManager.providerStatuses()
+    /** Reactive provider map — screens collect it and re-derive resolutions. */
+    val providerStatuses = capabilityManager.statuses
 
     fun quickTools(): List<Tool> =
         registry.tools.filter { capabilityManager.resolve(it) == ToolResolution.Ready }.take(6)

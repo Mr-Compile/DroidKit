@@ -8,6 +8,7 @@ import io.github.droidkit.core.privileges.ElevatedResult
 import io.github.droidkit.core.privileges.ProviderKind
 import io.github.droidkit.core.privileges.ProviderSetup
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.privileges.ProviderStatusBus
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -58,6 +59,7 @@ class ShizukuProvider : CapabilityProvider, ElevatedExecutor, ProviderSetup {
         val listener = object : Shizuku.OnRequestPermissionResultListener {
             override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
                 Shizuku.removeRequestPermissionResultListener(this)
+                ProviderStatusBus.notifyChanged()
                 if (cont.isActive) {
                     cont.resume(grantResult == PackageManager.PERMISSION_GRANTED)
                 }

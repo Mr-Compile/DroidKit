@@ -8,6 +8,7 @@ import io.github.droidkit.core.privileges.ElevatedExecutor
 import io.github.droidkit.core.privileges.ElevatedResult
 import io.github.droidkit.core.privileges.ProviderKind
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.privileges.ProviderStatusBus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -79,6 +80,8 @@ class WirelessAdbProvider : CapabilityProvider, ElevatedExecutor, AdbSessionSetu
                 }.onFailure {
                     session = null
                     sessionInfo = null
+                }.also {
+                    ProviderStatusBus.notifyChanged()
                 }
             }
         }
@@ -89,6 +92,7 @@ class WirelessAdbProvider : CapabilityProvider, ElevatedExecutor, AdbSessionSetu
             session = null
             sessionInfo = null
         }
+        ProviderStatusBus.notifyChanged()
     }
 
     override fun sessionSummary(): String? =
@@ -111,6 +115,7 @@ class WirelessAdbProvider : CapabilityProvider, ElevatedExecutor, AdbSessionSetu
                 // A dead socket ends the session — surface it.
                 session = null
                 sessionInfo = null
+                ProviderStatusBus.notifyChanged()
                 ElevatedResult(kind, -1, "", "adb session failed: ${t.message}")
             }
         }

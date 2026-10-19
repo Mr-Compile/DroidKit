@@ -3,6 +3,14 @@
 ## [0.9.0-alpha.1] - Unreleased
 
 ### Added
+- About DroidKit (Settings → About DroidKit): identity header with the
+  official mark, description, dynamic version/build from PackageManager,
+  Check for updates against GitHub Releases (typed results — offline,
+  no published releases, update available), What is DroidKit, a Features
+  page driven by ToolRegistry, What's New from local release notes, Help
+  & FAQ, Report a problem/Send feedback via GitHub Issues, configuration-
+  ready Privacy Policy and Terms rows, an Open-Source Licenses page, and
+  developer/GitHub links — all routed as `settings/about*` destinations
 - Insights (`feature:insights`): on-device analytics dashboard computed
   entirely from Room/DataStore — latest-session verdict ring, per-session
   pass-rate bars with day labels, "tests needing attention" ranking

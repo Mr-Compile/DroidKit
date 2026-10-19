@@ -7,12 +7,13 @@ import io.github.droidkit.core.privileges.ProviderKind
 import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.system.DeviceSystemProbe
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 @HiltViewModel
 class DeviceInfoViewModel @Inject constructor(
     val probe: DeviceSystemProbe,
-    private val capabilityManager: CapabilityManager,
+    capabilityManager: CapabilityManager,
 ) : ViewModel() {
-    fun providerStatuses(): Map<ProviderKind, ProviderStatus> =
-        capabilityManager.providerStatuses()
+    /** Reactive provider map — re-emits on provider status changes. */
+    val providerStatuses: StateFlow<Map<ProviderKind, ProviderStatus>> = capabilityManager.statuses
 }

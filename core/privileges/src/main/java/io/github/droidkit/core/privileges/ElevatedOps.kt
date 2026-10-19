@@ -229,5 +229,7 @@ class ElevatedOps @Inject constructor(
 
     /** Ask a provider to run its grant/setup flow. Returns false if unsupported. */
     suspend fun requestGrant(kind: ProviderKind): Boolean =
-        setupsByKind[kind]?.requestGrant() ?: false
+        (setupsByKind[kind]?.requestGrant() ?: false).also {
+            ProviderStatusBus.notifyChanged()
+        }
 }

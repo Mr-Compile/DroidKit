@@ -1,15 +1,22 @@
 package io.github.droidkit.feature.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -19,6 +26,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,19 +36,25 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.datastore.ThemeMode
 import io.github.droidkit.core.privileges.ProviderKind
 import io.github.droidkit.core.privileges.ProviderStatus
-import io.github.droidkit.core.ui.components.DroidKitWordmark
 import io.github.droidkit.core.ui.components.SectionHeader
+import io.github.droidkit.core.ui.theme.DroidKitMark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onOpenAdb: () -> Unit = {},
     onOpenAiChat: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
+    onOpenPermissions: () -> Unit = {},
+    onOpenPrivacy: () -> Unit = {},
+    onOpenHelp: () -> Unit = {},
+    onOpenWhatsNew: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val theme by viewModel.themeMode.collectAsState()
     val providerStatuses by viewModel.providerStatuses.collectAsState()
     val grantBusy by viewModel.grantBusy.collectAsState()
+    var showResetDialog by remember { mutableStateOf(false) }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
         LazyColumn(
@@ -259,26 +274,130 @@ fun SettingsScreen(
                 }
             }
 
-            item { SectionHeader("About") }
+            item { SectionHeader("Support & privacy") }
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            DroidKitWordmark(markSize = 22.dp)
-                            Text(
-                                viewModel.versionName,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(start = 8.dp),
-                            )
-                        }
-                        Text(
-                            "Android technician & power toolkit.",
-                            style = MaterialTheme.typography.bodyMedium,
+                        SettingsNavRow(
+                            title = "Permissions & Access",
+                            subtitle = "Android permissions and elevated providers",
+                            onClick = onOpenPermissions,
+                        )
+                        SettingsNavRow(
+                            title = "Privacy Center",
+                            subtitle = "What stays on-device and what can go online",
+                            onClick = onOpenPrivacy,
+                        )
+                        SettingsNavRow(
+                            title = "Help & FAQ",
+                            subtitle = "Guides, permissions and troubleshooting",
+                            onClick = onOpenHelp,
+                        )
+                        SettingsNavRow(
+                            title = "What's New",
+                            subtitle = "Release notes for this build",
+                            onClick = onOpenWhatsNew,
+                        )
+                        SettingsNavRow(
+                            title = "Reset settings",
+                            subtitle = "Theme, favorites, recents and preferences",
+                            showChevron = false,
+                            onClick = { showResetDialog = true },
                         )
                     }
                 }
             }
+
+            item { SectionHeader("About") }
+            item {
+                Card(onClick = onOpenAbout, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(
+                            imageVector = DroidKitMark,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 12.dp).size(24.dp),
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "About DroidKit",
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(
+                                "App information, support and legal information",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text("Reset settings?") },
+            text = {
+                Text(
+                    "Resets the theme, technician name, favorite tools, recent " +
+                        "tools and usage counters to defaults. Your AI key and " +
+                        "provider setup are not affected, and the intro will not " +
+                        "play again.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.resetSettings()
+                        showResetDialog = false
+                    },
+                ) { Text("Reset") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) { Text("Cancel") }
+            },
+        )
+    }
+}
+
+/** Tappable settings row: whole area is one click target with merged semantics. */
+@Composable
+private fun SettingsNavRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    showChevron: Boolean = true,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (showChevron) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

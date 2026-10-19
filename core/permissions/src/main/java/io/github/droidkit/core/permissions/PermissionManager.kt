@@ -22,4 +22,7 @@ class PermissionManager @Inject constructor(
     } catch (e: PackageManager.NameNotFoundException) {
         emptyList()
     }
+
+    /** True when the permission is declared in the merged manifest. */
+    fun isDeclared(permission: String): Boolean = permission in manifestPermissions()
 }

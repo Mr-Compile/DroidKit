@@ -10,5 +10,6 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.permissions)
     implementation(libs.javax.inject)
+    implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.androidx.junit)
 }

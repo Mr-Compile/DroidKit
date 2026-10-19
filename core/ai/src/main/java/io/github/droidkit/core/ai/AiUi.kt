@@ -62,15 +62,7 @@ fun AiResultDialog(
             Column {
                 result.error?.let {
                     Text(
-                        when (it) {
-                            AiError.DISABLED -> "AI is disabled in Settings."
-                            AiError.NO_KEY -> "No API key stored — add one in Settings."
-                            AiError.OFFLINE -> "Device is offline."
-                            AiError.AUTH_ERROR -> "Authentication failed — check the key."
-                            AiError.RATE_LIMITED -> "Rate limited — try again later."
-                            AiError.MALFORMED_RESPONSE -> "Unexpected response shape."
-                            AiError.PROVIDER_ERROR -> "Provider error."
-                        },
+                        it.describe(),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyMedium,
                     )

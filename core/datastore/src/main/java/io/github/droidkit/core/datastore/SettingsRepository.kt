@@ -87,4 +87,30 @@ class SettingsRepository @Inject constructor(
             prefs[toolUseKey] = counts.entries.joinToString(",") { "${it.key}:${it.value}" }
         }
     }
+
+    suspend fun clearFavorites() {
+        context.settingsStore.edit { it.remove(favoritesKey) }
+    }
+
+    /** Clears the recent-tools list and the per-tool open counters. */
+    suspend fun clearRecents() {
+        context.settingsStore.edit { prefs ->
+            prefs.remove(recentsKey)
+            prefs.remove(toolUseKey)
+        }
+    }
+
+    /**
+     * Resets every value in the settings store to defaults (theme, technician
+     * name, favorites, recents, use counts). The onboarding-completed flag is
+     * kept so reset does not replay the intro. AI configuration and its
+     * encrypted key live in a separate store and are not touched.
+     */
+    suspend fun resetAll() {
+        context.settingsStore.edit { prefs ->
+            val onboardingDone = prefs[onboardingKey]
+            prefs.clear()
+            if (onboardingDone != null) prefs[onboardingKey] = onboardingDone
+        }
+    }
 }

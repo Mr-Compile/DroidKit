@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
         NfcTagScanEntity::class,
     ],
     version = 5,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class DroidKitDatabase : RoomDatabase() {
     abstract fun sessionDao(): DiagnosticSessionDao

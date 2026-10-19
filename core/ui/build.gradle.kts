@@ -8,5 +8,7 @@ android {
 
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.core.permissions)
     implementation(projects.core.privileges)
+    implementation(libs.androidx.activity.compose)
 }

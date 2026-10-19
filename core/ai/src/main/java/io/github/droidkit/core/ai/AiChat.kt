@@ -116,15 +116,7 @@ class AiChatViewModel @Inject constructor(
         }
     }
 
-    private fun errorText(e: AiError) = when (e) {
-        AiError.DISABLED -> "AI is disabled — enable it in Settings."
-        AiError.NO_KEY -> "No API key stored — add one in Settings."
-        AiError.OFFLINE -> "Device is offline."
-        AiError.AUTH_ERROR -> "Authentication failed — check the key."
-        AiError.RATE_LIMITED -> "Rate limited — try again later."
-        AiError.MALFORMED_RESPONSE -> "Unexpected response shape."
-        AiError.PROVIDER_ERROR -> "Provider error."
-    }
+    private fun errorText(e: AiError) = e.describe()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -5,6 +5,13 @@ import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.permissions.PermissionChecker
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 @Singleton
 class CapabilityManager @Inject constructor(
@@ -19,8 +26,25 @@ class CapabilityManager @Inject constructor(
         providers.flatMap { p -> p.capabilities.map { c -> c to p } }
             .groupBy({ it.first }, { it.second })
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** Reactive view of [providerStatuses] — updates when any provider signals a change. */
+    private val _statuses = MutableStateFlow(providerStatuses())
+    val statuses: StateFlow<Map<ProviderKind, ProviderStatus>> = _statuses.asStateFlow()
+
+    init {
+        scope.launch {
+            ProviderStatusBus.changes.collect { refreshStatuses() }
+        }
+    }
+
     fun providerStatuses(): Map<ProviderKind, ProviderStatus> =
         providersByKind.mapValues { it.value.status }
+
+    /** Re-read every provider's live status into the reactive surface. */
+    fun refreshStatuses() {
+        _statuses.value = providerStatuses()
+    }
 
     fun resolve(tool: Tool): ToolResolution {
         val reasons = mutableListOf<BlockedReason>()
