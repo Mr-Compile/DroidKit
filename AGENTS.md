@@ -17,6 +17,18 @@ Verified repo/Android reality > this file + operating contract > `ai_security_ad
 
 Conflicts are classified and logged in `docs/02_foundations/PLAN_MIGRATION_LOG.md` — never silently rewrite an old decision. Full queue: `docs/01_plans/2026-10-18-droidkit-master-execution-plan.md`.
 
+## Docs layout
+`docs/` is organized by numbered phase folders (canonical map: `docs/README.md`):
+- `00_specs/` — canonical spec library: `playbook/` (journeys + operating rules), `feature_plans_v2/`, `ai_security_addon/`, `planning_package_superseded/` (history only), product bible + design docs.
+- `01_plans/` — master execution queue, dated per-journey/per-feature plans, journey checklist, plan packs (e.g. `droidkit_v1_completion_plan/`).
+- `02_foundations/` — Phase A gate evidence (PRD approval, J02 feasibility, J03 design, engineering foundation, migration log).
+- `03_design_system/` — `branding/` + `uiux_v5/` (canonical); `uiux_v4_superseded/` is detail reference only.
+- `04_audits/` — audit reports produced during implementation.
+- `05_release/` — release notes, privacy policy, device validation runbook.
+- `06_research/` — post-V1 research notes.
+- Extract imported archives into the matching folder, then delete the archive — never commit zip/docx duplicates of extracted content.
+- If a doc sits in the wrong folder, move it to its canonical location instead of leaving it; update `docs/README.md` when adding a folder or pack.
+
 ## Mandatory workflow
 AUDIT -> PLAN -> IMPLEMENT -> TARGETED VALIDATION -> SELF-REVIEW -> UPDATE CHECKLIST
 

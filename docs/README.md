@@ -25,6 +25,7 @@ Numbered in workflow order. Read `00` for the rules, `01` for what to do next.
 - `2026-10-18-droidkit-master-execution-plan.md` — **the queue** (Q1–Q23 + Q6b + Q16b)
 - `10_DroidKit_Master_Journey_Checklist.md` — the single progress tracker
 - `2026-10-*.md` — per-journey/per-feature implementation plans, dated in execution order
+- `droidkit_v1_completion_plan/` — V1 completion AI execution pack (master prompt, tracker, DoD, device verification matrix)
 
 ## What's inside `02_foundations/`
 
