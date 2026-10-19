@@ -11,4 +11,6 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
     implementation(projects.core.ui)
+
+    testImplementation(libs.androidx.junit)
 }

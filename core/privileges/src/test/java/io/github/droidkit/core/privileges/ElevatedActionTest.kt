@@ -51,6 +51,40 @@ class ElevatedActionTest {
     }
 
     @Test
+    fun `runtime permission commands grant and revoke`() {
+        assertEquals(
+            "pm grant com.example.app android.permission.CAMERA",
+            ElevatedAction.SetRuntimePermission(
+                "com.example.app",
+                "android.permission.CAMERA",
+                granted = true,
+            ).command(),
+        )
+        assertEquals(
+            "pm revoke com.example.app android.permission.RECORD_AUDIO",
+            ElevatedAction.SetRuntimePermission(
+                "com.example.app",
+                "android.permission.RECORD_AUDIO",
+                granted = false,
+            ).command(),
+        )
+        assertEquals(
+            "dumpsys package com.example.app",
+            ElevatedAction.GetRuntimePermissions("com.example.app").command(),
+        )
+    }
+
+    @Test
+    fun `runtime permission rejects bad names`() {
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            ElevatedAction.SetRuntimePermission("com.app", "CAMERA; rm -rf /", true)
+        }
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            ElevatedAction.GetRuntimePermissions("bad pkg name").command()
+        }
+    }
+
+    @Test
     fun `getprop and logcat and pm list commands`() {
         assertEquals("getprop ro.build.version.sdk", ElevatedAction.GetProp("ro.build.version.sdk").command())
         assertEquals("logcat -d -t 200", ElevatedAction.ReadLog(200).command())

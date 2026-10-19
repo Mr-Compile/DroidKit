@@ -33,6 +33,7 @@ import io.github.droidkit.core.ui.components.SectionHeader
 @Composable
 fun SettingsScreen(
     onOpenAdb: () -> Unit = {},
+    onOpenAiChat: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val theme by viewModel.themeMode.collectAsState()
@@ -97,6 +98,41 @@ fun SettingsScreen(
                         }
                         TextButton(onClick = onOpenAdb) {
                             Text("Open ADB Lab for wireless pairing")
+                        }
+                    }
+                }
+            }
+
+            item {
+                val log by viewModel.elevatedLog.collectAsState()
+                if (log.isNotEmpty()) {
+                    SectionHeader("Elevated action history")
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            log.take(10).forEach { entry ->
+                                val time = java.text.SimpleDateFormat(
+                                    "HH:mm:ss",
+                                    java.util.Locale.US,
+                                ).format(java.util.Date(entry.epochMs))
+                                Text(
+                                    "$time  ${entry.provider}  exit ${entry.exitCode}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (entry.exitCode == 0) {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    } else {
+                                        MaterialTheme.colorScheme.error
+                                    },
+                                )
+                                Text(
+                                    entry.command,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                )
+                            }
+                            TextButton(onClick = { viewModel.clearElevatedLog() }) {
+                                Text("Clear history")
+                            }
                         }
                     }
                 }
@@ -173,6 +209,9 @@ fun SettingsScreen(
                                     color = if (it == "Connected") MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.error,
                                 )
+                            }
+                            TextButton(onClick = onOpenAiChat) {
+                                Text("Open DroidKit Chat")
                             }
                         }
                     }

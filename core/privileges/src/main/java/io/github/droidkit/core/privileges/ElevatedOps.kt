@@ -68,6 +68,24 @@ sealed interface ElevatedAction {
         override fun command() = "pm uninstall -k --user 0 ${requirePackage(packageName)}"
     }
 
+    /** Runtime permission state for a package (`dumpsys package` runtime section). */
+    data class GetRuntimePermissions(val packageName: String) : ElevatedAction {
+        override fun command() = "dumpsys package ${requirePackage(packageName)}"
+    }
+
+    /** Grant or revoke a runtime permission (`pm grant` / `pm revoke`). */
+    data class SetRuntimePermission(
+        val packageName: String,
+        val permission: String,
+        val granted: Boolean,
+    ) : ElevatedAction {
+        init {
+            require(PACKAGE_RE.matches(permission)) { "invalid permission name" }
+        }
+        override fun command() =
+            "pm ${if (granted) "grant" else "revoke"} ${requirePackage(packageName)} $permission"
+    }
+
     /** Read a single system property (`getprop`). */
     data class GetProp(val key: String) : ElevatedAction {
         init { require(PROP_KEY_RE.matches(key)) { "invalid property key" } }
@@ -153,6 +171,20 @@ interface AdbSessionSetup : ProviderSetup {
     fun sessionSummary(): String?
 }
 
+/** One recorded elevated execution for the audit log. */
+data class ElevatedAuditEntry(
+    val epochMs: Long,
+    val provider: ProviderKind,
+    val command: String,
+    val exitCode: Int,
+    val stderrSummary: String?,
+)
+
+/** Optional sink for elevated-action audit records. Bound from core:database. */
+interface ElevatedAuditSink {
+    suspend fun record(entry: ElevatedAuditEntry)
+}
+
 /**
  * Routes [ElevatedAction]s to an available [ElevatedExecutor]. Features never
  * see which provider executed; selection prefers SHIZUKU, then ROOT, then ADB.
@@ -161,6 +193,7 @@ interface AdbSessionSetup : ProviderSetup {
 class ElevatedOps @Inject constructor(
     executors: Set<@JvmSuppressWildcards ElevatedExecutor>,
     setups: Set<@JvmSuppressWildcards ProviderSetup>,
+    private val auditSinks: Set<@JvmSuppressWildcards ElevatedAuditSink>,
 ) {
     private val preferenceOrder = listOf(ProviderKind.SHIZUKU, ProviderKind.ROOT, ProviderKind.ADB)
     private val executorsByKind = executors.associateBy { it.kind }
@@ -174,7 +207,24 @@ class ElevatedOps @Inject constructor(
     suspend fun execute(action: ElevatedAction, timeoutMs: Long = 30_000): ElevatedResult {
         val kind = activeProvider()
             ?: return ElevatedResult(ProviderKind.STANDARD, -1, "", "no elevated provider available")
-        return executorsByKind.getValue(kind).runShell(action.command(), timeoutMs)
+        val command = action.command()
+        return executorsByKind.getValue(kind).runShell(command, timeoutMs).also { result ->
+            auditSinks.forEach { sink ->
+                runCatching {
+                    sink.record(
+                        ElevatedAuditEntry(
+                            epochMs = System.currentTimeMillis(),
+                            provider = kind,
+                            command = command,
+                            exitCode = result.exitCode,
+                            stderrSummary = result.stderr.lineSequence()
+                                .firstOrNull { it.isNotBlank() }
+                                ?.take(200),
+                        ),
+                    )
+                }
+            }
+        }
     }
 
     /** Ask a provider to run its grant/setup flow. Returns false if unsupported. */

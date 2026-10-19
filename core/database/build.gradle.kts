@@ -9,6 +9,7 @@ android {
 
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.core.privileges)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.kotlinx.coroutines.android)

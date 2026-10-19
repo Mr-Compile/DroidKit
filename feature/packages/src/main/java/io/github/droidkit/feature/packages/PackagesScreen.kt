@@ -50,6 +50,7 @@ fun PackagesScreen(
     val events by viewModel.events.collectAsState()
 
     var pending by remember { mutableStateOf<Pair<PackagesViewModel.Action, String>?>(null) }
+    var permTarget by remember { mutableStateOf<String?>(null) }
     var restoreTarget by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
@@ -175,6 +176,13 @@ fun PackagesScreen(
                                     },
                                     enabled = !busy,
                                 ) { Text("Uninstall") }
+                                OutlinedButton(
+                                    onClick = {
+                                        permTarget = pkg.packageName
+                                        viewModel.loadPermissions(pkg.packageName)
+                                    },
+                                    enabled = !busy,
+                                ) { Text("Perms") }
                             }
                         }
                     }
@@ -216,6 +224,50 @@ fun PackagesScreen(
             },
             dismissButton = {
                 TextButton(onClick = { pending = null }) { Text("Cancel") }
+            },
+        )
+    }
+
+    // Runtime permission sheet — grant/revoke goes through the elevated provider.
+    permTarget?.let { pkg ->
+        val perms by viewModel.perms.collectAsState()
+        AlertDialog(
+            onDismissRequest = {
+                permTarget = null
+                viewModel.clearPermissions()
+            },
+            title = { Text("Runtime permissions — $pkg") },
+            text = {
+                Column {
+                    when {
+                        perms == null -> Text("Loading…")
+                        perms!!.isEmpty() -> Text("No runtime permissions declared.")
+                        else -> perms!!.forEach { (perm, granted) ->
+                            Row(
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    perm.substringAfterLast('.'),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                TextButton(
+                                    onClick = {
+                                        viewModel.setPermission(pkg, perm, !granted)
+                                    },
+                                    enabled = !busy,
+                                ) { Text(if (granted) "Revoke" else "Grant") }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    permTarget = null
+                    viewModel.clearPermissions()
+                }) { Text("Close") }
             },
         )
     }

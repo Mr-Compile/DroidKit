@@ -51,6 +51,10 @@ class PackagesViewModel @Inject constructor(
     private val _events = MutableStateFlow<List<Event>>(emptyList())
     val events: StateFlow<List<Event>> = _events.asStateFlow()
 
+    /** Runtime permissions of the package currently open in the perms dialog. */
+    private val _perms = MutableStateFlow<List<Pair<String, Boolean>>?>(null)
+    val perms: StateFlow<List<Pair<String, Boolean>>?> = _perms.asStateFlow()
+
     init {
         viewModelScope.launch { refreshElevated() }
     }
@@ -103,6 +107,41 @@ class PackagesViewModel @Inject constructor(
             loadPackages()
             _busy.value = false
         }
+    }
+
+    /** Loads runtime permission state for [pkg] via elevated dumpsys. */
+    fun loadPermissions(pkg: String) {
+        viewModelScope.launch {
+            _perms.value = null
+            val result = elevatedOps.execute(ElevatedAction.GetRuntimePermissions(pkg))
+            _perms.value = if (result.ok) {
+                RuntimePermissionParser.parse(result.stdout)
+            } else {
+                emit("Could not read permissions for $pkg")
+                emptyList()
+            }
+        }
+    }
+
+    /** Grant/revoke one runtime permission, then refresh the list. */
+    fun setPermission(pkg: String, permission: String, grant: Boolean) {
+        viewModelScope.launch {
+            _busy.value = true
+            val result = elevatedOps.execute(
+                ElevatedAction.SetRuntimePermission(pkg, permission, grant),
+            )
+            emit(
+                if (result.ok) "${if (grant) "Granted" else "Revoked"} $permission for $pkg"
+                else "Failed: " + (result.stderr.ifEmpty { result.stdout }
+                    .lineSequence().firstOrNull { it.isNotBlank() } ?: "exit ${result.exitCode}"),
+            )
+            _busy.value = false
+            loadPermissions(pkg)
+        }
+    }
+
+    fun clearPermissions() {
+        _perms.value = null
     }
 
     fun consumeEvent(event: Event) {

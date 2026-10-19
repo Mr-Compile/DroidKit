@@ -10,6 +10,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.droidkit.core.ai.AiError
 import io.github.droidkit.core.ai.AiSettingsStore
 import io.github.droidkit.core.ai.AiUseCase
+import io.github.droidkit.core.database.ElevatedActionLogEntity
+import io.github.droidkit.core.database.ElevatedHistoryRepository
 import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.datastore.ThemeMode
 import io.github.droidkit.core.privileges.CapabilityManager
@@ -32,6 +34,7 @@ class SettingsViewModel @Inject constructor(
     private val elevatedOps: ElevatedOps,
     private val aiStore: AiSettingsStore,
     private val aiUseCase: AiUseCase,
+    private val elevatedHistory: ElevatedHistoryRepository,
 ) : ViewModel() {
 
     val themeMode: StateFlow<ThemeMode> =
@@ -134,5 +137,15 @@ class SettingsViewModel @Inject constructor(
             }
             _aiTesting.value = false
         }
+    }
+
+    // ---- Elevated action audit ----
+
+    val elevatedLog: StateFlow<List<ElevatedActionLogEntity>> =
+        elevatedHistory.recent(50)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun clearElevatedLog() {
+        viewModelScope.launch { elevatedHistory.clear() }
     }
 }

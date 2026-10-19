@@ -54,3 +54,13 @@ data class SavedReportEntity(
     val format: String, // TEXT | PDF | ...
     val localUri: String,
 )
+
+@Entity(tableName = "elevated_action_log")
+data class ElevatedActionLogEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochMs: Long,
+    val provider: String, // ProviderKind name
+    val command: String,
+    val exitCode: Int,
+    val stderrSummary: String?,
+)

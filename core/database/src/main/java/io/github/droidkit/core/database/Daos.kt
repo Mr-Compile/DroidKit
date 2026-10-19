@@ -70,3 +70,15 @@ interface SavedReportDao {
     @Query("DELETE FROM saved_reports")
     suspend fun deleteAll()
 }
+
+@Dao
+interface ElevatedActionLogDao {
+    @Insert
+    suspend fun insert(entry: ElevatedActionLogEntity)
+
+    @Query("SELECT * FROM elevated_action_log ORDER BY epochMs DESC LIMIT :limit")
+    fun observeRecent(limit: Int = 100): Flow<List<ElevatedActionLogEntity>>
+
+    @Query("DELETE FROM elevated_action_log")
+    suspend fun deleteAll()
+}
