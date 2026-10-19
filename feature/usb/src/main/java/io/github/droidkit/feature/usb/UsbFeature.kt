@@ -1,16 +1,22 @@
 package io.github.droidkit.feature.usb
 
+import android.net.Uri
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
+import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
 
 object UsbFeature : FeatureContribution {
     const val ROUTE = "usb"
+    const val DETAIL_ROUTE = "usb/device/{deviceName}"
+
+    fun detailRoute(deviceName: String) = "usb/device/${Uri.encode(deviceName)}"
 
     override val tools = listOf(
         Tool(
@@ -19,7 +25,9 @@ object UsbFeature : FeatureContribution {
             description = "Detect USB host capability and connected devices",
             category = ToolCategory.HARDWARE,
             route = ROUTE,
+            safetyLevel = SafetyLevel.SAFE,
             requiredFeatures = setOf("android.hardware.usb.host"),
+            phase = ToolPhase.V1,
         ),
         Tool(
             id = "usb.descriptors",
@@ -27,18 +35,23 @@ object UsbFeature : FeatureContribution {
             description = "VID/PID, interfaces and endpoints for attached devices",
             category = ToolCategory.HARDWARE,
             route = ROUTE,
+            safetyLevel = SafetyLevel.SAFE,
             requiredFeatures = setOf("android.hardware.usb.host"),
+            phase = ToolPhase.V1,
         ),
     )
 }
 
 fun NavGraphBuilder.usbGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(UsbFeature.ROUTE) {
-        FeatureStubScreen(
-            title = "USB Lab",
-            subtitle = "USB host detection, permission flow and descriptor reads ship in Phase 6.",
-            tools = UsbFeature.tools,
-            resolve = resolve,
+        UsbScreen(onOpenDetail = { name -> nav.navigate(UsbFeature.detailRoute(name)) })
+    }
+    composable(UsbFeature.DETAIL_ROUTE) { backStackEntry ->
+        val deviceName = backStackEntry.arguments?.getString("deviceName").orEmpty()
+        val parentEntry = nav.getBackStackEntry(UsbFeature.ROUTE)
+        UsbDetailScreen(
+            deviceName = deviceName,
+            viewModel = hiltViewModel(parentEntry),
         )
     }
 }
