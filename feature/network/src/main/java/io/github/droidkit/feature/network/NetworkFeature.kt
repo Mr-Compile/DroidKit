@@ -69,6 +69,24 @@ object NetworkFeature : FeatureContribution {
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
         ),
+        Tool(
+            id = "network.interfaces",
+            title = "Interface Detail",
+            description = "Every network interface: MTU, flags, addresses",
+            category = ToolCategory.CONNECTIVITY,
+            route = ROUTE,
+            safetyLevel = SafetyLevel.SAFE,
+            requiredPermissions = NETWORK_PERMS,
+        ),
+        Tool(
+            id = "network.discovery",
+            title = "Service Discovery",
+            description = "Bounded mDNS/NSD browse of local services",
+            category = ToolCategory.CONNECTIVITY,
+            route = ROUTE,
+            safetyLevel = SafetyLevel.MINOR,
+            requiredPermissions = NETWORK_PERMS + "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+        ),
     )
 }
 

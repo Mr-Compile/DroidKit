@@ -5,12 +5,17 @@ import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.droidkit.core.common.DLog
+import java.net.NetworkInterface
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +71,137 @@ class NetworkViewModel @Inject constructor(
 
     private val _ports = MutableStateFlow<ToolState<List<NetTools.PortResult>>>(ToolState.Idle)
     val ports: StateFlow<ToolState<List<NetTools.PortResult>>> = _ports.asStateFlow()
+
+    // ---- Interfaces + local service discovery ----
+
+    data class InterfaceInfo(
+        val name: String,
+        val displayName: String,
+        val mtu: Int?,
+        val up: Boolean,
+        val loopback: Boolean,
+        val multicast: Boolean,
+        val addresses: List<String>,
+    )
+
+    /** Every network interface Android exposes, whatever its state. */
+    fun interfaces(): List<InterfaceInfo> = runCatching {
+        NetworkInterface.getNetworkInterfaces()?.toList().orEmpty().map { ni ->
+            InterfaceInfo(
+                name = ni.name,
+                displayName = ni.displayName ?: ni.name,
+                mtu = runCatching { ni.mtu }.getOrNull()?.takeIf { it > 0 },
+                up = runCatching { ni.isUp }.getOrDefault(false),
+                loopback = runCatching { ni.isLoopback }.getOrDefault(false),
+                multicast = runCatching { ni.supportsMulticast() }.getOrDefault(false),
+                addresses = ni.inetAddresses.toList().mapNotNull { it.hostAddress },
+            )
+        }
+    }.getOrDefault(emptyList())
+
+    data class NsdFound(
+        val name: String,
+        val type: String,
+        val host: String? = null,
+        val port: Int? = null,
+    )
+
+    private val nsdManager =
+        context.getSystemService(Context.NSD_SERVICE) as? NsdManager
+
+    private val _nsdState = MutableStateFlow<ToolState<List<NsdFound>>>(ToolState.Idle)
+    val nsdState: StateFlow<ToolState<List<NsdFound>>> = _nsdState.asStateFlow()
+
+    private var discoveryListener: NsdManager.DiscoveryListener? = null
+    private var multicastLock: WifiManager.MulticastLock? = null
+    private var discoveryStop: kotlinx.coroutines.Job? = null
+
+    /**
+     * Bounded NSD discovery of one service type (e.g. `_ipp._tcp.`). Holds a
+     * multicast lock for the window so mDNS traffic is delivered, then stops.
+     */
+    fun discoverServices(serviceType: String) {
+        val type = serviceType.trim().removePrefix(".").let { if (it.endsWith(".")) it else "$it." }
+        if (type.isBlank() || nsdManager == null) {
+            _nsdState.value = ToolState.Failed("NSD unavailable or no service type")
+            return
+        }
+        stopDiscovery()
+        _nsdState.value = ToolState.Running
+        val found = mutableListOf<NsdFound>()
+        val wm = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        multicastLock = wm?.createMulticastLock("droidkit-nsd")?.also {
+            it.setReferenceCounted(true)
+            runCatching { it.acquire() }
+        }
+        val listener = object : NsdManager.DiscoveryListener {
+            override fun onDiscoveryStarted(serviceType: String) {}
+            override fun onDiscoveryStopped(serviceType: String) {}
+            override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
+                _nsdState.value = ToolState.Failed("Discovery failed (error $errorCode)")
+                stopDiscovery()
+            }
+            override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
+            override fun onServiceFound(serviceInfo: NsdServiceInfo) {
+                found += NsdFound(serviceInfo.serviceName, serviceInfo.serviceType.orEmpty())
+                _nsdState.value = ToolState.Done(found.toList())
+            }
+            override fun onServiceLost(serviceInfo: NsdServiceInfo) {
+                found.removeAll { it.name == serviceInfo.serviceName }
+                _nsdState.value = ToolState.Done(found.toList())
+            }
+        }
+        discoveryListener = listener
+        runCatching { nsdManager?.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, listener) }
+            .onFailure {
+                _nsdState.value = ToolState.Failed(it.message ?: "Discovery failed")
+                stopDiscovery()
+            }
+        discoveryStop = viewModelScope.launch {
+            delay(10_000)
+            // mark end of the bounded window without dropping found services
+            if (_nsdState.value is ToolState.Running) {
+                _nsdState.value = ToolState.Done(found.toList())
+            }
+            stopDiscoveryOnly()
+        }
+    }
+
+    /** Resolves a discovered service to host/port (user-tapped). */
+    fun resolveService(name: String, onResult: (NsdFound) -> Unit) {
+        val mgr = nsdManager ?: return
+        val info = NsdServiceInfo().apply { serviceName = name; serviceType = "" }
+        // Resolution needs the full record; re-resolve by name+type snapshot.
+        val current = (_nsdState.value as? ToolState.Done)?.result.orEmpty()
+        val target = current.firstOrNull { it.name == name } ?: return
+        info.serviceType = target.type
+        mgr.resolveService(info, object : NsdManager.ResolveListener {
+            override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+                onResult(target)
+            }
+            override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                onResult(
+                    target.copy(
+                        host = serviceInfo.host?.hostAddress,
+                        port = serviceInfo.port.takeIf { it > 0 },
+                    ),
+                )
+            }
+        })
+    }
+
+    private fun stopDiscoveryOnly() {
+        discoveryListener?.let { runCatching { nsdManager?.stopServiceDiscovery(it) } }
+        discoveryListener = null
+        runCatching { multicastLock?.release() }
+        multicastLock = null
+    }
+
+    fun stopDiscovery() {
+        discoveryStop?.cancel()
+        discoveryStop = null
+        stopDiscoveryOnly()
+    }
 
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) = refreshSnapshot()
@@ -224,6 +360,7 @@ class NetworkViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        stopDiscovery()
         runCatching { cm?.unregisterNetworkCallback(callback) }
         super.onCleared()
     }

@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -185,6 +186,124 @@ fun NetworkScreen(
                                         " · ${NetTools.formatMs(r.elapsedMs)}",
                                     copyable = false,
                                 )
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "Interfaces") {
+                    val interfaces = remember { viewModel.interfaces() }
+                    if (interfaces.isEmpty()) {
+                        Text("No interfaces exposed.", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    interfaces.forEach { ni ->
+                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                            Text(
+                                ni.name + if (ni.displayName != ni.name) " — ${ni.displayName}" else "",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(
+                                buildList {
+                                    add(if (ni.up) "up" else "down")
+                                    if (ni.loopback) add("loopback")
+                                    if (ni.multicast) add("multicast")
+                                    ni.mtu?.let { add("mtu $it") }
+                                }.joinToString(" · "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            ni.addresses.forEach {
+                                Text(
+                                    "  $it",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                val nsd by viewModel.nsdState.collectAsState()
+                var serviceType by remember { mutableStateOf("_ipp._tcp") }
+                var resolved by remember { mutableStateOf<NetworkViewModel.NsdFound?>(null) }
+                SectionCard(title = "Local service discovery") {
+                    Text(
+                        "Bounded 10s mDNS/NSD browse of one service type on the local " +
+                            "network — user-initiated only, results stay on device.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OutlinedTextField(
+                            value = serviceType,
+                            onValueChange = { serviceType = it },
+                            label = { Text("Service type") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                        OutlinedButton(
+                            onClick = { viewModel.discoverServices(serviceType) },
+                        ) { Text("Discover") }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        listOf("_ipp._tcp", "_http._tcp", "_googlecast._tcp", "_airplay._tcp", "_ssh._tcp")
+                            .forEach { t ->
+                                TextButton(onClick = { serviceType = t }) {
+                                    Text(t, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                    }
+                    when (val n = nsd) {
+                        is ToolState.Running -> Text(
+                            "Discovering… (10s window)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        is ToolState.Failed -> Text(
+                            n.message,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        is ToolState.Done -> {
+                            if (n.result.isEmpty()) {
+                                Text(
+                                    "No services of this type found.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                )
+                            }
+                            n.result.forEach { svc ->
+                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            svc.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        TextButton(onClick = {
+                                            viewModel.resolveService(svc.name) { resolved = it }
+                                        }) { Text("Resolve") }
+                                    }
+                                    resolved?.takeIf { it.name == svc.name }?.let { r ->
+                                        Text(
+                                            "host ${r.host ?: "—"} · port ${r.port ?: "—"}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
                             }
                         }
                         else -> {}
