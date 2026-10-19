@@ -10,7 +10,6 @@ import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
 
 object AppOpsFeature : FeatureContribution {
     const val ROUTE = "appops"
@@ -22,7 +21,7 @@ object AppOpsFeature : FeatureContribution {
             description = "Per-app AppOps modes (usage access, overlays, background)",
             category = ToolCategory.APPS,
             route = ROUTE,
-            requiredCapabilities = setOf(Capability.SHIZUKU_SERVICE),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
         ),
         Tool(
@@ -32,7 +31,7 @@ object AppOpsFeature : FeatureContribution {
             category = ToolCategory.APPS,
             route = ROUTE,
             safetyLevel = SafetyLevel.SYSTEM_CHANGE,
-            requiredCapabilities = setOf(Capability.SHIZUKU_SERVICE),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
         ),
     )
@@ -40,11 +39,6 @@ object AppOpsFeature : FeatureContribution {
 
 fun NavGraphBuilder.appOpsGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(AppOpsFeature.ROUTE) {
-        FeatureStubScreen(
-            title = "AppOps",
-            subtitle = "Requires the Shizuku provider — post-V1 journey J18.",
-            tools = AppOpsFeature.tools,
-            resolve = resolve,
-        )
+        AppOpsScreen(onOpenAdb = { nav.navigate("adb") })
     }
 }

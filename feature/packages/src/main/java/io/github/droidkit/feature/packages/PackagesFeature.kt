@@ -10,7 +10,6 @@ import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
-import io.github.droidkit.core.ui.FeatureStubScreen
 
 object PackagesFeature : FeatureContribution {
     const val ROUTE = "packages"
@@ -23,7 +22,7 @@ object PackagesFeature : FeatureContribution {
             category = ToolCategory.APPS,
             route = ROUTE,
             safetyLevel = SafetyLevel.HIGH_IMPACT,
-            requiredCapabilities = setOf(Capability.ADB_SHELL),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
         ),
         Tool(
@@ -33,7 +32,7 @@ object PackagesFeature : FeatureContribution {
             category = ToolCategory.APPS,
             route = ROUTE,
             safetyLevel = SafetyLevel.HIGH_IMPACT,
-            requiredCapabilities = setOf(Capability.ADB_SHELL),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
         ),
         Tool(
@@ -43,7 +42,7 @@ object PackagesFeature : FeatureContribution {
             category = ToolCategory.APPS,
             route = ROUTE,
             safetyLevel = SafetyLevel.HIGH_IMPACT,
-            requiredCapabilities = setOf(Capability.ADB_SHELL),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
         ),
     )
@@ -51,12 +50,6 @@ object PackagesFeature : FeatureContribution {
 
 fun NavGraphBuilder.packagesGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(PackagesFeature.ROUTE) {
-        FeatureStubScreen(
-            title = "Package Controls",
-            subtitle = "High-impact package operations gated on wireless ADB — post-V1 journeys J18/J19. " +
-                "Each action will show its exact consequence before running.",
-            tools = PackagesFeature.tools,
-            resolve = resolve,
-        )
+        PackagesScreen(onOpenAdb = { nav.navigate("adb") })
     }
 }

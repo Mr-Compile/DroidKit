@@ -11,8 +11,11 @@ import io.github.droidkit.core.common.ToolRegistry
 import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.permissions.PermissionChecker
 import io.github.droidkit.core.permissions.PermissionManager
+import io.github.droidkit.core.privileges.AdbSessionSetup
 import io.github.droidkit.core.privileges.CapabilityManager
 import io.github.droidkit.core.privileges.CapabilityProvider
+import io.github.droidkit.core.privileges.ElevatedExecutor
+import io.github.droidkit.core.privileges.ProviderSetup
 import io.github.droidkit.core.system.DeviceSystemProbe
 import io.github.droidkit.feature.adb.AdbFeature
 import io.github.droidkit.feature.appops.AppOpsFeature
@@ -62,12 +65,47 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideProviders(): Set<CapabilityProvider> = setOf(
+    fun provideShizukuProvider() = ShizukuProvider()
+
+    @Provides
+    @Singleton
+    fun provideAdbProvider() = WirelessAdbProvider()
+
+    @Provides
+    @Singleton
+    fun provideAdbSetup(adb: WirelessAdbProvider): AdbSessionSetup = adb
+
+    @Provides
+    @Singleton
+    fun provideRootProvider() = RootProvider()
+
+    @Provides
+    @Singleton
+    fun provideProviders(
+        shizuku: ShizukuProvider,
+        adb: WirelessAdbProvider,
+        root: RootProvider,
+    ): Set<CapabilityProvider> = setOf(
         StandardAndroidProvider(),
-        ShizukuProvider(),
-        WirelessAdbProvider(),
-        RootProvider(),
+        shizuku,
+        adb,
+        root,
     )
+
+    @Provides
+    @Singleton
+    fun provideExecutors(
+        shizuku: ShizukuProvider,
+        adb: WirelessAdbProvider,
+        root: RootProvider,
+    ): Set<ElevatedExecutor> = setOf(shizuku, root, adb)
+
+    @Provides
+    @Singleton
+    fun provideSetups(
+        shizuku: ShizukuProvider,
+        root: RootProvider,
+    ): Set<ProviderSetup> = setOf(shizuku, root)
 
     @Provides
     @Singleton
