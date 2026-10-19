@@ -26,6 +26,7 @@ Numbered in workflow order. Read `00` for the rules, `01` for what to do next.
 - `10_DroidKit_Master_Journey_Checklist.md` — the single progress tracker
 - `2026-10-*.md` — per-journey/per-feature implementation plans, dated in execution order
 - `droidkit_v1_completion_plan/` — V1 completion AI execution pack (master prompt, tracker, DoD, device verification matrix)
+- `droidkit_navigation_plan/` — navigation hardening AI pack (master navigation prompt, QA matrix, route contract, AI-first prompt)
 
 ## What's inside `02_foundations/`
 
