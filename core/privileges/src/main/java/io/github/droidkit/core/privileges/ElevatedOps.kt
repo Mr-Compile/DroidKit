@@ -3,6 +3,7 @@ package io.github.droidkit.core.privileges
 import io.github.droidkit.core.common.Capability
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.StateFlow
 
 /** AppOps modes accepted by `appops set`. */
 enum class AppOpMode(val wire: String) {
@@ -169,6 +170,39 @@ interface AdbSessionSetup : ProviderSetup {
 
     /** Human-readable summary of the live session, or null when not connected. */
     fun sessionSummary(): String?
+
+    /** Live state of the guided (mDNS-assisted) pairing flow. */
+    val pairingState: StateFlow<AdbPairingState>
+
+    /**
+     * Start discovering the pairing service (`_adb-tls-pairing._tcp`) and post
+     * the pairing notification so the code can be entered without leaving the
+     * developer-options dialog. Stops when paired, failed, or cancelled.
+     */
+    fun startPairingSearch(): Result<Unit>
+
+    /** Stop discovery and dismiss the pairing notification/service. */
+    fun stopPairingSearch()
+
+    /**
+     * Pair against the endpoint most recently discovered by
+     * [startPairingSearch] — no host/port needed.
+     */
+    suspend fun pairWithDiscovered(code: String): Result<String>
+
+    /**
+     * Discover `_adb-tls-connect._tcp` and open the session on it. Works
+     * without re-pairing when the device already trusts our ADB key.
+     */
+    suspend fun connectDiscovered(): Result<String>
+
+    /**
+     * QR-assisted pairing: keep discovering until a pairing service named
+     * `payload.serviceName` appears, then auto-pair with `payload.secret`
+     * and auto-connect. Covers both directions — a QR we display for another
+     * device to scan, or a device-displayed QR we decoded from a screenshot.
+     */
+    fun startQrPairing(payload: AdbQrPayload): Result<Unit>
 }
 
 /** One recorded elevated execution for the audit log. */

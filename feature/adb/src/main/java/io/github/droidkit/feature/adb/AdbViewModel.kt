@@ -3,6 +3,8 @@ package io.github.droidkit.feature.adb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.droidkit.core.privileges.AdbPairingState
+import io.github.droidkit.core.privileges.AdbQrPayload
 import io.github.droidkit.core.privileges.AdbSessionSetup
 import io.github.droidkit.core.privileges.ElevatedAction
 import io.github.droidkit.core.privileges.ElevatedOps
@@ -25,6 +27,8 @@ class AdbViewModel @Inject constructor(
     private val _session = MutableStateFlow<String?>(adbSetup.sessionSummary())
     val session: StateFlow<String?> = _session.asStateFlow()
 
+    val pairingState: StateFlow<AdbPairingState> = adbSetup.pairingState
+
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
@@ -37,9 +41,13 @@ class AdbViewModel @Inject constructor(
     private val _log = MutableStateFlow("")
     val log: StateFlow<String> = _log.asStateFlow()
 
+    /** QR payload currently being advertised for another device to scan. */
+    private val _qrPayload = MutableStateFlow<AdbQrPayload?>(null)
+    val qrPayload: StateFlow<AdbQrPayload?> = _qrPayload.asStateFlow()
+
+    val pairingCode = MutableStateFlow("")
     val pairingHost = MutableStateFlow("")
     val pairingPort = MutableStateFlow("")
-    val pairingCode = MutableStateFlow("")
     val connectHost = MutableStateFlow("")
     val connectPort = MutableStateFlow("5555")
     val logLines = MutableStateFlow("200")
@@ -48,6 +56,67 @@ class AdbViewModel @Inject constructor(
     fun refreshSession() {
         _session.value = adbSetup.sessionSummary()
     }
+
+    // ---------- guided flow -------------------------------------------------
+
+    fun startPairing() {
+        adbSetup.startPairingSearch()
+            .onFailure { emit("Could not start discovery: ${it.message}") }
+    }
+
+    fun stopPairing() {
+        adbSetup.stopPairingSearch()
+        _qrPayload.value = null
+    }
+
+    fun submitPairingCode() {
+        val code = pairingCode.value.trim()
+        if (code.isEmpty()) {
+            emit("Enter the 6-digit code from the pairing dialog.")
+            return
+        }
+        viewModelScope.launch {
+            _busy.value = true
+            adbSetup.pairWithDiscovered(code)
+                .onSuccess { emit("Pairing succeeded: $it") }
+                .onFailure { emit("Pairing failed: ${it.message}") }
+            refreshSession()
+            _busy.value = false
+        }
+    }
+
+    /** Connect to the already-paired device via discovered connect endpoint. */
+    fun autoConnect() {
+        viewModelScope.launch {
+            _busy.value = true
+            adbSetup.connectDiscovered()
+                .onSuccess { emit("Connected — $it") }
+                .onFailure { emit("Connect failed: ${it.message}") }
+            refreshSession()
+            _busy.value = false
+        }
+    }
+
+    /** Display a QR for another device's "Pair device with QR code" scanner. */
+    fun showQrForOtherDevice() {
+        val payload = AdbQrPayload.generate()
+        adbSetup.startQrPairing(payload)
+            .onSuccess { _qrPayload.value = payload }
+            .onFailure { emit("Could not start QR pairing: ${it.message}") }
+    }
+
+    /** Pair using a QR payload decoded from an imported screenshot. */
+    fun pairWithQrText(text: String) {
+        val payload = AdbQrPayload.parse(text)
+        if (payload == null) {
+            emit("That image doesn't contain an ADB pairing QR code.")
+            return
+        }
+        adbSetup.startQrPairing(payload)
+            .onFailure { emit("Could not start QR pairing: ${it.message}") }
+    }
+
+    // ---------- manual flow (fallback) ---------------------------------------
 
     fun pair() {
         val host = pairingHost.value.trim()

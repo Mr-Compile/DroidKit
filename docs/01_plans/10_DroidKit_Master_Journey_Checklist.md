@@ -596,6 +596,10 @@ Suggested target: later `1.x`, for example `v1.7.0`, but do not lock the number 
 Status: implementation complete and statically verified. Custom SPAKE2 +
 TLS/plain protocol implementation (no third-party ADB library), RSA-2048
 identity in AndroidKeyStore, actions routed through `ElevatedOps` allow-list.
+Guided pairing (2026-10-20): mDNS discovery of pairing/connect services,
+foreground pairing service with notification RemoteInput for the code,
+QR pairing both directions (display for other device + screenshot decode),
+manual host/port fallback — all behind `AdbSessionSetup` in core:privileges.
 Pairing/connect round-trips not yet run on hardware — release items open.
 
 ## Research
@@ -608,7 +612,7 @@ Pairing/connect round-trips not yet run on hardware — release items open.
 - [x] Define threat/security model
 
 ## Implementation
-- [x] Pairing UI
+- [x] Pairing UI (guided + manual fallback)
 - [x] Secure key storage
 - [x] Session manager
 - [x] Capability provider
@@ -617,6 +621,8 @@ Pairing/connect round-trips not yet run on hardware — release items open.
 - [x] Device property actions
 - [x] Authorized log tools
 - [x] Reboot/system actions only where appropriate
+- [x] mDNS auto-discovery (no IP/port entry) + notification code entry
+- [x] QR pairing both directions (display + screenshot decode)
 - [ ] Terminal only if explicitly approved as product scope
 
 Release:

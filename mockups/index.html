@@ -361,7 +361,8 @@ const S = {
   ai: { enabled:false, hasKey:false, model:"openai/gpt-oss-120b", status:null, testing:false,
         turns:[], busy:false },
   adb: { paired:false, session:null, busy:false, props:null, log:"", logLines:"200", useTls:true,
-         pairHost:"192.168.1.37", pairPort:"", pairCode:"", connHost:"", connPort:"" },
+         pairHost:"192.168.1.37", pairPort:"", pairCode:"", connHost:"", connPort:"",
+         pairState:"idle", qr:null, manual:false },
   appopsQuery: "", appopsSel: null, appopsOps: {},
   pkgQuery: "", pkgRestore: "",
   nsd: null, ports: null,
@@ -2551,27 +2552,58 @@ function pkgPermSheet(pkg){
 /* ---------- wireless adb ---------- */
 function scrAdb(){
   const a=S.adb;
+  const stateTxt={
+    searching:`<div class="t-mini pri">Searching for the pairing service…</div>`,
+    found:`<div class="t-mini pri">Found pairing port 39177 — enter the code.</div>`,
+    pairing:`<div class="t-mini pri">Pairing…</div>`,
+    paired:`<div class="t-mini pri">Paired ✓ — finding the connect port…</div>`,
+    connsearch:`<div class="t-mini pri">Finding the connect service…</div>`,
+    connecting:`<div class="t-mini pri">Connecting…</div>`,
+    connected:`<div class="t-mini pri">Connected ✓</div>`,
+    failed:`<div class="t-mini" style="color:var(--error)">Pairing rejected — check the 6-digit code</div>`,
+  }[a.pairState]||"";
   return `<div class="pad col">
     ${sectionCard("Session", a.session
       ? infoRow("Connected",a.session)+`<button class="btn-outline" style="margin-top:8px" data-act="adb-disconnect">Disconnect</button>`
-      : `<div class="t-body">Not connected. Enable Wireless debugging in Developer options — it shows an IP plus a pairing port and a connect port.</div>`)}
-    ${sectionCard("1 — Pair", `
-      <div class="t-mini sub">Wireless debugging → 'Pair device with pairing code'. Enter the address, pairing port and 6-digit code.</div>
+      : `<div class="t-body">Not connected. Enable Wireless debugging in Developer options, then pair below — no IP or port typing needed.</div>`)}
+    ${sectionCard("1 — Pair with code", `
+      <div class="t-mini sub">Open Developer options → Wireless debugging → “Pair device with pairing code”. The pairing port is found automatically — you only enter the code.</div>
+      ${stateTxt}
+      <div class="row" style="margin-top:8px">
+        <button class="btn-outline" data-act="adb-start" ${a.pairState==="searching"?"disabled":""}>${a.pairState==="searching"?"Searching…":"Start pairing"}</button>
+        <button class="btn-outline" data-act="adb-devopts">Open Developer options</button>
+        ${a.pairState!=="idle"&&a.pairState!=="connected"?`<button class="textbtn" data-act="adb-stop">Stop</button>`:""}
+      </div>
+      <input class="field" id="adbPairCode" placeholder="Pairing code (6 digits)" value="${esc(a.pairCode)}" style="margin-top:8px">
+      <button class="btn-outline" style="margin-top:8px" data-act="adb-pair" ${a.pairState!=="found"||a.busy?"disabled":""}>${a.busy?"Working…":"Pair"}</button>
+      <div class="t-mini sub">You can also reply with the code straight in the pairing notification without leaving Developer options.</div>`)}
+    ${sectionCard("2 — Connect", `
+      <div class="t-mini sub">After pairing, the connect service is found automatically (the connect port differs from the pairing port).</div>
+      <button class="btn-outline" style="margin-top:8px" data-act="adb-connect" ${a.session||a.busy?"disabled":""}>${a.pairState==="connsearch"?"Finding device…":a.pairState==="connecting"?"Connecting…":"Connect via auto-discovery"}</button>`)}
+    ${sectionCard("QR pairing", `
+      <div class="t-mini sub">Show a QR for another device to scan, or import a screenshot of a pairing QR shown by a device.</div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn-outline" data-act="adb-qr-show">Show QR</button>
+        <button class="btn-outline" data-act="adb-qr-import">Import screenshot</button>
+      </div>
+      ${a.qr?`<div style="margin-top:8px;background:#fff;padding:12px;border-radius:12px;width:200px;height:200px;display:grid;place-items:center">
+          <div class="t-mini" style="color:#000;text-align:center">[ QR: WIFI:T:ADB;S:${esc(a.qr)};P:•••;; ]</div></div>
+        <div class="t-mini sub">On the other device: Wireless debugging → “Pair device with QR code” → scan this.</div>`:""}`)}
+    ${sectionCard("Advanced — manual endpoint", `
+      <button class="textbtn" data-act="adb-manual">${a.manual?"Hide manual fields":"Show manual fields"}</button>
+      ${a.manual?`
+      <div class="t-mini sub" style="margin-top:8px">Fallback when mDNS discovery is blocked (guest Wi-Fi, some OEMs). Pairing port and connect port differ.</div>
       <input class="field" id="adbPairHost" placeholder="Host / IP" value="${esc(a.pairHost)}" style="margin-top:8px">
       <div class="row" style="margin-top:8px">
         <input class="field grow" id="adbPairPort" placeholder="Pairing port" value="${esc(a.pairPort)}">
-        <input class="field grow" id="adbPairCode" placeholder="Pairing code" value="${esc(a.pairCode)}">
-      </div>
-      <button class="btn-outline" style="margin-top:8px" data-act="adb-pair" ${a.busy?"disabled":""}>${a.busy?"Working…":"Pair"}</button>
-      ${a.paired?`<div class="t-mini pri" style="margin-top:4px">Paired — RSA-2048 identity saved in AndroidKeyStore.</div>`:""}`)}
-    ${sectionCard("2 — Connect", `
-      <div class="t-mini sub">The connect port is the main port shown on the Wireless debugging screen (different from the pairing port).</div>
-      <input class="field" id="adbConnHost" placeholder="Host / IP (same as pairing if blank)" value="${esc(a.connHost)}" style="margin-top:8px">
-      <div class="row" style="margin-top:8px">
         <input class="field grow" id="adbConnPort" placeholder="Connect port" value="${esc(a.connPort)}">
-        <label class="row" style="gap:4px"><input type="checkbox" data-act="adb-tls" ${a.useTls?"checked":""} style="accent-color:var(--primary)"><span class="t-mini">TLS</span></label>
       </div>
-      <button class="btn-outline" style="margin-top:8px" data-act="adb-connect" ${a.busy?"disabled":""}>${a.busy?"Working…":"Connect"}</button>`)}
+      <input class="field" id="adbConnHost" placeholder="Connect host (blank = pairing host)" value="${esc(a.connHost)}" style="margin-top:8px">
+      <label class="row" style="gap:4px;margin-top:8px"><input type="checkbox" data-act="adb-tls" ${a.useTls?"checked":""} style="accent-color:var(--primary)"><span class="t-mini">TLS</span></label>
+      <div class="row" style="margin-top:8px">
+        <button class="btn-outline" data-act="adb-pair-manual" ${a.busy?"disabled":""}>Pair manually</button>
+        <button class="btn-outline" data-act="adb-connect-manual" ${a.busy?"disabled":""}>Connect manually</button>
+      </div>`:""}`)}
     ${a.session?`
       ${sectionCard("Device properties", `<button class="btn-outline" data-act="adb-props">Read device info</button>
         ${a.props?a.props.map(([k,v])=>infoRow(k,v)).join(""):""}`)}
@@ -2809,13 +2841,37 @@ function handleAct(act, el, e){
     case "pkg-restore": { const v=$("#pkgRestore")?.value.trim();
       if(v){ pushElevLog("pm install-existing "+v); toast("Restored "+v+" (mock)"); S.pkgRestore=""; render(); } break; }
     case "adb-tls": S.adb.useTls=!S.adb.useTls; break;
+    case "adb-start": { const a=S.adb; a.pairState="searching"; render();
+      toast("Discovery started — a pairing notification is waiting for the code");
+      later(()=>{ if(a.pairState==="searching"){ a.pairState="found"; if(cur()==="adb")render(); } },1200); break; }
+    case "adb-devopts": toast("Opening Developer options → Wireless debugging (deep link)"); break;
+    case "adb-stop": S.adb.pairState="idle"; S.adb.qr=null; render(); break;
     case "adb-pair": { const a=S.adb;
+      a.pairCode=$("#adbPairCode")?.value||"";
+      if(!a.pairCode){ toast("Enter the 6-digit code"); break; }
+      a.busy=true; a.pairState="pairing"; render();
+      later(()=>{ a.busy=false; a.paired=true; a.pairState="connsearch";
+        if(cur()==="adb")render();
+        later(()=>{ a.pairState="connected"; a.session=`${a.pairHost}:45213${a.useTls?" (TLS)":""}`;
+          PROVIDERS.ADB={status:"ready"};
+          if(cur()==="adb")render(); toast("ADB session established — elevated tools unlocked"); },1200);
+      },900); break; }
+    case "adb-connect": { const a=S.adb;
+      if(!a.paired){ toast("Pair first — no stored identity"); break; }
+      a.busy=true; a.pairState="connsearch"; render();
+      later(()=>{ a.busy=false; a.pairState="connected"; a.session=`${a.pairHost}:45213${a.useTls?" (TLS)":""}`;
+        PROVIDERS.ADB={status:"ready"};
+        if(cur()==="adb")render(); toast("ADB session established — elevated tools unlocked"); },1300); break; }
+    case "adb-qr-show": S.adb.qr="droidkit-x7k2qm"; render(); break;
+    case "adb-qr-import": toast("Pick the pairing-QR screenshot — decoded WIFI:T:ADB payload (mock)"); break;
+    case "adb-manual": S.adb.manual=!S.adb.manual; render(); break;
+    case "adb-pair-manual": { const a=S.adb;
       a.pairHost=$("#adbPairHost")?.value||a.pairHost;
       a.pairPort=$("#adbPairPort")?.value||""; a.pairCode=$("#adbPairCode")?.value||"";
       if(!a.pairPort||!a.pairCode){ toast("Enter pairing port and code"); break; }
       a.busy=true; render();
       later(()=>{ a.busy=false; a.paired=true; if(cur()==="adb")render(); toast("Paired — identity saved"); },900); break; }
-    case "adb-connect": { const a=S.adb;
+    case "adb-connect-manual": { const a=S.adb;
       a.connHost=$("#adbConnHost")?.value||""; a.connPort=$("#adbConnPort")?.value||"";
       if(!a.paired){ toast("Pair first — no stored identity"); break; }
       if(!a.connPort){ toast("Enter connect port"); break; }
@@ -2823,7 +2879,7 @@ function handleAct(act, el, e){
       later(()=>{ a.busy=false; a.session=`${a.connHost||a.pairHost}:${a.connPort}${a.useTls?" (TLS)":""}`;
         PROVIDERS.ADB={status:"ready"};
         if(cur()==="adb")render(); toast("ADB session established — elevated tools unlocked"); },1300); break; }
-    case "adb-disconnect": S.adb.session=null;
+    case "adb-disconnect": S.adb.session=null; S.adb.pairState="idle";
       PROVIDERS.ADB={status:"setup",instructions:"enable wireless debugging in Developer options, then pair"};
       render(); toast("Disconnected"); break;
     case "adb-props": S.adb.props=[["ro.product.model","Pixel 8 Pro"],["ro.build.version.release","15"],
