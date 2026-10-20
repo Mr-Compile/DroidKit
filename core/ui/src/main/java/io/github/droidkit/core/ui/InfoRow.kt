@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -30,7 +31,12 @@ fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Text(shown, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            shown,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.End,
+        )
         if (copyable && value != null) {
             TextButton(
                 onClick = {

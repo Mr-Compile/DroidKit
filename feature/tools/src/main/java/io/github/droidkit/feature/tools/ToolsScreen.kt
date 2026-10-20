@@ -212,7 +212,11 @@ private fun SearchResultRow(entry: SearchEntry, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ToolIcon(ToolIcons.forEntry(entry))
-            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp),
+            ) {
                 Text(entry.title, style = MaterialTheme.typography.titleMedium)
                 Text(
                     entry.subtitle,
