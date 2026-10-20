@@ -32,8 +32,16 @@ Allow Copy Field, Copy Section, Share Summary, and Launch Related Lab.
 ## POST-V1
 Compare snapshots, technician device profile, change detection after repair/update.
 
+## Advanced detail (owner-approved, elevated, read-only)
+On-demand deep snapshot via the active elevated provider (Shizuku preferred, then root, then ADB — `ElevatedOps` preference order). Implemented now (migration-log 2026-10-21) to fulfill the "unlock the capabilities of the phone" goal.
+
+- Curated allow-list of `getprop` entries (ABI/SoC/security/boot/crypto/Treble/AB-update/dalvik), `/sys/class/thermal` zones, `/proc/cpuinfo`+`/proc/meminfo`+`/proc/partitions`, `dumpsys battery` + learned-capacity hints, curated `dumpsys wifi` link slice.
+- Loaded on tap only, labeled with the provider that served it; per-action failures list as "Not exposed" — never fabricated.
+- Standard tier expanded at the same time: fingerprint/build IDs/tags, kernel (`/proc/version`), uptime + approx. deep sleep, ART version, SoC model/manufacturer (API 31+), baseband, bootloader, codec counts, Widevine security level, HDR types + wide-color-gamut.
+- Advanced output is excluded from AI context and from copy/share summaries.
+
 ## Hard boundaries
-No invented battery-health %, NAND health, hidden serials, bootloader/security state unless supported and verified.
+No invented battery-health %, NAND health, hidden serials, bootloader/security state unless supported and verified. Elevated output is parsed, allow-listed, and labeled by source; a field that didn't parse is "Not exposed", not an error.
 
 ## Shared implementation requirements
 - Explicit loading/content/permission-required/unsupported/error states.

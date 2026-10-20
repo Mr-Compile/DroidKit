@@ -66,3 +66,16 @@ Owner approval required?: yes — given in session
 Files/docs updated: `docs/03_design_system/branding/*`, `docs/03_design_system/uiux_v5/{README.md, foundation/01, implementation/21,23}`, `core/ui/.../theme/Brand.kt`, `app/.../SplashScreen.kt`, `ic_launcher_foreground.xml`, `themes.xml`, `colors.xml`, `mockups/index.html`, master journey checklist; deleted `splash_loading.png` + stale branding PNG
 Migration completed? [x]
 Notes: splash tagline switched to the candidate's own "Deeper insights. Better devices."; old primary tagline retained as alternate for onboarding/store copy.
+
+## Entry
+Date: 2026-10-21
+Feature: Saved Wi-Fi passwords (root) + Device Inspector depth + battery-health measured values
+Old document/decision: Frozen V1 scope (playbook/03 + feature_plans_v2/30) — root capabilities deferred to J20/V2; Network Lab V1 has no credential access; Device Inspector lists basic Build fields
+Improved v2 decision: Owner-approved "unlock the capabilities of the phone" scope — root-only saved Wi-Fi viewer, elevated deep detail, measured battery health where the fuel gauge exposes it
+Repository reality: `RootProvider` already landed de-facto; `ElevatedOps` had no way to pin an action to one provider, so a root-only action could silently run as the shell identity and fail; battery fuel-gauge WIP already in tree
+Conflict classification: scope extension beyond the frozen V1 boundary (partial J20 de-freeze, owner-approved)
+Decision: land it now with hard gates — `ElevatedAction.requiredProvider` pins `ReadWifiConfigStore` to ROOT (never Shizuku/ADB); secrets are display-only (FLAG_SECURE screen, reveal-on-tap, no clipboard/export/audit/AI); `Tool` is `Capability.ROOT` + `ToolPhase.V2`; elevated Device Inspector detail is read-only, on-demand, labeled by provider; battery health stays measured-vs-estimated honest
+Owner approval required?: yes — given in session ("include, root-only (recommended)", "on-device-only, reveal-on-tap, never stored/exported/AI-sent")
+Files/docs updated: `core/privileges/.../ElevatedOps.kt` (+`requiredProvider`, `ReadWifiConfigStore`, read-only dump actions), `feature/network/.../{SavedWifiParser,SavedNetworksViewModel,SavedNetworksScreen,NetworkFeature,NetworkScreen,NetworkViewModel}.kt`, `core/system/.../DeviceSystemProbe.kt` (deeper fields + fuel-gauge nodes), `feature/deviceinfo/.../{DeviceDeepProbe,DeviceInfoViewModel,DeviceInfoScreen}.kt`, `feature/battery/.../{FuelGauge,BatteryHealth,BatteryViewModel,BatteryScreen,BatteryFeature}.kt`, tests, `mockups/index.html`
+Migration completed? [x]
+Notes: Wi-Fi store paths vary by Android/OEM (apexdata `WifiConfigStore.xml` on API 29+, `wpa_supplicant.conf` pre-10); root may still be denied by the user's root manager — the tool reports `requires ROOT` honestly instead of degrading to shell identity. Hex PSKs are labeled "derived key", never presented as the passphrase.

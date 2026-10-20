@@ -1,6 +1,7 @@
 *.class
 *.log
 .gradle/
+.guh/
 build/
 local.properties
 .idea/

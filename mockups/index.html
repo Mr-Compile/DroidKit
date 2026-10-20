@@ -347,6 +347,12 @@ const DK_WORDMARK = `<span style="display:inline-flex;align-items:center;gap:8px
 const DEVICE = {
   manufacturer: "Google", model: "Pixel 8 Pro", device: "husky", product: "husky",
   androidRelease: "15", sdkInt: 35, securityPatch: "2026-09-05",
+  fingerprint: "google/husky/husky:15/AP4A.250105.002/14402196:user/release-keys",
+  buildIdDisplay: "AP4A.250105.002 / husky-ota-14402196",
+  buildIncremental: "14402196", buildTypeTags: "user / release-keys",
+  buildDate: "2026-01-05", kernel: "Linux version 6.1.99-android14-11-gd7dac4b14270",
+  soc: "Google Tensor G3", boardHardware: "husky / zuma",
+  baseband: "g5123b-130920-240927-B-12234567", bootloader: "ripcurrent-15.0-13214724",
   abis: "arm64-v8a, armeabi-v7a", appVersion: "0.1.0",
   ramTotalMb: 12228, ramAvailMb: 6114, ramThresholdMb: 220,
   storageTotal: 137438953472, storageFree: 73400320000,
@@ -359,7 +365,8 @@ const DEVICE = {
     "android.hardware.location": true, "android.hardware.camera.any": true,
     "android.hardware.camera.flash": true, "android.hardware.wifi": true,
   },
-  battery: { level: 72, status: "Discharging", plug: "Unplugged", tempC: 31.4, voltageMv: 4132, tech: "Li-ion", health: "Good", currentMa: "-412", saver: false },
+  battery: { level: 72, status: "Discharging", plug: "Unplugged", tempC: 31.4, voltageMv: 4132, tech: "Li-ion", health: "Good", currentMa: "-412", saver: false,
+    cycles: 412, chargeMah: 3600, fg: { node: "maxfg", fullMah: 4750, designMah: 5000, cycles: 412 } },
 };
 const PROVIDERS = {
   STANDARD: { status: "ready" },
@@ -369,6 +376,8 @@ const PROVIDERS = {
 };
 const S = {
   stack: ["splash"], tab: "home",
+  advLoaded: false,      // Device Inspector advanced-detail snapshot loaded
+  paneSel: null,         // expanded-mode detail selection (apps/usb/reports)
   perms: {
     "android.permission.INTERNET": true, "android.permission.ACCESS_NETWORK_STATE": true,
     "android.permission.VIBRATE": true, "android.permission.WAKE_LOCK": true,
@@ -387,6 +396,7 @@ const S = {
   appsQuery: "", appsFilter: "ALL",
   reportsFilter: "ALL",
   sessions: [], sessionResults: {},
+  batt: { measured: false, measuring: false, samples: 7, estMah: 4820, designMah: null },
   engine: null,           // guided run state
   theme: "dark",
   materialYou: true,
@@ -464,6 +474,7 @@ const TOOLS = [
   t("network.ports","Port Reachability","TCP connect probes on user-specified host and ports",CAT.CONNECTIVITY,"network",{perms:NETP}),
   t("network.discovery","Service Discovery","Bounded mDNS/NSD browse of local services",CAT.CONNECTIVITY,"network",{safety:MINOR,perms:[...NETP,"android.permission.CHANGE_WIFI_MULTICAST_STATE"]}),
   t("network.interfaces","Interface Detail","Every network interface: MTU, flags, addresses",CAT.CONNECTIVITY,"network"),
+  t("network.saved","Saved Wi-Fi Networks","Saved SSIDs and passwords read from the system store — root only",CAT.CONNECTIVITY,"network/saved",{safety:ADV,caps:[CAP.ROOT],phase:"V2"}),
   t("bluetooth.status","Bluetooth Status","Adapter state, classic/LE capability, bonded devices",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTC],feats:["android.hardware.bluetooth"],minSdk:31}),
   t("bluetooth.scan","BLE Scan","Scan for nearby BLE devices (post-V1)",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTS],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
   t("bluetooth.gatt","GATT Explorer","Connect to a discovered device and inspect services (read-only)",CAT.CONNECTIVITY,"bluetooth",{safety:MINOR,perms:[P.BTC],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
@@ -1031,7 +1042,10 @@ function render(){
       else if(parts[1]==="live"){ body = scrLiveSensor(parseInt(parts[2])); title = SENSORS.find(s=>s.type===parseInt(parts[2]))?.name || "Live Sensor"; }
       else { body = scrSensors(); title="Sensor Lab"; }
       break;
-    case "network": body = scrNetwork(); title="Network Lab"; break;
+    case "network":
+      if(parts[1]==="saved"){ body = scrSavedNetworks(); title="Saved Wi-Fi Networks"; }
+      else { body = scrNetwork(); title="Network Lab"; }
+      break;
     case "bluetooth":
       if(parts[1]==="gatt"){ body = scrGatt(decodeURIComponent(parts.slice(2).join("/"))); title="GATT explorer"; }
       else { body = scrBluetooth(); title="Bluetooth Lab"; }
@@ -1897,13 +1911,42 @@ function scrDeviceInfo(){
   const provs = Object.keys(PROVIDERS).map(k=>infoRow(k,providerLabel(k),false)).join("");
   return `<div class="pad col">
     ${sectionCard("Identity", infoRow("Manufacturer",DEVICE.manufacturer)+infoRow("Model",DEVICE.model)+infoRow("Device",DEVICE.device)+infoRow("Product",DEVICE.product)+infoRow("App version",DEVICE.appVersion)+copyBar("Identity"))}
-    ${sectionCard("OS", infoRow("Android release",DEVICE.androidRelease)+infoRow("API level",DEVICE.sdkInt)+infoRow("Security patch",DEVICE.securityPatch)+copyBar("OS"))}
-    ${sectionCard("Hardware", infoRow("Supported ABIs",DEVICE.abis)+infoRow("Cameras",`${DEVICE.cameras.total} (back ${DEVICE.cameras.back}, front ${DEVICE.cameras.front}, external ${DEVICE.cameras.external})`)+infoRow("Sensors",SENSORS.length)+copyBar("Hardware","sensors","Sensor inventory"))}
+    ${sectionCard("OS & build", infoRow("Android release",DEVICE.androidRelease)+infoRow("API level",DEVICE.sdkInt)+infoRow("Security patch",DEVICE.securityPatch)+
+      infoRow("Fingerprint",DEVICE.fingerprint)+infoRow("Build ID / display",DEVICE.buildIdDisplay)+
+      infoRow("Incremental",DEVICE.buildIncremental)+infoRow("Type / tags",DEVICE.buildTypeTags)+
+      infoRow("Build date",DEVICE.buildDate)+infoRow("Kernel",DEVICE.kernel)+
+      infoRow("ART runtime","2.1.0")+infoRow("Uptime","3d 4h 12m")+infoRow("Deep sleep (approx.)","2d 18h 40m")+copyBar("OS & build"))}
+    ${sectionCard("Hardware", infoRow("SoC",DEVICE.soc)+infoRow("Board / hardware",DEVICE.boardHardware)+
+      infoRow("CPU cores","9")+infoRow("Supported ABIs",DEVICE.abis)+infoRow("Baseband",DEVICE.baseband)+
+      infoRow("Bootloader",DEVICE.bootloader)+infoRow("Media codecs","68 decoders / 24 encoders")+
+      infoRow("Widevine security level","L1")+
+      infoRow("Cameras",`${DEVICE.cameras.total} (back ${DEVICE.cameras.back}, front ${DEVICE.cameras.front}, external ${DEVICE.cameras.external})`)+infoRow("Sensors",SENSORS.length)+copyBar("Hardware","sensors","Sensor inventory"))}
     ${sectionCard("Memory & Storage", infoRow("Total RAM",DEVICE.ramTotalMb+" MB")+infoRow("Available RAM",DEVICE.ramAvailMb+" MB")+infoRow("Low-memory threshold",DEVICE.ramThresholdMb+" MB")+infoRow("Internal storage total",fmtBytes(DEVICE.storageTotal))+infoRow("Internal storage free",fmtBytes(DEVICE.storageFree))+copyBar("Memory & Storage","deviceinfo/storage","Storage Lab"))}
-    ${sectionCard("Display", infoRow("Resolution",DEVICE.display.w+" x "+DEVICE.display.h)+infoRow("Density",DEVICE.display.dpi+" dpi")+infoRow("Current refresh rate",DEVICE.display.refresh)+infoRow("Supported modes",DEVICE.display.modes)+copyBar("Display"))}
+    ${sectionCard("Display", infoRow("Resolution",DEVICE.display.w+" x "+DEVICE.display.h)+infoRow("Density",DEVICE.display.dpi+" dpi")+infoRow("Current refresh rate",DEVICE.display.refresh)+infoRow("Supported modes",DEVICE.display.modes)+infoRow("HDR","HDR10, HLG")+infoRow("Wide color gamut","true")+copyBar("Display"))}
     ${sectionCard("Battery", infoRow("Charge level",DEVICE.battery.level+"%")+infoRow("Status",DEVICE.battery.status)+infoRow("Source",DEVICE.battery.plug)+infoRow("Temperature",DEVICE.battery.tempC+" °C")+copyBar("Battery","battery","Battery Lab"))}
     ${sectionCard("Hardware features", infoRow("NFC",f("android.hardware.nfc"),false)+infoRow("Bluetooth",f("android.hardware.bluetooth"),false)+infoRow("Bluetooth LE",f("android.hardware.bluetooth_le"),false)+infoRow("USB host",f("android.hardware.usb.host"),false)+infoRow("Telephony",f("android.hardware.telephony"),false)+infoRow("Location",f("android.hardware.location"),false)+copyBar("Hardware features"))}
-    ${sectionCard("Access providers", provs+copyBar("Access providers"))}
+    ${sectionCard("Access providers", provs+copyBar("Access providers","permissions","Permission Center"))}
+    ${sectionCard("Advanced detail",
+      `<div class="t-mini sub">Read-only deep snapshot via the active elevated provider (Shizuku, root or wireless ADB): system props, thermal zones, /proc details, partitions, battery and Wi-Fi dumpsys fields. Nothing here is modified.</div>`+
+      (elevatedReady()
+        ? (S.advLoaded
+          ? infoRow("Source provider",providerLabel(elevatedProvider()),false)+
+            infoRow("CPU","9 cores — AArch64 Processor rev 1 — HW Qualcomm Technologies",false)+
+            infoRow("MemTotal / MemFree","11.2 GB / 435 MB",false)+
+            infoRow("thermal_zone0","soc-thermal — 42.1 °C",false)+
+            infoRow("thermal_zone1","battery — 31.5 °C",false)+
+            infoRow("Block devices","42 partitions",false)+
+            infoRow("Learned battery capacity","3018 mAh (learned)",false)+
+            infoRow("Wi-Fi link","HomeWifi · Wi-Fi 6 · 5180 MHz",false)+
+            infoRow("RSSI / link speed","-55 dBm / 866 Mbps",false)+
+            infoRow("ro.product.cpu.abi","arm64-v8a",false)+
+            infoRow("ro.boot.verifiedbootstate","green",false)+
+            infoRow("ro.crypto.state","encrypted",false)+
+            infoRow("ro.treble.enabled","true",false)+
+            infoRow("System props total","612",false)+
+            `<button class="textbtn" data-act="adv-load">Refresh</button>`
+          :`<button class="btn-outline" style="margin-top:8px" data-act="adv-load">Load advanced detail</button>`)
+        : infoRow("Elevated provider","Not available — set up Shizuku, root or ADB in Permission Center",false)))}
   </div>`;
 }
 function copyBar(name,route,label){
@@ -1940,6 +1983,29 @@ function scrBattery(){
   return `<div class="pad col">
     ${sectionCard("Charge", infoRow("Level",b.level+"%",false)+infoRow("Status",b.status,false)+infoRow("Source",b.plug,false))}
     ${sectionCard("Conditions", infoRow("Temperature",b.tempC.toFixed(1)+" °C",false)+infoRow("Voltage",b.voltageMv+" mV",false)+infoRow("Technology",b.tech,false)+infoRow("Health (as reported)",b.health,false))}
+    ${sectionCard("Health",
+      infoRow("Cycle count (reported)",String(b.cycles),false)+
+      infoRow("Charge in pack",b.chargeMah+" mAh",false)+
+      (S.batt.measured?
+        infoRow("Fuel-gauge node",b.fg.node,false)+
+        infoRow("Max capacity (measured)",b.fg.fullMah+" mAh",false)+
+        infoRow("Design capacity",b.fg.designMah+" mAh",false)+
+        infoRow("Health (measured)",Math.round(b.fg.fullMah/b.fg.designMah*100)+"%",false)+
+        infoRow("Cycles (fuel gauge)",String(b.fg.cycles),false)
+      :"")+
+      (elevatedReady()
+        ?`<button class="textbtn" data-act="batt-measure" ${S.batt.measuring?"disabled":""}>${S.batt.measuring?"Reading fuel gauge…":"Measure via elevated access"}</button>`
+        :`<div class="t-mini sub" style="margin-top:4px">A measured capacity % needs the kernel fuel gauge via Shizuku, wireless ADB, or root — it is not exposed to apps.</div>
+          <button class="textbtn" data-nav="permissions">Open Permission Center</button>`))}
+    ${sectionCard("Capacity estimate",
+      `<div class="t-mini sub">Tracks real charge flowing into the pack across sessions — an estimate, not a measured value.</div>`+
+      infoRow("Samples",String(S.batt.samples),false)+
+      infoRow("Estimated capacity",S.batt.estMah?"≈"+S.batt.estMah+" mAh":"Collecting — needs ≥20% of tracked charge",false)+
+      `<div class="row" style="gap:8px;margin-top:8px">
+        <input class="field grow" id="designMah" inputmode="numeric" placeholder="${S.batt.designMah??"e.g. 5000"}">
+        <button class="btn-outline" data-act="batt-design">Save</button></div>`+
+      (S.batt.designMah&&S.batt.estMah?infoRow("Estimated health","≈"+Math.round(S.batt.estMah/S.batt.designMah*100)+"% of design capacity",false):"")+
+      (S.batt.samples?`<button class="textbtn" data-act="batt-reset-est">Reset estimate</button>`:""))}
     ${sectionCard("Power", infoRow("Current now",b.currentMa+" mA (instantaneous)",false)+infoRow("Battery saver",String(b.saver),false))}
     ${aiSumCard("battery")}
   </div>`;
@@ -2006,6 +2072,9 @@ function scrNetwork(){
       `<div class="t-mini sub" style="margin-top:8px">SSID/BSSID/MAC require location permission and are not read here.</div>`)}
     ${sectionCard("Diagnostics", `<div id="netdiag">${netLayers()}</div>
       <button class="btn-outline" style="margin-top:8px" data-act="netdiag">Re-run</button>`)}
+    ${sectionCard("Saved networks",
+      `<div class="t-mini sub">Saved SSIDs and passwords from the system Wi-Fi store — displayed on-device only, never stored or sent to AI. Requires root: ready.</div>
+       <button class="btn-outline" style="margin-top:8px" data-nav="network/saved">Open saved networks</button>`)}
     ${sectionCard("Ping", `
       <input class="field" id="pinghost" placeholder="Host or IP">
       <button class="btn-outline" style="margin-top:8px" data-act="ping">Run</button>
@@ -2029,6 +2098,26 @@ function scrNetwork(){
       <div class="row" style="margin-top:8px"><input class="field grow" id="nsdtype" value="_ipp._tcp"><button class="btn-outline" data-act="nsd">Discover</button></div>
       <div class="row" style="margin-top:4px;flex-wrap:wrap">${["_ipp._tcp","_http._tcp","_googlecast._tcp","_airplay._tcp","_ssh._tcp"].map(x=>`<button class="textbtn" style="padding:2px 6px" data-act="nsd-preset" data-t="${x}">${x}</button>`).join("")}</div>
       <div id="nsdout" style="margin-top:8px">${S.nsd||""}</div>`)}
+  </div>`;
+}
+function scrSavedNetworks(){
+  const nets=[
+    {ssid:"HomeWifi",sec:"WPA_PSK",psk:"s3cret pass",hex:false},
+    {ssid:"Cafe-5G",sec:"SAE",psk:"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",hex:true},
+    {ssid:"GuestNet",sec:"NONE",psk:null},
+  ];
+  return `<div class="pad col">
+    <div class="t-mini sub">Passwords stay on this screen — never stored, logged, shared, or sent to AI. Screenshots are blocked on this page.</div>
+    <div class="t-mini sub" style="font-family:monospace">Source: /data/misc/apexdata/com.android.wifi/WifiConfigStore.xml</div>
+    ${nets.map((n,i)=>`<div class="card"><div class="sec-head" style="padding:0 0 6px">${esc(n.ssid)}</div>
+      ${infoRow("Security",n.sec,false)}
+      ${n.psk==null
+        ?`<div class="inforow"><span class="k">Password</span><span class="v na">None (open / enterprise-managed)</span></div>`
+        :`<div class="inforow"><span class="k">${n.hex?"PSK (hex)":"Password"}</span>
+          <span class="v" id="psk${i}" data-v="${esc(n.psk)}" data-shown="0" style="font-family:monospace">••••••••</span></div>
+          <button class="textbtn" data-act="saved-reveal" data-i="${i}">Reveal</button>`}
+      ${n.hex?`<div class="t-mini sub">Stored as the derived key — not a typed passphrase.</div>`:""}
+    </div>`).join("")}
   </div>`;
 }
 function netLayers(){
@@ -2939,6 +3028,13 @@ function handleAct(act, el, e){
       break; }
     case "sensor-share": toast("Sharesheet would open with the CSV (mock)"); break;
     case "nfc-clearhist": S.nfc.history=[]; render(); break;
+    case "batt-measure": { S.batt.measuring=true; render();
+      later(()=>{ S.batt.measuring=false; S.batt.measured=true;
+        if(cur()==="battery")render();
+        toast("Fuel gauge read via "+(elevatedProvider()||"adb").toLowerCase()); },900); break; }
+    case "batt-design": { const v=parseInt($("#designMah")?.value);
+      if(v>0){ S.batt.designMah=v; render(); toast("Design capacity saved"); } break; }
+    case "batt-reset-est": S.batt.samples=0; S.batt.estMah=null; render(); break;
     case "deeplink": { const u=$("#dl-uri")?.value.trim(), i=$("#dl-info");
       if(i) i.textContent=u&&u.startsWith("http")?"Handled by com.android.chrome/.Main":"No activity on this device handles this URI.";
       toast("Would launch VIEW intent (mock)"); break; }
@@ -3027,6 +3123,12 @@ function handleAct(act, el, e){
       $("#torchstate").textContent=on?"":"Torch is ON — check the LED on the back.";
       $(".camview, .phone").classList?.toggle?.("torch-on",!on); break; }
     case "charge-refresh": $("#chargeread").innerHTML=chargeReading(); toast("Reading refreshed"); break;
+    case "adv-load": S.advLoaded=true; render(); break;
+    case "saved-reveal": { const s=$("#psk"+el.dataset.i);
+      if(!s) break;
+      if(s.dataset.shown==="1"){ s.textContent="••••••••"; s.dataset.shown="0"; el.textContent="Reveal"; }
+      else { s.textContent=s.dataset.v; s.dataset.shown="1"; el.textContent="Hide"; }
+      break; }
     case "netdiag": $("#netdiag").innerHTML=`<div class="t-body">Running…</div>`;
       later(()=>{ if($("#netdiag"))$("#netdiag").innerHTML=netLayers(); },800); break;
     case "ping": { const h=$("#pinghost").value.trim(); if(!h)break;

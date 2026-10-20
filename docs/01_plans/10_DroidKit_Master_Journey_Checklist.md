@@ -287,6 +287,9 @@ Release gate:
 - [x] Storage — dashboard summary + Storage Lab volumes
 - [x] Display — resolution, density, refresh rate, supported modes
 - [x] Battery — Battery Lab (level, status, temp, voltage, tech, health-as-reported)
+- [x] Battery health — cycle count (API 34+), elevated fuel-gauge measure (charge_full/design → real %), DataStore charge-counter estimate labeled as estimate
+- [x] Deep build/hardware fields — fingerprint, kernel, uptime + approx deep sleep, ART, SoC model/manufacturer (API 31+), baseband, bootloader, codec counts, Widevine level, HDR types, wide-color-gamut
+- [x] Advanced detail (elevated, on-demand) — curated getprop allow-list, thermal zones, /proc cpuinfo+meminfo+partitions, dumpsys battery + learned-capacity hint, dumpsys wifi link; provider-labeled, read-only, per-action "Not exposed" on failure
 - [x] Sensor inventory — Sensor Lab + live monitor for safe types
 - [x] Camera capability summary — count by facing via CameraManager
 - [x] Connectivity/hardware summary — NFC/BT/BLE/USB-host/telephony/location features
@@ -446,6 +449,7 @@ Release gate:
 - [x] DNS lookup — `getAllByName` with elapsed time
 - [x] Basic connectivity diagnostics — per-layer results, no aggregate score
 - [x] Wi-Fi restrictions handled by API/version — SSID/BSSID/MAC not read; restriction noted
+- [x] Saved Wi-Fi Networks (owner-approved scope extension, V2) — root-pinned `ReadWifiConfigStore`; FLAG_SECURE screen, reveal-on-tap, no clipboard/export/AI/audit of secrets; honest requires-ROOT/empty/failed states; device validation pending
 
 ## Bluetooth (V1 OPTIONAL basic)
 - [x] Adapter support/state — presence, enabled, classic+LE features
