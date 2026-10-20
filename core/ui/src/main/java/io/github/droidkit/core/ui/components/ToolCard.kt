@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolPhase
@@ -30,28 +32,28 @@ import io.github.droidkit.core.privileges.ToolResolution
  */
 @Composable
 fun AvailabilityBadge(resolution: ToolResolution) {
+    val (kind, label) = availabilityPresentation(resolution)
+    StatusBadge(kind, label)
+}
+
+private fun availabilityPresentation(resolution: ToolResolution): Pair<StatusKind, String> =
     when (resolution) {
-        ToolResolution.Ready ->
-            StatusBadge(StatusKind.Info, "Ready")
-        is ToolResolution.Blocked -> {
-            val (kind, label) = when (val reason = dominantReason(resolution.reasons)) {
-                is BlockedReason.NeedsProvider -> when (reason.status) {
-                    is ProviderStatus.Unavailable ->
-                        StatusKind.Unsupported to "Unavailable"
-                    else -> StatusKind.SetupRequired to "Setup required"
-                }
-                is BlockedReason.MissingPermission ->
-                    StatusKind.SetupRequired to "Permission required"
-                is BlockedReason.MissingHardware ->
-                    StatusKind.Unsupported to "Not supported"
-                is BlockedReason.RequiresApi ->
-                    StatusKind.Unsupported to "Needs API ${reason.minSdk}+"
-                null -> StatusKind.Neutral to "Unavailable"
+        ToolResolution.Ready -> StatusKind.Info to "Ready"
+        is ToolResolution.Blocked -> when (val reason = dominantReason(resolution.reasons)) {
+            is BlockedReason.NeedsProvider -> when (reason.status) {
+                is ProviderStatus.Unavailable ->
+                    StatusKind.Unsupported to "Unavailable"
+                else -> StatusKind.SetupRequired to "Setup required"
             }
-            StatusBadge(kind, label)
+            is BlockedReason.MissingPermission ->
+                StatusKind.SetupRequired to "Permission required"
+            is BlockedReason.MissingHardware ->
+                StatusKind.Unsupported to "Not supported"
+            is BlockedReason.RequiresApi ->
+                StatusKind.Unsupported to "Needs API ${reason.minSdk}+"
+            null -> StatusKind.Neutral to "Unavailable"
         }
     }
-}
 
 /** Same ordering the UiProblem mapper uses: provider > permission > device. */
 private fun dominantReason(reasons: List<BlockedReason>): BlockedReason? =
@@ -77,7 +79,15 @@ fun ToolCard(
     onInfo: (() -> Unit)? = null,
     onClick: () -> Unit = {},
 ) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    // stateDescription lets TalkBack announce e.g. "NFC Lab, not supported"
+    // (plan file 19); the visible badge label shares the same mapping.
+    val availabilityLabel = availabilityPresentation(resolution).second.lowercase()
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics { stateDescription = availabilityLabel },
+    ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,

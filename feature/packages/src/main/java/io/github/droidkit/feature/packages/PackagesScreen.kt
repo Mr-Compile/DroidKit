@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ui.InfoRow
@@ -192,23 +193,50 @@ fun PackagesScreen(
         }
     }
 
-    // Every mutating action previews its consequence before running.
+    // Every mutating action previews its consequence before running; the
+    // confirm button names the action itself — no vague "Confirm"/"OK".
     pending?.let { (action, pkg) ->
-        val (title, body) = when (action) {
+        val (title, body, label, destructive) = when (action) {
             PackagesViewModel.Action.DISABLE ->
-                "Disable $pkg?" to
+                ConfirmSpec(
+                    "Disable $pkg?",
                     "The app will stop running and disappear from launchers. " +
-                    "Reversible — re-enable it later from its App Info page."
+                        "Reversible — re-enable it later from its App Info page.",
+                    "Disable",
+                    destructive = false,
+                )
+            PackagesViewModel.Action.ENABLE ->
+                ConfirmSpec(
+                    "Enable $pkg?",
+                    "The app becomes runnable and appears in launchers again.",
+                    "Enable",
+                    destructive = false,
+                )
             PackagesViewModel.Action.CLEAR_DATA ->
-                "Clear data for $pkg?" to
+                ConfirmSpec(
+                    "Clear data for $pkg?",
                     "Permanently wipes all of the app's data: accounts, settings, " +
-                    "files, databases. This cannot be undone."
+                        "files, databases. This cannot be undone.",
+                    "Clear data",
+                    destructive = true,
+                )
             PackagesViewModel.Action.UNINSTALL ->
-                "Uninstall $pkg for this user?" to
+                ConfirmSpec(
+                    "Uninstall $pkg for this user?",
                     "Removed for the current user profile only; other users keep it. " +
-                    "For preinstalled apps it can be restored with " +
-                    "'pm install-existing'."
-            else -> "" to ""
+                        "For preinstalled apps it can be restored with " +
+                        "'pm install-existing'.",
+                    "Uninstall",
+                    destructive = true,
+                )
+            PackagesViewModel.Action.RESTORE ->
+                ConfirmSpec(
+                    "Restore $pkg for this user?",
+                    "Reinstalls the preinstalled package for the current user " +
+                        "profile ('pm install-existing').",
+                    "Restore",
+                    destructive = false,
+                )
         }
         AlertDialog(
             onDismissRequest = { pending = null },
@@ -221,7 +249,13 @@ fun PackagesScreen(
                         pending = null
                     },
                     enabled = !busy,
-                ) { Text("Confirm") }
+                ) {
+                    Text(
+                        label,
+                        color = if (destructive) MaterialTheme.colorScheme.error
+                        else Color.Unspecified,
+                    )
+                }
             },
             dismissButton = {
                 TextButton(onClick = { pending = null }) { Text("Cancel") }
@@ -273,3 +307,11 @@ fun PackagesScreen(
         )
     }
 }
+
+/** Title, consequence copy, explicit confirm label and destructive styling for a package action. */
+private data class ConfirmSpec(
+    val title: String,
+    val body: String,
+    val label: String,
+    val destructive: Boolean,
+)

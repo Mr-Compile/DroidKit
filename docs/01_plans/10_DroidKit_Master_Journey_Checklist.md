@@ -836,7 +836,10 @@ Plan pack `01_plans/droidkit_ui_v6_plan/` (27 docs). Audit: `docs/04_audits/2026
 - [x] Feature metadata — `iconKey` + keywords on all tools; 21 diagnostics tests as `DIAGNOSTIC` search entries; `SearchPages` folded into `ToolsFeature.searchEntries`
 - [x] Navigation — `DroidKitTopAppBar` + `onBack` across all screens/graphs; bottom bar on the four top-level routes only; `launchSingleTop` on tool/page opens; `UnknownTestScreen` friendly fallback for invalid `diagnose/test/{testId}`
 - [x] Settings — dynamic-color user toggle (`SettingsRepository.dynamicColor` → `DroidKitTheme`, disabled with "Requires Android 12+" below API 31)
-- [ ] Targeted UI/navigation QA (plan 25) + final audit report (plan 26)
+- [x] Dialogs (17): consequence copy + action-named confirms, destructive styling — Packages "Confirm" fixed
+- [x] Accessibility (19): `stateDescription` on `ToolCard`, decorative `ToolIcon`, described actions — static scope
+- [x] Final audit report — `docs/04_audits/2026-10-20-ui-v6-final-audit.md`
+- [ ] Device QA: TalkBack, large font, landscape, tab-state restore — pending hardware (plan 25)
 
 Use Semantic Versioning:
 
