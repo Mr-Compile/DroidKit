@@ -39,6 +39,7 @@ import io.github.droidkit.feature.network.NetworkViewModel.ToolState
 @Composable
 fun NetworkScreen(
     onBack: () -> Unit,
+    onOpenSavedNetworks: () -> Unit,
     viewModel: NetworkViewModel = hiltViewModel(),
 ) {
     val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
@@ -99,6 +100,24 @@ fun NetworkScreen(
                         onClick = { viewModel.runDiagnostics() },
                         modifier = Modifier.padding(top = 8.dp),
                     ) { Text("Re-run") }
+                }
+            }
+
+            item {
+                SectionCard(title = "Saved networks") {
+                    val rootReady by viewModel.rootReady.collectAsStateWithLifecycle()
+                    Text(
+                        "Saved SSIDs and passwords from the system Wi-Fi store — " +
+                            "displayed on-device only. Requires root: " +
+                            (when (rootReady) {
+                                true -> "ready."
+                                false -> "not granted on this device."
+                                null -> "checking…"
+                            }),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = onOpenSavedNetworks) { Text("Open saved networks") }
                 }
             }
 

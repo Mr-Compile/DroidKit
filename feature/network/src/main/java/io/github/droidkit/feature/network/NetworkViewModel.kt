@@ -13,6 +13,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.droidkit.core.common.DLog
+import io.github.droidkit.core.privileges.ElevatedOps
+import io.github.droidkit.core.privileges.ProviderKind
 import java.net.NetworkInterface
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -24,6 +26,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val elevatedOps: ElevatedOps,
 ) : ViewModel() {
 
     private val cm =
@@ -71,6 +74,10 @@ class NetworkViewModel @Inject constructor(
 
     private val _ports = MutableStateFlow<ToolState<List<NetTools.PortResult>>>(ToolState.Idle)
     val ports: StateFlow<ToolState<List<NetTools.PortResult>>> = _ports.asStateFlow()
+
+    /** True once a ROOT executor is live — gates the "saved networks" hint text. */
+    private val _rootReady = MutableStateFlow<Boolean?>(null)
+    val rootReady: StateFlow<Boolean?> = _rootReady.asStateFlow()
 
     // ---- Interfaces + local service discovery ----
 
@@ -220,6 +227,11 @@ class NetworkViewModel @Inject constructor(
     fun refresh() {
         refreshSnapshot()
         runDiagnostics()
+        viewModelScope.launch {
+            _rootReady.value = runCatching {
+                elevatedOps.isAvailable(ProviderKind.ROOT)
+            }.getOrNull()
+        }
     }
 
     private fun refreshSnapshot() {

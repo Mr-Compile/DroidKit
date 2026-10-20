@@ -3,6 +3,7 @@ package io.github.droidkit.feature.network
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import io.github.droidkit.core.common.Capability
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
@@ -102,11 +103,29 @@ object NetworkFeature : FeatureContribution {
             keywords = setOf("mdns", "nsd", "browse", "services", "local"),
             iconKey = ToolIconKeys.RADAR,
         ),
+        Tool(
+            id = "network.saved",
+            title = "Saved Wi-Fi Networks",
+            description = "Saved SSIDs and passwords read from the system store — root only",
+            category = ToolCategory.CONNECTIVITY,
+            route = "$ROUTE/saved",
+            safetyLevel = SafetyLevel.ADVANCED,
+            requiredCapabilities = setOf(Capability.ROOT),
+            phase = ToolPhase.V2,
+            keywords = setOf("password", "saved", "ssid", "psk", "credentials", "share"),
+            iconKey = ToolIconKeys.KEY,
+        ),
     )
 }
 
 fun NavGraphBuilder.networkGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(NetworkFeature.ROUTE) {
-        NetworkScreen(onBack = { nav.navigateUp() })
+        NetworkScreen(
+            onBack = { nav.navigateUp() },
+            onOpenSavedNetworks = { nav.navigate("${NetworkFeature.ROUTE}/saved") },
+        )
+    }
+    composable("${NetworkFeature.ROUTE}/saved") {
+        SavedNetworksScreen(onBack = { nav.navigateUp() })
     }
 }
