@@ -26,13 +26,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.datastore.ThemeMode
 import io.github.droidkit.core.privileges.CapabilityManager
+import io.github.droidkit.core.ui.navigation.TOP_LEVEL_ROUTES
+import io.github.droidkit.core.ui.navigation.navigateTopLevel
 import io.github.droidkit.core.ui.theme.DroidKitTheme
 import io.github.droidkit.navigation.DroidKitNavHost
 import javax.inject.Inject
@@ -104,18 +105,12 @@ private fun DroidKitScaffold(
         bottomBar = {
             // Bottom nav lives only on top-level destinations (UI v6 plan 16);
             // secondary/detail surfaces use the Up affordance instead.
-            if (currentRoute in topLevelDestinations.map { it.route }) {
+            if (currentRoute in TOP_LEVEL_ROUTES) {
                 NavigationBar {
                     topLevelDestinations.forEach { dest ->
                         NavigationBarItem(
                             selected = currentRoute == dest.route,
-                            onClick = {
-                                nav.navigate(dest.route) {
-                                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
+                            onClick = { nav.navigateTopLevel(dest.route) },
                             icon = { Icon(dest.icon, contentDescription = dest.label) },
                             label = { Text(dest.label) },
                         )

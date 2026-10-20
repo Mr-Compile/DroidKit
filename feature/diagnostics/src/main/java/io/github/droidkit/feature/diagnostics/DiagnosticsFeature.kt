@@ -13,6 +13,7 @@ import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolIconKeys
+import io.github.droidkit.core.ui.navigation.openRoute
 
 object DiagnosticsFeature : FeatureContribution {
     const val ROUTE = "diagnose"
@@ -128,8 +129,8 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
     composable(DiagnosticsFeature.ROUTE) {
         DiagnosticsScreen(
             onStartGuided = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) { launchSingleTop = true } },
-            onOpenTool = { route -> nav.navigate(route) { launchSingleTop = true } },
-            onOpenReports = { nav.navigate("reports") { launchSingleTop = true } },
+            onOpenTool = { route -> nav.openRoute(route) },
+            onOpenReports = { nav.openRoute("reports") },
         )
     }
     composable(DiagnosticsFeature.GUIDED_ROUTE) {

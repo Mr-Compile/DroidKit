@@ -11,6 +11,7 @@ import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
+import io.github.droidkit.core.ui.navigation.navigateTopLevel
 
 object PermissionsFeature : FeatureContribution {
     const val ROUTE = "permissions"
@@ -44,7 +45,7 @@ object PermissionsFeature : FeatureContribution {
 fun NavGraphBuilder.permissionsGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(PermissionsFeature.ROUTE) {
         PermissionCenterScreen(
-            onOpenSettings = { nav.navigate("settings") { launchSingleTop = true } },
+            onOpenSettings = { nav.navigateTopLevel("settings") },
             onBack = { nav.navigateUp() },
         )
     }

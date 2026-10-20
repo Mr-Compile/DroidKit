@@ -35,6 +35,7 @@ import io.github.droidkit.core.system.formatHz
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
+import io.github.droidkit.core.ui.navigation.openRoute
 
 private data class Section(
     val title: String,
@@ -93,7 +94,7 @@ fun DeviceInfoScreen(
                             copySection(context, section)
                         }) { Text("Copy section") }
                         if (section.labRoute != null && section.labLabel != null) {
-                            TextButton(onClick = { nav.navigate(section.labRoute) { launchSingleTop = true } }) {
+                            TextButton(onClick = { nav.openRoute(section.labRoute) }) {
                                 Text(section.labLabel)
                             }
                         }
@@ -113,7 +114,7 @@ fun DeviceInfoScreen(
                 AiExplainButton(
                     assistant = AiAssistant.DEVICE_EXPLAINER,
                     fields = aiFields,
-                    onNavigate = { nav.navigate(it) { launchSingleTop = true } },
+                    onNavigate = { nav.openRoute(it) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

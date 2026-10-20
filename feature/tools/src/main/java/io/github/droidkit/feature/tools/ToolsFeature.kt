@@ -7,6 +7,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SearchEntry
 import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.ToolIconKeys
+import io.github.droidkit.core.ui.navigation.openRoute
 
 object ToolsFeature : FeatureContribution {
     const val ROUTE = "tools"
@@ -74,15 +75,6 @@ object ToolsFeature : FeatureContribution {
             keywords = setOf("help", "faq", "troubleshoot", "support", "guide"),
         ),
         SearchEntry(
-            id = "page.ai_chat",
-            title = "DroidKit Chat",
-            subtitle = "Optional AI assistant",
-            route = "settings/ai_chat",
-            type = SearchResultType.SETTING,
-            iconKey = ToolIconKeys.CHAT,
-            keywords = setOf("ai", "chat", "assistant", "groq", "intelligence"),
-        ),
-        SearchEntry(
             id = "page.reports",
             title = "Reports",
             subtitle = "Saved diagnostic sessions and exports",
@@ -114,6 +106,6 @@ object ToolsFeature : FeatureContribution {
 
 fun NavGraphBuilder.toolsGraph(nav: NavHostController) {
     composable(ToolsFeature.ROUTE) {
-        ToolsScreen(onOpenTool = { route -> nav.navigate(route) { launchSingleTop = true } })
+        ToolsScreen(onOpenTool = { route -> nav.openRoute(route) })
     }
 }

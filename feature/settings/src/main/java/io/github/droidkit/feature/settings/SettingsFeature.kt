@@ -5,6 +5,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import io.github.droidkit.core.ai.AiChatScreen
 import io.github.droidkit.core.common.FeatureContribution
+import io.github.droidkit.core.ui.navigation.openRoute
+import io.github.droidkit.core.common.Tool
+import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.feature.settings.about.AboutFeaturesScreen
 import io.github.droidkit.feature.settings.about.AboutHelpScreen
 import io.github.droidkit.feature.settings.about.AboutLicensesScreen
@@ -23,7 +27,17 @@ object SettingsFeature : FeatureContribution {
     const val ABOUT_WHATS_NEW_ROUTE = "settings/about/whats_new"
     const val ABOUT_HELP_ROUTE = "settings/about/help"
     const val ABOUT_LICENSES_ROUTE = "settings/about/licenses"
-    override val tools = emptyList<io.github.droidkit.core.common.Tool>()
+    override val tools = listOf(
+        Tool(
+            id = "ai.chat",
+            title = "DroidKit Chat",
+            description = "AI assistant — device answers, tool shortcuts and read-only checks",
+            category = ToolCategory.DEVICE,
+            route = AI_CHAT_ROUTE,
+            keywords = setOf("ai", "chat", "assistant", "groq", "intelligence", "ask"),
+            iconKey = ToolIconKeys.CHAT,
+        ),
+    )
 }
 
 fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
@@ -40,8 +54,9 @@ fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
     }
     composable(SettingsFeature.AI_CHAT_ROUTE) {
         AiChatScreen(
-            onNavigate = { route -> nav.navigate(route) { launchSingleTop = true } },
+            onNavigate = { route -> nav.openRoute(route) },
             onBack = { nav.navigateUp() },
+            onOpenAiSettings = { nav.openRoute(SettingsFeature.ROUTE) },
         )
     }
     composable(SettingsFeature.PRIVACY_ROUTE) {
@@ -66,7 +81,7 @@ fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
     composable(SettingsFeature.ABOUT_FEATURES_ROUTE) {
         AboutFeaturesScreen(
             onBack = { nav.navigateUp() },
-            onOpenTool = { route -> nav.navigate(route) { launchSingleTop = true } },
+            onOpenTool = { route -> nav.openRoute(route) },
         )
     }
     composable(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) {
