@@ -944,6 +944,10 @@ function scrReview(){
   const retryable = Object.entries(e.results).filter(([,st])=>st==="FAIL"||st==="NOT_TESTED").map(([k])=>k);
   return `<div class="pad col">
     <div class="card"><div class="t-small">${summary}</div></div>
+    ${(S.ai.enabled&&S.ai.hasKey)?`<div class="row" style="gap:8px">
+      <button class="btn-outline grow" data-act="ai-explain" data-kind="analyze">Explain with AI</button>
+      ${counts.FAIL?`<button class="btn-outline grow" data-act="ai-explain" data-kind="repair">Explain with AI</button>`:""}
+    </div>`:""}
     ${Object.entries(groups).map(([c,ids]) =>
       `<div class="sec-head">${c}</div>` + ids.map(tid => {
         const st = e.results[tid];
@@ -2515,6 +2519,18 @@ function handleAct(act, el, e){
       later(()=>{ const tt=$("#aiSummaryText"); if(tt){
         tt.textContent="21 checks ran: 18 passed. Touch grid failed (74/96 cells, dead zone top-left) — consistent with a digitizer fault or damaged panel region. Proximity sensor absent (NOT_SUPPORTED). Recommend panel replacement, then re-run Full diagnostic and use Compare sessions to verify the fix.";
         tt.className="t-body"; } },1300); break; }
+    case "ai-explain": { const en=S.engine; if(!en) break;
+      const fails=Object.entries(en.results).filter(([,s])=>s==="FAIL");
+      const name=t=>esc(TEST(t)?.title||t);
+      const note=t=>en.notes[t]?` — ${esc(en.notes[t])}`:"";
+      const body = el.dataset.kind==="repair"
+        ? (fails.map(([t])=>`• ${name(t)}${note(t)}: re-test once, then check the related hardware or permission path.`).join("<br>")||"No failures to repair.")
+        : `${Object.keys(en.results).length} checks ran. `+(fails.length?fails.map(([t])=>`${name(t)} failed${note(t)}`).join("; ")+".":"No failures recorded.");
+      $("#overlay").innerHTML=`<div class="scrim" data-act="dlg-close"></div>
+        <div class="dialog"><h3>DroidKit Intelligence</h3>
+          <div class="dtext">${body}</div>
+          <div class="dbtns"><button class="textbtn" data-act="dlg-close">Close</button></div></div>`;
+      break; }
     case "splash-next": if(cur()==="splash") replace("onboarding"); break;
     case "ob-skip": S.obPage=0; goTab("home"); break;
     case "ob-next": if(S.obPage<3){ S.obPage++; renderOnboarding(); } else { S.obPage=0; goTab("home"); } break;

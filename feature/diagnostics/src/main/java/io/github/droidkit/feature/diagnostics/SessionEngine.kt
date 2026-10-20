@@ -11,6 +11,7 @@ data class EngineState(
     val index: Int = 0,
     val total: Int = 0,
     val results: Map<String, TestResultState> = emptyMap(),
+    val notes: Map<String, String> = emptyMap(),
     val done: Boolean = false,
 )
 
@@ -38,7 +39,11 @@ class SessionEngine(private val tests: List<PhoneDoctorTest>) {
     fun record(state: TestResultState, note: String?) {
         val test = _state.value.current ?: return
         _state.update {
-            it.copy(results = it.results + (test.id to state))
+            it.copy(
+                results = it.results + (test.id to state),
+                notes = note?.takeIf(String::isNotBlank)
+                    ?.let { n -> it.notes + (test.id to n) } ?: it.notes,
+            )
         }
         advance()
     }

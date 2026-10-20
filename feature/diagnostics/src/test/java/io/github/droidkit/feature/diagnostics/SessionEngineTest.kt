@@ -37,6 +37,15 @@ class SessionEngineTest {
         e.skip()
         assertEquals(TestResultState.FAIL, e.state.value.results[first])
         assertEquals(TestResultState.NOT_TESTED, e.state.value.results[second])
+        assertEquals("dead pixel top-left", e.state.value.notes[first])
+        assertFalse(e.state.value.notes.containsKey(second))
+    }
+
+    @Test fun `record ignores blank notes`() {
+        val e = engine()
+        e.start()
+        e.record(TestResultState.PASS, "   ")
+        assertFalse(e.state.value.notes.containsKey(PhoneDoctorTests.ALL[0].id))
     }
 
     @Test fun `finish marks engine done after all tests`() {

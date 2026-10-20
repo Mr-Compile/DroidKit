@@ -1,6 +1,7 @@
 package io.github.droidkit.feature.diagnostics
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -80,9 +81,16 @@ fun SessionReviewScreen(
             }
 
             item {
-                val resultFields = engineState.results.entries.associate { (id, state) ->
-                    (PhoneDoctorTests.findById(id)?.title ?: id) to state.name
+                fun field(id: String, state: TestResultState): Pair<String, String> {
+                    val title = PhoneDoctorTests.findById(id)?.title ?: id
+                    val note = engineState.notes[id]
+                    return title to (state.name + (note?.let { " — $it" } ?: ""))
                 }
+                val resultFields =
+                    engineState.results.entries.associate { (id, state) -> field(id, state) }
+                val failFields = engineState.results.entries
+                    .filter { it.value == TestResultState.FAIL }
+                    .associate { (id, state) -> field(id, state) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AiExplainButton(
                         assistant = AiAssistant.DIAGNOSTIC_ANALYZER,
@@ -92,8 +100,7 @@ fun SessionReviewScreen(
                     if (counts[TestResultState.FAIL] != null) {
                         AiExplainButton(
                             assistant = AiAssistant.REPAIR_ASSISTANT,
-                            fields = mapOf("Summary" to summary) + resultFields
-                                .filterValues { it == TestResultState.FAIL.name },
+                            fields = mapOf("Summary" to summary) + failFields,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -104,13 +111,23 @@ fun SessionReviewScreen(
                 item { SectionHeader(category) }
                 items(results, key = { it.key }) { (testId, state) ->
                     Card(modifier = Modifier.fillMaxWidth()) {
-                        Row(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                PhoneDoctorTests.findById(testId)?.title ?: testId,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                            ResultBadge(state)
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row {
+                                Text(
+                                    PhoneDoctorTests.findById(testId)?.title ?: testId,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                ResultBadge(state)
+                            }
+                            engineState.notes[testId]?.let {
+                                Text(
+                                    it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
+                            }
                         }
                     }
                 }
