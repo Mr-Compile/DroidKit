@@ -29,6 +29,7 @@ import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 fun VibrationScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
     val context = LocalContext.current
     val vibrator = remember {
@@ -43,7 +44,7 @@ fun VibrationScreen(
     val hasVibrator = remember { vibrator?.hasVibrator() == true }
     var pulseCount by remember { mutableIntStateOf(0) }
 
-    if (!hasVibrator) {
+    if (!hasVibrator && autoResult) {
         LaunchedEffect(test.id) {
             onResult(TestResultState.NOT_SUPPORTED, "Device reports no vibrator")
         }
@@ -79,7 +80,8 @@ fun VibrationScreen(
             }
             if (!hasVibrator) {
                 Text(
-                    "No vibrator reported — recording NOT SUPPORTED.",
+                    "No vibrator reported — " +
+                        if (autoResult) "recording NOT SUPPORTED." else "NOT SUPPORTED.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp),
                 )

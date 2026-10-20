@@ -348,7 +348,7 @@ Release gate:
 - [x] Diagnostic summary — state counts + category grouping on review screen
 
 Release gate:
-- [ ] Full diagnostic completes without crashes when hardware is missing — designed-in (NOT_SUPPORTED auto-results, no crashes by construction); needs device run
+- [ ] Full diagnostic completes without crashes when hardware is missing — designed-in (NOT_SUPPORTED auto-results, no crashes by construction); needs device run. Found+fixed static: `context.display` API-30 crash on minSdk 28 devices during session start, and `getBackStackEntry("diagnose")` crash when guided flow opened from Tools/Dashboard/search
 - [x] `v0.4.0` tagged
 - [x] CHANGELOG updated
 

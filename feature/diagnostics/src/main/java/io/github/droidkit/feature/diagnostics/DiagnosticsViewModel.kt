@@ -54,10 +54,12 @@ class DiagnosticsViewModel @Inject constructor(
 
     /** Creates a session + device snapshot and seeds the guided engine. */
     fun startGuided() {
+        val preset = pendingPreset
+        // Restart synchronously so a finished run can't emit done=true while
+        // the coroutine below is still persisting the new session.
+        engine.restart(preset.tests.map { it.id })
         viewModelScope.launch {
-            val preset = pendingPreset
             _activeSessionId.value = createSession(preset)
-            engine.restart(preset.tests.map { it.id })
         }
     }
 

@@ -1237,12 +1237,15 @@ function testBody(test, mode){
         <div class="t-mini" id="torchstate" style="margin-top:8px"></div>`);
     case test.capKey: {
       const r = capReading(test.capKey);
+      const verdict = mode==="guided"
+        ? (r.supported?"Result recorded: PASS":"Result recorded: NOT SUPPORTED")
+        : (r.supported?"Result: PASS":"Result: NOT SUPPORTED");
       return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
         <div class="t-body" style="margin-top:4px">${test.instr}</div>
         <div class="card" style="margin-top:16px">
           <div class="row"><span class="grow t-body">Hardware capability</span><span class="t-body">${r.supported?"Present":"Absent"}</span></div>
           <div class="row" style="margin-top:8px"><span class="grow t-body">${r.label}</span><span class="t-body">${r.value??"Not applicable"}</span></div>
-          <div class="t-mini sub" style="margin-top:8px">${r.supported?"Result recorded: PASS":"Result recorded: NOT SUPPORTED"}</div>
+          <div class="t-mini sub" style="margin-top:8px">${verdict}</div>
         </div></div>`;
     }
     case test.id==="power.charging":

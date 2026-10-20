@@ -1,6 +1,7 @@
 package io.github.droidkit.feature.diagnostics
 
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -112,6 +113,17 @@ object DiagnosticsFeature : FeatureContribution {
     }
 }
 
+/**
+ * Owner for the session ViewModel shared by the picker, guided runner and
+ * review. When the Diagnose tab entry sits underneath (the normal intake
+ * path) the session is scoped to it; external entries — the Tools card,
+ * Dashboard recents, search — have no "diagnose" on the back stack, so the
+ * nav graph owns the session instead of crashing in getBackStackEntry.
+ */
+private fun NavHostController.sessionStoreOwner(): ViewModelStoreOwner =
+    runCatching { getBackStackEntry(DiagnosticsFeature.ROUTE) }
+        .getOrElse { getViewModelStoreOwner(graph.id) }
+
 fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
     composable(DiagnosticsFeature.ROUTE) {
         DiagnosticsScreen(
@@ -121,7 +133,6 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
         )
     }
     composable(DiagnosticsFeature.GUIDED_ROUTE) {
-        val parentEntry = nav.getBackStackEntry(DiagnosticsFeature.ROUTE)
         GuidedSessionScreen(
             onFinished = {
                 nav.navigate(DiagnosticsFeature.REVIEW_ROUTE) {
@@ -129,11 +140,10 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
                 }
             },
             onBack = { nav.navigateUp() },
-            viewModel = hiltViewModel(parentEntry),
+            viewModel = hiltViewModel(nav.sessionStoreOwner()),
         )
     }
     composable(DiagnosticsFeature.REVIEW_ROUTE) {
-        val parentEntry = nav.getBackStackEntry(DiagnosticsFeature.ROUTE)
         SessionReviewScreen(
             onRetry = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) { launchSingleTop = true } },
             onSaved = {
@@ -142,7 +152,7 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
                 }
             },
             onBack = { nav.navigateUp() },
-            viewModel = hiltViewModel(parentEntry),
+            viewModel = hiltViewModel(nav.sessionStoreOwner()),
         )
     }
     composable(DiagnosticsFeature.TEST_ROUTE) { backStackEntry ->
@@ -155,6 +165,7 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
                 test = test,
                 onResult = { _, _ -> nav.popBackStack() },
                 onBack = { nav.navigateUp() },
+                autoResult = false,
             )
         }
     }

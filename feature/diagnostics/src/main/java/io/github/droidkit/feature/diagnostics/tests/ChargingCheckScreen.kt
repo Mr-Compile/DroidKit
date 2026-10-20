@@ -37,6 +37,7 @@ private data class BatteryReading(
 fun ChargingCheckScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
     val context = LocalContext.current
     var reading by remember { mutableStateOf<BatteryReading?>(null) }
@@ -73,7 +74,7 @@ fun ChargingCheckScreen(
     LaunchedEffect(Unit) {
         val r = read()
         reading = r
-        if (r == null) {
+        if (r == null && autoResult) {
             onResult(TestResultState.NOT_SUPPORTED, "Battery status broadcast unavailable")
         }
     }
@@ -96,7 +97,10 @@ fun ChargingCheckScreen(
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val r = reading
                 if (r == null) {
-                    Text("Battery broadcast unavailable — recorded NOT SUPPORTED.")
+                    Text(
+                        "Battery broadcast unavailable — " +
+                            if (autoResult) "recorded NOT SUPPORTED." else "NOT SUPPORTED.",
+                    )
                 } else {
                     Row { Text("Level", Modifier.weight(1f)); Text("${r.levelPercent}%") }
                     Row { Text("Status", Modifier.weight(1f)); Text(r.statusLabel) }

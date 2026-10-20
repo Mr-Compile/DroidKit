@@ -32,8 +32,9 @@ private const val RECORD_MS = 3000L
 fun MicrophoneTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
-    PermissionGate(permission = test.permission!!, onResult = onResult) {
+    PermissionGate(permission = test.permission!!, onResult = onResult, autoResult = autoResult) {
         MicContent(test, onResult)
     }
 }

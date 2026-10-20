@@ -27,25 +27,31 @@ import io.github.droidkit.feature.diagnostics.tests.VibrationScreen
 /**
  * Single dispatch point for every Phone Doctor test screen.
  * Used by both the standalone quick-test route and the guided runner.
+ *
+ * [autoResult] lets objective checks auto-emit their result — needed by the
+ * guided runner, which advances on emit. Standalone mode must not auto-emit:
+ * the route pops on result, so an automatic emit would close the screen
+ * before the reading is ever visible.
  */
 @Composable
 fun PhoneDoctorTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
     onBack: (() -> Unit)? = null,
+    autoResult: Boolean = true,
 ) {
     when (routeFor(test)) {
         PhoneDoctorRoute.DisplayColor -> DisplayColorScreen(test, onResult)
         PhoneDoctorRoute.TouchGrid -> TouchGridScreen(test, onResult)
         PhoneDoctorRoute.Multitouch -> MultitouchScreen(test, onResult)
-        PhoneDoctorRoute.Vibration -> VibrationScreen(test, onResult)
+        PhoneDoctorRoute.Vibration -> VibrationScreen(test, onResult, autoResult)
         PhoneDoctorRoute.Speaker -> SpeakerTestScreen(test, onResult)
-        PhoneDoctorRoute.Microphone -> MicrophoneTestScreen(test, onResult)
-        PhoneDoctorRoute.CameraPreview -> CameraTestScreen(test, onResult)
-        PhoneDoctorRoute.Flash -> FlashTestScreen(test, onResult)
-        PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult)
-        PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult)
-        PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult)
+        PhoneDoctorRoute.Microphone -> MicrophoneTestScreen(test, onResult, autoResult)
+        PhoneDoctorRoute.CameraPreview -> CameraTestScreen(test, onResult, autoResult)
+        PhoneDoctorRoute.Flash -> FlashTestScreen(test, onResult, autoResult)
+        PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult, autoResult)
+        PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult, autoResult)
+        PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult, autoResult)
         PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test, onBack)
     }
 }

@@ -34,24 +34,29 @@ private data class CapabilityReading(
 /**
  * Objective capability check: hardware absent → NOT_SUPPORTED; hardware
  * present → PASS with the enabled/disabled state recorded in the note.
- * These are capability reads, not sensory judgments — auto-emitted.
+ * These are capability reads, not sensory judgments — auto-emitted in the
+ * guided runner ([autoResult] = true). Standalone keeps the reading on
+ * screen and lets the user back out.
  */
 @Composable
 fun ConnectivityCheckScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
     val context = LocalContext.current
     val reading = remember(test.capabilityKey) { readCapability(context, test.capabilityKey) }
 
-    LaunchedEffect(test.id) {
-        if (reading.supported) {
-            onResult(
-                TestResultState.PASS,
-                "${reading.stateLabel}: ${reading.stateValue ?: "unknown"}",
-            )
-        } else {
-            onResult(TestResultState.NOT_SUPPORTED, reading.detail)
+    if (autoResult) {
+        LaunchedEffect(test.id) {
+            if (reading.supported) {
+                onResult(
+                    TestResultState.PASS,
+                    "${reading.stateLabel}: ${reading.stateValue ?: "unknown"}",
+                )
+            } else {
+                onResult(TestResultState.NOT_SUPPORTED, reading.detail)
+            }
         }
     }
 
@@ -73,8 +78,12 @@ fun ConnectivityCheckScreen(
                     Text(reading.stateValue ?: "Not applicable")
                 }
                 Text(
-                    if (reading.supported) "Result recorded: PASS"
-                    else "Result recorded: NOT SUPPORTED",
+                    if (autoResult) {
+                        if (reading.supported) "Result recorded: PASS"
+                        else "Result recorded: NOT SUPPORTED"
+                    } else {
+                        if (reading.supported) "Result: PASS" else "Result: NOT SUPPORTED"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

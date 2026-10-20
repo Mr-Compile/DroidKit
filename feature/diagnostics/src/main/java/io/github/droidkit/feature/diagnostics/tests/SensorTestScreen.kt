@@ -33,6 +33,7 @@ private val axisLabels = listOf("X", "Y", "Z")
 fun SensorTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
     val context = LocalContext.current
     val sensorManager = remember {
@@ -42,15 +43,19 @@ fun SensorTestScreen(
         test.sensorType?.let { sensorManager?.getDefaultSensor(it) }
     }
 
-    // Missing hardware is NOT_SUPPORTED, never FAIL — emitted once via LaunchedEffect.
+    // Missing hardware is NOT_SUPPORTED, never FAIL — auto-emitted in the
+    // guided runner; standalone keeps the notice on screen.
     if (sensor == null) {
-        LaunchedEffect(test.id) {
-            onResult(TestResultState.NOT_SUPPORTED, "No ${test.title} sensor reported by SensorManager")
+        if (autoResult) {
+            LaunchedEffect(test.id) {
+                onResult(TestResultState.NOT_SUPPORTED, "No ${test.title} sensor reported by SensorManager")
+            }
         }
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text(test.title, style = MaterialTheme.typography.titleMedium)
             Text(
-                "This device reports no ${test.title.lowercase()} hardware. Recording NOT SUPPORTED.",
+                "This device reports no ${test.title.lowercase()} hardware." +
+                    if (autoResult) " Recording NOT SUPPORTED." else " NOT SUPPORTED.",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 8.dp),
             )

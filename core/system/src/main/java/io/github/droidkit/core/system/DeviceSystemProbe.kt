@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.hardware.camera2.CameraManager
+import android.hardware.display.DisplayManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.util.DisplayMetrics
+import android.view.Display
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -176,19 +178,23 @@ class DeviceSystemProbe @Inject constructor(
         CameraSummary(back + front + ext, back, front, ext)
     }
 
+    /** Default display via DisplayManager — works on all API levels and on the application context. */
+    private fun defaultDisplay(): Display? =
+        (context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager)
+            ?.getDisplay(Display.DEFAULT_DISPLAY)
+
     val displayModeRatesHz: List<Float>
-        get() = context.display?.supportedModes?.map { it.refreshRate }?.distinct()?.sorted()
+        get() = defaultDisplay()?.supportedModes?.map { it.refreshRate }?.distinct()?.sorted()
             ?: emptyList()
 
     val displayInfo: DisplayInfo
         get() {
             val dm: DisplayMetrics = context.resources.displayMetrics
-            val display = context.display
             return DisplayInfo(
                 widthPx = dm.widthPixels,
                 heightPx = dm.heightPixels,
                 densityDpi = dm.densityDpi,
-                refreshHz = display?.refreshRate ?: 0f,
+                refreshHz = defaultDisplay()?.refreshRate ?: 0f,
             )
         }
 

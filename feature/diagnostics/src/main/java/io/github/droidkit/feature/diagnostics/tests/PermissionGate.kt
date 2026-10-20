@@ -24,11 +24,14 @@ import io.github.droidkit.core.ui.components.rememberRuntimePermission
 fun PermissionGate(
     permission: String,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val perm = rememberRuntimePermission(
         permission = permission,
-        onDenied = { onResult(TestResultState.PERMISSION_REQUIRED, "$permission denied") },
+        onDenied = {
+            if (autoResult) onResult(TestResultState.PERMISSION_REQUIRED, "$permission denied")
+        },
     )
 
     if (perm.state == RuntimePermissionState.GRANTED) {

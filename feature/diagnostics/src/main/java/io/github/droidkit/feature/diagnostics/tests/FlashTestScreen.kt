@@ -30,9 +30,10 @@ import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 fun FlashTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
-    PermissionGate(permission = test.permission!!, onResult = onResult) {
-        FlashContent(test, onResult)
+    PermissionGate(permission = test.permission!!, onResult = onResult, autoResult = autoResult) {
+        FlashContent(test, onResult, autoResult)
     }
 }
 
@@ -40,6 +41,7 @@ fun FlashTestScreen(
 private fun FlashContent(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -62,12 +64,14 @@ private fun FlashContent(
                         val camera = p.bindToLifecycle(lifecycleOwner, selector)
                         boundCamera = camera
                         hasFlash = camera.cameraInfo.hasFlashUnit()
-                        if (hasFlash == false) {
+                        if (hasFlash == false && autoResult) {
                             onResult(TestResultState.NOT_SUPPORTED, "Rear camera reports no flash unit")
                         }
                     } else {
                         hasFlash = false
-                        onResult(TestResultState.NOT_SUPPORTED, "No rear camera for flash test")
+                        if (autoResult) {
+                            onResult(TestResultState.NOT_SUPPORTED, "No rear camera for flash test")
+                        }
                     }
                 } catch (e: Exception) {
                     initError = e.message ?: e.javaClass.simpleName
@@ -121,7 +125,8 @@ private fun FlashContent(
             }
             if (hasFlash == false) {
                 Text(
-                    "No flash unit reported — recorded NOT SUPPORTED.",
+                    "No flash unit reported — " +
+                        if (autoResult) "recorded NOT SUPPORTED." else "NOT SUPPORTED.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp),
                 )

@@ -30,9 +30,10 @@ import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 fun CameraTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean = true,
 ) {
-    PermissionGate(permission = test.permission!!, onResult = onResult) {
-        CameraContent(test, onResult)
+    PermissionGate(permission = test.permission!!, onResult = onResult, autoResult = autoResult) {
+        CameraContent(test, onResult, autoResult)
     }
 }
 
@@ -40,6 +41,7 @@ fun CameraTestScreen(
 private fun CameraContent(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    autoResult: Boolean,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -58,7 +60,7 @@ private fun CameraContent(
                         .requireLensFacing(test.lensFacing!!)
                         .build()
                     cameraAvailable = p.hasCamera(selector)
-                    if (!cameraAvailable!!) {
+                    if (!cameraAvailable!! && autoResult) {
                         onResult(
                             TestResultState.NOT_SUPPORTED,
                             "No camera with lensFacing=${test.lensFacing} reported",
@@ -118,7 +120,8 @@ private fun CameraContent(
                 Text(
                     when {
                         initError != null -> "Could not start camera — judge based on the error shown."
-                        cameraAvailable == false -> "No ${test.title.lowercase()} hardware — recorded NOT SUPPORTED."
+                        cameraAvailable == false -> "No ${test.title.lowercase()} hardware — " +
+                            if (autoResult) "recorded NOT SUPPORTED." else "NOT SUPPORTED."
                         else -> "Initializing camera…"
                     },
                     style = MaterialTheme.typography.bodyMedium,
