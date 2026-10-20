@@ -20,6 +20,13 @@ sealed interface ElevatedAction {
     /** The exact shell command string executed through `sh -c`. */
     fun command(): String
 
+    /**
+     * When non-null, only this provider kind may execute the action — e.g.
+     * filesystem reads under `/data` that the shell identity cannot perform.
+     * Null leaves provider choice to [ElevatedOps] preference order.
+     */
+    val requiredProvider: ProviderKind? get() = null
+
     companion object {
         private val PACKAGE_RE = Regex("^[A-Za-z0-9_.]+$")
         private val OP_RE = Regex("^[A-Z0-9_]+$")
@@ -107,6 +114,106 @@ sealed interface ElevatedAction {
     data class ListPackages(val includeDisabled: Boolean = true) : ElevatedAction {
         override fun command() =
             "pm list packages" + if (includeDisabled) " -d -e" else ""
+    }
+
+    /**
+     * Read fuel-gauge capacity nodes under `/sys/class/power_supply/` —
+     * charge_full, charge_full_design, cycle_count and OEM state-of-health
+     * nodes (soh / *asoc*). `grep -H` prints `path:value` per readable file;
+     * absent or permission-denied nodes produce no output. Fixed command,
+     * no parameters. Used for a *measured* battery-health reading on devices
+     * whose fuel gauge exposes it.
+     */
+    data object ReadPowerSupply : ElevatedAction {
+        override fun command() =
+            "grep -H ." +
+                " /sys/class/power_supply/*/charge_full" +
+                " /sys/class/power_supply/*/charge_full_design" +
+                " /sys/class/power_supply/*/cycle_count" +
+                " /sys/class/power_supply/*/soh" +
+                " /sys/class/power_supply/*/*asoc*" +
+                " 2>/dev/null"
+    }
+
+    /**
+     * Read saved Wi-Fi configuration — `WifiConfigStore.xml` on API 29+
+     * (apexdata first, then the legacy `/data/misc/wifi` path) and
+     * `wpa_supplicant.conf` on older builds. These files sit under `/data`
+     * owned by the `wifi` group, so the shell identity cannot read them —
+     * the action is pinned to ROOT. Fixed command, no parameters; `== path`
+     * markers separate each file for the parser.
+     */
+    data object ReadWifiConfigStore : ElevatedAction {
+        override val requiredProvider: ProviderKind = ProviderKind.ROOT
+        override fun command() =
+            "for f in /data/misc/apexdata/com.android.wifi/WifiConfigStore.xml" +
+                " /data/misc/wifi/WifiConfigStore.xml" +
+                " /data/misc/wifi/wpa_supplicant.conf; do" +
+                " [ -r \"\$f\" ] && echo \"== \$f\" && cat \"\$f\"; done"
+    }
+
+    /**
+     * `dumpsys battery` plus learned-capacity lines from `dumpsys
+     * batterystats` — bounded with head. Read-only; whichever elevated
+     * provider is available can run it.
+     */
+    data object DumpBatteryDetail : ElevatedAction {
+        override fun command() =
+            "dumpsys battery; dumpsys batterystats | grep -iE 'capacity|learned' | head -40"
+    }
+
+    /**
+     * Learned capacity hints: `dumpsys batteryproperties` charge counter and
+     * the "Learned battery capacity" line some builds print in `dumpsys
+     * battery`. Read-only; units differ by source so the parser keeps the
+     * raw value with its label.
+     */
+    data object ReadLearnedBatteryCapacity : ElevatedAction {
+        override fun command() =
+            "dumpsys batteryproperties 2>/dev/null | grep -iE 'capacity|counter';" +
+                " dumpsys battery 2>/dev/null | grep -i learned | head -5"
+    }
+
+    /**
+     * Curated slice of `dumpsys wifi` — link state, current SSID/BSSID, RSSI,
+     * link speed, frequency, traffic counters. Bounded with head; the parser
+     * treats every field as optional.
+     */
+    data object DumpWifiLink : ElevatedAction {
+        override fun command() =
+            "dumpsys wifi | grep -iE 'Wi-Fi generation|SSID|BSSID|RSSI|Link speed|frequency|mNetworkInfo|score|tx |rx ' | head -80"
+    }
+
+    /** Full `getprop` table — features display a curated allow-list only. */
+    data object ReadSystemProps : ElevatedAction {
+        override fun command() = "getprop"
+    }
+
+    /**
+     * Thermal zone type + temperature under `/sys/class/thermal/`. Readable
+     * by the shell identity on many devices, root-only on stricter SELinux
+     * builds — either way the output is parsed honestly. `== zone` markers
+     * delimit each zone.
+     */
+    data object ReadThermalZones : ElevatedAction {
+        override fun command() =
+            "for z in /sys/class/thermal/thermal_zone*; do" +
+                " echo \"== \$z\"; cat \"\$z/type\" \"\$z/temp\" 2>/dev/null; done"
+    }
+
+    /** Full `/proc/cpuinfo` — includes fields masked from app-context reads. */
+    data object ReadCpuInfo : ElevatedAction {
+        override fun command() = "cat /proc/cpuinfo"
+    }
+
+    /** `/proc/meminfo` — memory totals apps cannot read on modern builds. */
+    data object ReadMeminfo : ElevatedAction {
+        override fun command() = "cat /proc/meminfo"
+    }
+
+    /** `/proc/partitions` — block-device name/size table. */
+    data object ReadPartitions : ElevatedAction {
+        override fun command() = "cat /proc/partitions"
     }
 
     /** Identity of the shell user (`id`) — a read-only elevated proof. */
@@ -237,10 +344,24 @@ class ElevatedOps @Inject constructor(
     suspend fun activeProvider(): ProviderKind? =
         preferenceOrder.firstOrNull { executorsByKind[it]?.isAvailable() == true }
 
-    /** Execute [action] through the preferred available provider. */
+    /** Live availability of one specific provider kind — false when absent or not ready. */
+    suspend fun isAvailable(kind: ProviderKind): Boolean =
+        executorsByKind[kind]?.isAvailable() == true
+
+    /**
+     * Execute [action] through the preferred available provider — or, when
+     * the action pins [ElevatedAction.requiredProvider], only through that
+     * kind. A pinned action never falls back to a weaker provider.
+     */
     suspend fun execute(action: ElevatedAction, timeoutMs: Long = 30_000): ElevatedResult {
-        val kind = activeProvider()
-            ?: return ElevatedResult(ProviderKind.STANDARD, -1, "", "no elevated provider available")
+        val pinned = action.requiredProvider
+        val kind = if (pinned == null) {
+            activeProvider()
+                ?: return ElevatedResult(ProviderKind.STANDARD, -1, "", "no elevated provider available")
+        } else {
+            if (executorsByKind[pinned]?.isAvailable() == true) pinned
+            else return ElevatedResult(pinned, -1, "", "requires ${pinned.name} provider — not available")
+        }
         val command = action.command()
         return executorsByKind.getValue(kind).runShell(command, timeoutMs).also { result ->
             auditSinks.forEach { sink ->

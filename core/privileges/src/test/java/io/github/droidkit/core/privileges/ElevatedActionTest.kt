@@ -100,6 +100,46 @@ class ElevatedActionTest {
     }
 
     @Test
+    fun `wifi config read is root-pinned with a fixed command`() {
+        val action = ElevatedAction.ReadWifiConfigStore
+        assertEquals(ProviderKind.ROOT, action.requiredProvider)
+        val cmd = action.command()
+        assertTrue(cmd.contains("/data/misc/apexdata/com.android.wifi/WifiConfigStore.xml"))
+        assertTrue(cmd.contains("/data/misc/wifi/WifiConfigStore.xml"))
+        assertTrue(cmd.contains("/data/misc/wifi/wpa_supplicant.conf"))
+    }
+
+    @Test
+    fun `read-only dump actions are unpinned and param-free`() {
+        listOf(
+            ElevatedAction.DumpBatteryDetail,
+            ElevatedAction.ReadLearnedBatteryCapacity,
+            ElevatedAction.DumpWifiLink,
+            ElevatedAction.ReadSystemProps,
+            ElevatedAction.ReadThermalZones,
+            ElevatedAction.ReadCpuInfo,
+            ElevatedAction.ReadMeminfo,
+            ElevatedAction.ReadPartitions,
+        ).forEach { action ->
+            org.junit.Assert.assertNull(action.requiredProvider)
+            assertTrue(action.command().isNotBlank())
+        }
+        assertEquals("getprop", ElevatedAction.ReadSystemProps.command())
+        assertEquals("cat /proc/cpuinfo", ElevatedAction.ReadCpuInfo.command())
+        assertEquals("cat /proc/meminfo", ElevatedAction.ReadMeminfo.command())
+        assertEquals("cat /proc/partitions", ElevatedAction.ReadPartitions.command())
+    }
+
+    @Test
+    fun `power-supply read is a fixed allow-listed dump`() {
+        val cmd = ElevatedAction.ReadPowerSupply.command()
+        assertTrue(cmd.startsWith("grep -H . /sys/class/power_supply/"))
+        assertTrue(cmd.endsWith("2>/dev/null"))
+        // No parameter injection is possible: the command takes no input.
+        assertTrue(listOf("charge_full", "charge_full_design", "cycle_count").all { it in cmd })
+    }
+
+    @Test
     fun `injection through package name is rejected`() {
         listOf("com.app;rm -rf /", "com.app && id", "com.app\nevil", "com.app$(id)").forEach { bad ->
             val threw = runCatching { ElevatedAction.GetAppOps(bad).command() }.isFailure

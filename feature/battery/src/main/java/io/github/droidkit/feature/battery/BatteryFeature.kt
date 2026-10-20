@@ -7,6 +7,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolIconKeys
+import io.github.droidkit.core.ui.navigation.openRoute
 
 object BatteryFeature : FeatureContribution {
     const val ROUTE = "battery"
@@ -26,6 +27,9 @@ object BatteryFeature : FeatureContribution {
 
 fun NavGraphBuilder.batteryGraph(nav: NavHostController) {
     composable(BatteryFeature.ROUTE) {
-        BatteryScreen(onBack = { nav.navigateUp() })
+        BatteryScreen(
+            onBack = { nav.navigateUp() },
+            onOpenPermissions = { nav.openRoute("permissions") },
+        )
     }
 }

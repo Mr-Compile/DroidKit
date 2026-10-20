@@ -6,12 +6,17 @@ import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
+import android.media.MediaCodecList
+import android.media.MediaDrm
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import android.os.SystemClock
 import android.util.DisplayMetrics
 import android.view.Display
+import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,6 +42,8 @@ data class BatteryStatus(
     val technology: String?,    // null when not exposed
     val healthText: String?,    // Good | Overheat | Dead | ... null when not exposed
     val currentNowUa: Int?,     // instantaneous current, null when unsupported
+    val chargeCounterUa: Int?,  // µAh present in pack right now, null when unsupported
+    val cycleCount: Int?,       // API 34+ EXTRA_CYCLE_COUNT where the HAL reports it
 )
 
 data class CameraSummary(val total: Int, val backFacing: Int, val frontFacing: Int, val external: Int)
@@ -59,6 +66,70 @@ class DeviceSystemProbe @Inject constructor(
     val androidRelease: String = Build.VERSION.RELEASE
     val securityPatch: String? = Build.VERSION.SECURITY_PATCH
     val supportedAbis: List<String> = Build.SUPPORTED_ABIS.toList()
+
+    // ---- deeper build/hardware identity (all standard API, honest nulls) ----
+
+    val fingerprint: String = Build.FINGERPRINT
+    val buildId: String = Build.ID
+    val buildDisplay: String = Build.DISPLAY
+    val buildType: String = Build.TYPE
+    val buildTags: String = Build.TAGS
+    val buildIncremental: String = Build.VERSION.INCREMENTAL
+    val buildTimeMs: Long = Build.TIME
+    val bootloader: String? = Build.BOOTLOADER.takeIf { it.isNotBlank() && it != "unknown" }
+    val hardware: String = Build.HARDWARE
+    val board: String = Build.BOARD
+    val socModel: String? =
+        if (sdkInt >= Build.VERSION_CODES.S) Build.SOC_MODEL.takeIf { it.isNotBlank() } else null
+    val socManufacturer: String? =
+        if (sdkInt >= Build.VERSION_CODES.S) Build.SOC_MANUFACTURER.takeIf { it.isNotBlank() } else null
+    val radioVersion: String? = Build.getRadioVersion()?.takeIf { it.isNotBlank() }
+
+    /** Kernel release (`os.version`) — the long line from `/proc/version` when readable. */
+    val kernelRelease: String? = System.getProperty("os.version")
+    val kernelDetail: String? by lazy {
+        runCatching { File("/proc/version").readText().trim() }.getOrNull()
+    }
+
+    val cpuCoreCount: Int = Runtime.getRuntime().availableProcessors()
+    val artVersion: String? = System.getProperty("java.vm.version")
+
+    /** Milliseconds since boot including deep sleep. */
+    fun uptimeMs(): Long = SystemClock.elapsedRealtime()
+
+    /** Approximate deep-sleep total — elapsed realtime minus CPU-awake time. */
+    fun deepSleepMs(): Long = (uptimeMs() - SystemClock.uptimeMillis()).coerceAtLeast(0)
+
+    data class CodecSummary(val decoders: Int, val encoders: Int)
+
+    val codecSummary: CodecSummary? by lazy {
+        runCatching {
+            val infos = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
+            CodecSummary(
+                decoders = infos.count { !it.isEncoder },
+                encoders = infos.count { it.isEncoder },
+            )
+        }.getOrNull()
+    }
+
+    /** Widevine DRM security level (L1/L3) — null when the CDM is absent or refuses. */
+    val widevineSecurityLevel: String? by lazy {
+        runCatching {
+            val drm = MediaDrm(UUID.fromString(WIDEVINE_UUID))
+            try {
+                drm.getPropertyString("securityLevel")
+            } finally {
+                drm.close()
+            }
+        }.getOrNull()?.takeIf { it.isNotBlank() }?.uppercase()
+    }
+
+    val displayHdrTypes: List<String>
+        get() = defaultDisplay()?.hdrCapabilities?.supportedHdrTypes
+            ?.map { hdrTypeName(it) } ?: emptyList()
+
+    val displayWideColorGamut: Boolean?
+        get() = defaultDisplay()?.isWideColorGamut
 
     val appVersionName: String by lazy {
         try {
@@ -124,9 +195,11 @@ class DeviceSystemProbe @Inject constructor(
             val raw = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: -1
             val level = if (raw in 0..100) raw.toFloat() else -1f
             val cur = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+            val counter = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+                ?.takeIf { it != Int.MIN_VALUE }
             if (i == null) {
                 return BatteryStatus(level, "Unknown", "Not plugged", -1f, -1, null, null,
-                    cur?.takeIf { it != Int.MIN_VALUE && it != 0 })
+                    cur?.takeIf { it != Int.MIN_VALUE && it != 0 }, counter, null)
             }
             val status = when (i.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1)) {
                 android.os.BatteryManager.BATTERY_STATUS_CHARGING -> "Charging"
@@ -152,10 +225,19 @@ class DeviceSystemProbe @Inject constructor(
                 android.os.BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified failure"
                 else -> null
             }
+            // EXTRA_CYCLE_COUNT exists from API 34; before that the HAL kept it
+            // behind a system API. Some HALs also report garbage — pass it
+            // through as "reported" data, never interpreted.
+            val cycles = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                i.getIntExtra(android.os.BatteryManager.EXTRA_CYCLE_COUNT, -1)
+                    .takeIf { it >= 0 }
+            } else {
+                null
+            }
             return BatteryStatus(level, status, plugged,
                 if (tempTenths > -1000) tempTenths / 10f else -1f, volts,
                 i.getStringExtra(android.os.BatteryManager.EXTRA_TECHNOLOGY), health,
-                cur?.takeIf { it != Int.MIN_VALUE && it != 0 })
+                cur?.takeIf { it != Int.MIN_VALUE && it != 0 }, counter, cycles)
         }
 
     /** Battery charge counter percent; -1f when the platform does not expose it. */
@@ -217,6 +299,29 @@ class DeviceSystemProbe @Inject constructor(
         append(" | RAM ${totalRamMb}MB")
         append(" | Storage free ${storage.freeBytes / (1024 * 1024 * 1024)}GB/${storage.totalBytes / (1024 * 1024 * 1024)}GB")
     }
+}
+
+private const val WIDEVINE_UUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
+
+private fun hdrTypeName(type: Int): String = when (type) {
+    Display.HdrCapabilities.HDR_TYPE_HDR10 -> "HDR10"
+    Display.HdrCapabilities.HDR_TYPE_HLG -> "HLG"
+    Display.HdrCapabilities.HDR_TYPE_HDR10_PLUS -> "HDR10+"
+    Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION -> "Dolby Vision"
+    else -> "type $type"
+}
+
+/** Compact uptime like `3d 4h 12m`. */
+fun formatUptime(ms: Long): String {
+    val totalMin = ms / 60_000
+    val days = totalMin / (24 * 60)
+    val hours = (totalMin / 60) % 24
+    val mins = totalMin % 60
+    return buildString {
+        if (days > 0) append("${days}d ")
+        if (hours > 0 || days > 0) append("${hours}h ")
+        append("${mins}m")
+    }.trim()
 }
 
 fun formatBytes(bytes: Long): String {
