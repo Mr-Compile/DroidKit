@@ -56,7 +56,8 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
                 ThemeMode.LIGHT -> false
             }
-            DroidKitTheme(darkTheme = darkTheme) {
+            val dynamicColor by settings.dynamicColor.collectAsState(initial = true)
+            DroidKitTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
                 DroidKitScaffold(capabilityManager, settings)
             }
         }

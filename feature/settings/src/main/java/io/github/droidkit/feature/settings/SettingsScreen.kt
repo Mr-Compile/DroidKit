@@ -79,6 +79,28 @@ fun SettingsScreen(
                                 Text(mode.name)
                             }
                         }
+                        val dynamicColor by viewModel.dynamicColor.collectAsState()
+                        val materialYouSupported =
+                            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Material You colors")
+                                Text(
+                                    if (materialYouSupported) "Use your wallpaper palette"
+                                    else "Requires Android 12 or later",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            androidx.compose.material3.Switch(
+                                checked = dynamicColor && materialYouSupported,
+                                onCheckedChange = { viewModel.setDynamicColor(it) },
+                                enabled = materialYouSupported,
+                            )
+                        }
                     }
                 }
             }

@@ -343,6 +343,7 @@ const S = {
   sessions: [], sessionResults: {},
   engine: null,           // guided run state
   theme: "dark",
+  materialYou: true,
   usbPerm: {},            // deviceName -> granted
   usbPermPending: {},
   nfc: { scanning: false, armed: null, tag: null, result: null, history: [
@@ -1195,7 +1196,11 @@ function scrSettings(){
     <div class="card">${modes.map(m=>`
       <label class="row" style="padding:4px 0;cursor:pointer">
         <input type="radio" name="theme" value="${m}" ${m===sel?"checked":""} data-theme-opt="${m}" style="accent-color:var(--primary)">
-        <span class="t-body">${m}</span></label>`).join("")}</div>
+        <span class="t-body">${m}</span></label>`).join("")}
+      <div class="row" style="padding:4px 0">
+        <div class="grow"><div class="t-body">Material You colors</div>
+        <div class="t-mini sub">Use your wallpaper palette</div></div>
+        <input type="checkbox" data-act="myout-toggle" ${S.materialYou?"checked":""} style="width:20px;height:20px;accent-color:var(--primary)"></div></div>
     <div class="sec-head">Reports</div>
     <div class="card">
       <span class="flabel">Technician name / signature</span>
@@ -2509,6 +2514,7 @@ function handleAct(act, el, e){
     case "pkg-grant": toast("No Shizuku/root provider on this mock device — pair wireless ADB instead"); break;
     case "clear-elevlog": S.elevLog=[]; render(); break;
     case "ai-toggle": S.ai.enabled=!S.ai.enabled; render(); break;
+    case "myout-toggle": S.materialYou=!S.materialYou; render(); break;
     case "ai-savekey": { const v=$("#aiKey")?.value.trim();
       if(v){ S.ai.hasKey=true; S.ai.status=null; render(); toast("Key stored (AES/GCM, AndroidKeyStore)"); } break; }
     case "ai-disconnect": S.ai.hasKey=false; S.ai.turns=[]; S.ai.status=null; render(); toast("Key removed"); break;

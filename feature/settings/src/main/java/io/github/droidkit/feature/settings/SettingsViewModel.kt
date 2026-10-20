@@ -46,6 +46,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settings.setThemeMode(mode) }
     }
 
+    val dynamicColor: StateFlow<Boolean> =
+        settings.dynamicColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { settings.setDynamicColor(enabled) }
+    }
+
     // ---- Reports ----
 
     val technicianName: StateFlow<String> =

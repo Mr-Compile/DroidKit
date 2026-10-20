@@ -835,7 +835,7 @@ Plan pack `01_plans/droidkit_ui_v6_plan/` (27 docs). Audit: `docs/04_audits/2026
 - [x] `core:ui` — `ToolIcons` registry + `ToolIcon`, `DroidKitTopAppBar`, `ToolCard` v6 (leading icon, category subtitle, single status badge), reason-aware `AvailabilityBadge`
 - [x] Feature metadata — `iconKey` + keywords on all tools; 21 diagnostics tests as `DIAGNOSTIC` search entries; `SearchPages` folded into `ToolsFeature.searchEntries`
 - [x] Navigation — `DroidKitTopAppBar` + `onBack` across all screens/graphs; bottom bar on the four top-level routes only; `launchSingleTop` on tool/page opens; `UnknownTestScreen` friendly fallback for invalid `diagnose/test/{testId}`
-- [ ] Settings — dynamic-color user toggle (audit step 5)
+- [x] Settings — dynamic-color user toggle (`SettingsRepository.dynamicColor` → `DroidKitTheme`, disabled with "Requires Android 12+" below API 31)
 - [ ] Targeted UI/navigation QA (plan 25) + final audit report (plan 26)
 
 Use Semantic Versioning:

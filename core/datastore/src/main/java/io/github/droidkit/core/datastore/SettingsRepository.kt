@@ -24,6 +24,8 @@ class SettingsRepository @Inject constructor(
     private val toolUseKey = stringPreferencesKey("tool_use_counts")
     private val onboardingKey = androidx.datastore.preferences.core.booleanPreferencesKey("onboarding_completed")
     private val technicianKey = stringPreferencesKey("technician_name")
+    private val dynamicColorKey =
+        androidx.datastore.preferences.core.booleanPreferencesKey("dynamic_color")
 
     val onboardingCompleted: Flow<Boolean> =
         context.settingsStore.data.map { it[onboardingKey] ?: false }
@@ -45,6 +47,14 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setThemeMode(mode: ThemeMode) {
         context.settingsStore.edit { it[themeKey] = mode.name }
+    }
+
+    /** Material You wallpaper colors. No-op below API 31 — the theme ignores it. */
+    val dynamicColor: Flow<Boolean> =
+        context.settingsStore.data.map { it[dynamicColorKey] ?: true }
+
+    suspend fun setDynamicColor(enabled: Boolean) {
+        context.settingsStore.edit { it[dynamicColorKey] = enabled }
     }
 
     suspend fun toggleFavorite(toolId: String) {
