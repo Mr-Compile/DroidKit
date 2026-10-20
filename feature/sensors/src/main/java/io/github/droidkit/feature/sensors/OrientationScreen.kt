@@ -12,7 +12,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlin.math.roundToInt
 
@@ -35,6 +35,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrientationScreen(
+    onBack: () -> Unit,
     viewModel: SensorsViewModel = hiltViewModel(),
 ) {
     val sensor = viewModel.defaultSensor(Sensor.TYPE_ROTATION_VECTOR)
@@ -65,7 +66,7 @@ fun OrientationScreen(
         onDispose { viewModel.sensorManager?.unregisterListener(listener) }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Orientation") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Orientation", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

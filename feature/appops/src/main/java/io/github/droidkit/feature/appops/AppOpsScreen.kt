@@ -19,9 +19,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -30,12 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.BackHandler
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.privileges.AppOpMode
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
 
@@ -43,6 +40,7 @@ import io.github.droidkit.core.ui.components.SectionHeader
 @Composable
 fun AppOpsScreen(
     onOpenAdb: () -> Unit,
+    onBack: () -> Unit,
     viewModel: AppOpsViewModel = hiltViewModel(),
 ) {
     val provider by viewModel.provider.collectAsStateWithLifecycle()
@@ -56,18 +54,13 @@ fun AppOpsScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     var pending by remember { mutableStateOf<Triple<String, String, AppOpMode>?>(null) }
 
+    BackHandler(enabled = selected != null) { viewModel.back() }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(selected ?: "AppOps") },
-                navigationIcon = {
-                    if (selected != null) {
-                        IconButton(
-                            onClick = viewModel::back,
-                            modifier = Modifier.semantics { contentDescription = "Back" },
-                        ) { Text("←") }
-                    }
-                },
+            DroidKitTopAppBar(
+                title = selected ?: "AppOps",
+                onBack = if (selected != null) viewModel::back else onBack,
             )
         },
     ) { padding ->

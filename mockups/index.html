@@ -811,6 +811,8 @@ function render(){
   afterRender(r);
 }
 function renderBNav(){
+  const TOP = ["home","tools","diagnose","settings"];
+  if(!TOP.includes(cur())){ $("#bottomnav").innerHTML=""; return; }
   const items = [
     ["home","Home",`<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>`],
     ["tools","Tools",`<svg viewBox="0 0 24 24"><path d="M21.7 18.3 13.4 10a5.5 5.5 0 0 0-7-7L9.9 6.5 6.5 9.9 3 6.4a5.5 5.5 0 0 0 7 7l8.3 8.3a1.5 1.5 0 0 0 2.1 0l1.3-1.3a1.5 1.5 0 0 0 0-2.1z"/></svg>`],
@@ -966,7 +968,7 @@ function renderTest(testId){
   const test = TEST(testId);
   renderBNav(); renderFlow();
   $("#routebar").textContent = "route: diagnose/test/"+testId;
-  if(!test){ appbar(null); $("#body").innerHTML = `<div class="pad empty">Unknown test: ${esc(testId)}</div>`; return; }
+  if(!test){ appbar(null); $("#body").innerHTML = `<div class="pad empty">This test isn't available on this device or was moved.<br><button class="btn-outline" data-act="go-back" style="margin-top:12px">Back to diagnostics</button></div>`; return; }
   appbar(null); // standalone tests draw no app bar
   if(test.perm && !S.perms[test.perm]){ renderPermGate(test, "standalone"); return; }
   $("#body").innerHTML = testBody(test, "standalone");

@@ -6,11 +6,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
+import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.feature.diagnostics.tests.CameraTestScreen
 import io.github.droidkit.feature.diagnostics.tests.ChargingCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.ConnectivityCheckScreen
@@ -31,6 +32,7 @@ import io.github.droidkit.feature.diagnostics.tests.VibrationScreen
 fun PhoneDoctorTestScreen(
     test: PhoneDoctorTest,
     onResult: (TestResultState, note: String?) -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     when (routeFor(test)) {
         PhoneDoctorRoute.DisplayColor -> DisplayColorScreen(test, onResult)
@@ -44,19 +46,35 @@ fun PhoneDoctorTestScreen(
         PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult)
         PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult)
         PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult)
-        PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test)
+        PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test, onBack)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun UnsupportedTestPlaceholder(test: PhoneDoctorTest) {
-    Scaffold(topBar = { TopAppBar(title = { Text(test.title) }) }) { padding ->
+private fun UnsupportedTestPlaceholder(test: PhoneDoctorTest, onBack: (() -> Unit)?) {
+    Scaffold(topBar = { DroidKitTopAppBar(test.title, onBack = onBack) }) { padding ->
         Box(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentAlignment = Alignment.Center,
         ) {
             Text("Test screen not yet wired: ${test.id}")
+        }
+    }
+}
+
+/**
+ * Friendly fallback for invalid `diagnose/test/{testId}` route arguments
+ * (plan file 13 — invalid arguments must fail safely, not render raw text).
+ */
+@Composable
+fun UnknownTestScreen(onBack: () -> Unit) {
+    Scaffold(topBar = { DroidKitTopAppBar("Diagnostic test", onBack = onBack) }) { padding ->
+        Box(
+            modifier = Modifier.fillMaxSize().padding(padding),
+            contentAlignment = Alignment.Center,
+        ) {
+            EmptyState("This test is not available — it may have been renamed or removed.")
         }
     }
 }

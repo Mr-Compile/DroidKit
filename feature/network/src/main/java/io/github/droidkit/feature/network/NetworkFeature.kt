@@ -7,6 +7,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -28,6 +29,8 @@ object NetworkFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
+            keywords = setOf("connection", "transport", "wifi", "cellular", "ip"),
+            iconKey = ToolIconKeys.NETWORK,
         ),
         Tool(
             id = "network.ping",
@@ -38,6 +41,8 @@ object NetworkFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
+            keywords = setOf("latency", "icmp", "reachability", "echo"),
+            iconKey = ToolIconKeys.PING,
         ),
         Tool(
             id = "network.dns",
@@ -48,6 +53,8 @@ object NetworkFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
+            keywords = setOf("resolve", "hostname", "lookup", "resolver"),
+            iconKey = ToolIconKeys.DNS,
         ),
         Tool(
             id = "network.diagnostics",
@@ -58,6 +65,8 @@ object NetworkFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
+            keywords = setOf("internet", "layers", "checks", "troubleshoot"),
+            iconKey = ToolIconKeys.TROUBLESHOOT,
         ),
         Tool(
             id = "network.ports",
@@ -68,6 +77,8 @@ object NetworkFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredPermissions = NETWORK_PERMS,
             phase = ToolPhase.V1,
+            keywords = setOf("tcp", "port", "connect", "open"),
+            iconKey = ToolIconKeys.PORTS,
         ),
         Tool(
             id = "network.interfaces",
@@ -77,6 +88,8 @@ object NetworkFeature : FeatureContribution {
             route = ROUTE,
             safetyLevel = SafetyLevel.SAFE,
             requiredPermissions = NETWORK_PERMS,
+            keywords = setOf("mtu", "interface", "address", "flags", "lan"),
+            iconKey = ToolIconKeys.LAN,
         ),
         Tool(
             id = "network.discovery",
@@ -86,12 +99,14 @@ object NetworkFeature : FeatureContribution {
             route = ROUTE,
             safetyLevel = SafetyLevel.MINOR,
             requiredPermissions = NETWORK_PERMS + "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+            keywords = setOf("mdns", "nsd", "browse", "services", "local"),
+            iconKey = ToolIconKeys.RADAR,
         ),
     )
 }
 
 fun NavGraphBuilder.networkGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(NetworkFeature.ROUTE) {
-        NetworkScreen()
+        NetworkScreen(onBack = { nav.navigateUp() })
     }
 }

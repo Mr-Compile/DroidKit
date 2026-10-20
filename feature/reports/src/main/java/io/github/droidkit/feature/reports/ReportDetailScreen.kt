@@ -21,7 +21,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,6 +40,7 @@ import io.github.droidkit.core.database.DeviceSnapshotEntity
 import io.github.droidkit.core.database.DiagnosticResultEntity
 import io.github.droidkit.core.database.DiagnosticSessionEntity
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import java.io.File
 import java.text.DateFormat
@@ -66,6 +66,7 @@ private val sensitivePreview = listOf(
 fun ReportDetailScreen(
     sessionId: String,
     onDeleted: () -> Unit,
+    onBack: () -> Unit,
     viewModel: ReportsViewModel,
 ) {
     val context = LocalContext.current
@@ -89,7 +90,7 @@ fun ReportDetailScreen(
         d?.let { ReportBuilder.build(it.session, it.snapshot, it.results) }
     }
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Report detail") }) },
+        topBar = { DroidKitTopAppBar("Report detail", onBack = onBack) },
     ) { padding ->
         if (d == null) {
             Text(

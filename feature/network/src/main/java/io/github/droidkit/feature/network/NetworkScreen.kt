@@ -15,7 +15,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -30,6 +29,7 @@ import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.feature.network.NetworkViewModel.LayerResult
 import io.github.droidkit.feature.network.NetworkViewModel.LayerState
 import io.github.droidkit.feature.network.NetworkViewModel.ToolState
@@ -37,6 +37,7 @@ import io.github.droidkit.feature.network.NetworkViewModel.ToolState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NetworkScreen(
+    onBack: () -> Unit,
     viewModel: NetworkViewModel = hiltViewModel(),
 ) {
     val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
@@ -49,7 +50,7 @@ fun NetworkScreen(
     var portHost by remember { mutableStateOf("") }
     var portList by remember { mutableStateOf("80, 443") }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Network Lab") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Network Lab", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

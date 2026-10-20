@@ -10,7 +10,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,10 +23,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BatteryScreen(viewModel: BatteryViewModel = hiltViewModel()) {
+fun BatteryScreen(onBack: () -> Unit, viewModel: BatteryViewModel = hiltViewModel()) {
     val status by viewModel.status.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -43,7 +43,7 @@ fun BatteryScreen(viewModel: BatteryViewModel = hiltViewModel()) {
     val powerSave = (context.getSystemService(android.content.Context.POWER_SERVICE) as? PowerManager)
         ?.isPowerSaveMode
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Battery Lab") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Battery Lab", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

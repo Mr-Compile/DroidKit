@@ -17,7 +17,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -29,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.ResultBadge
 import io.github.droidkit.core.ui.components.SectionHeader
 
@@ -37,6 +37,7 @@ import io.github.droidkit.core.ui.components.SectionHeader
 fun SessionReviewScreen(
     onRetry: () -> Unit,
     onSaved: () -> Unit,
+    onBack: () -> Unit,
     viewModel: DiagnosticsViewModel,
 ) {
     val engineState by viewModel.engine.state.collectAsStateWithLifecycle()
@@ -60,7 +61,7 @@ fun SessionReviewScreen(
     val grouped = engineState.results.entries
         .groupBy { PhoneDoctorTests.findById(it.key)?.category ?: "Other" }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Diagnostic review") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Diagnostic review", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

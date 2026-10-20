@@ -17,7 +17,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +31,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.droidkit.core.privileges.ElevatedOps
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -123,6 +123,7 @@ class AiChatViewModel @Inject constructor(
 @Composable
 fun AiChatScreen(
     onNavigate: (String) -> Unit,
+    onBack: () -> Unit,
     viewModel: AiChatViewModel = hiltViewModel(),
 ) {
     val turns by viewModel.turns.collectAsState()
@@ -135,7 +136,7 @@ fun AiChatScreen(
         if (turns.isNotEmpty()) listState.animateScrollToItem(turns.size - 1)
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("DroidKit Chat") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("DroidKit Chat", onBack = onBack) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (gate != null) {
                 Text(

@@ -9,6 +9,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
     implementation(projects.core.permissions)
+    implementation(projects.core.ui)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
 

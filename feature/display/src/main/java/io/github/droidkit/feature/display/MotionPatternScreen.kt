@@ -23,7 +23,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import kotlin.math.roundToInt
 
 /**
@@ -46,7 +46,7 @@ import kotlin.math.roundToInt
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MotionPatternScreen() {
+fun MotionPatternScreen(onBack: () -> Unit) {
     var speedMs by remember { mutableStateOf(2000) }
     var pattern by remember { mutableStateOf(Pattern.BOUNCE) }
 
@@ -61,7 +61,7 @@ fun MotionPatternScreen() {
         label = "progress",
     )
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Motion pattern") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Motion pattern", onBack = onBack) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

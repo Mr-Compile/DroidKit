@@ -35,4 +35,17 @@ class PhoneDoctorCatalogTest {
             assertNotNull(it.id, it.capabilityKey)
         }
     }
+
+    @Test fun `every catalog test is searchable with a real route and icon`() {
+        val entries = DiagnosticsFeature.searchEntries
+        val byId = entries.associateBy { it.id }
+        PhoneDoctorTests.ALL.forEach { test ->
+            val entry = byId["diag.${test.id}"]
+            assertNotNull("missing search entry for ${test.id}", entry)
+            entry!!
+            assertEquals(DiagnosticsFeature.testRoute(test.id), entry.route)
+            assertTrue(entry.iconKey.isNotEmpty())
+        }
+        assertEquals(PhoneDoctorTests.ALL.size, entries.size)
+    }
 }

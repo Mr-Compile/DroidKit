@@ -8,6 +8,7 @@ import androidx.navigation.navArgument
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 
 object SensorsFeature : FeatureContribution {
     const val ROUTE = "sensors"
@@ -19,7 +20,8 @@ object SensorsFeature : FeatureContribution {
             description = "Full sensor inventory with vendor, power and range details",
             category = ToolCategory.DEVICE,
             route = ROUTE,
-            keywords = setOf("inventory", "accelerometer", "gyroscope"),
+            keywords = setOf("inventory", "accelerometer", "gyroscope", "vendor", "range"),
+            iconKey = ToolIconKeys.SENSORS,
         ),
         Tool(
             id = "sensors.live",
@@ -27,7 +29,8 @@ object SensorsFeature : FeatureContribution {
             description = "Stream live readings from supported sensors",
             category = ToolCategory.DIAGNOSTICS,
             route = "$ROUTE/live",
-            keywords = setOf("live", "stream", "monitor"),
+            keywords = setOf("live", "stream", "monitor", "readings"),
+            iconKey = ToolIconKeys.LIVE,
         ),
         Tool(
             id = "sensors.orientation",
@@ -35,19 +38,25 @@ object SensorsFeature : FeatureContribution {
             description = "Azimuth/pitch/roll from the rotation-vector sensor",
             category = ToolCategory.DEVICE,
             route = "$ROUTE/orientation",
-            keywords = setOf("compass", "heading", "tilt"),
+            keywords = setOf("compass", "heading", "tilt", "azimuth", "pitch", "roll"),
+            iconKey = ToolIconKeys.COMPASS,
         ),
     )
 }
 
 fun NavGraphBuilder.sensorsGraph(nav: NavHostController) {
     composable(SensorsFeature.ROUTE) { SensorsScreen(nav) }
-    composable("${SensorsFeature.ROUTE}/orientation") { OrientationScreen() }
+    composable("${SensorsFeature.ROUTE}/orientation") {
+        OrientationScreen(onBack = { nav.navigateUp() })
+    }
     composable("${SensorsFeature.ROUTE}/live") { LiveSensorPickerScreen(nav) }
     composable(
         route = "${SensorsFeature.ROUTE}/live/{type}",
         arguments = listOf(navArgument("type") { type = NavType.IntType }),
     ) { backStackEntry ->
-        LiveSensorScreen(sensorType = backStackEntry.arguments?.getInt("type") ?: -1)
+        LiveSensorScreen(
+            sensorType = backStackEntry.arguments?.getInt("type") ?: -1,
+            onBack = { nav.navigateUp() },
+        )
     }
 }

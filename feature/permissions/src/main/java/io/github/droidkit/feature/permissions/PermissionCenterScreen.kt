@@ -19,7 +19,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.permissions.RuntimePermissionState
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.components.openAppSettings
 import io.github.droidkit.core.ui.components.rememberRuntimePermission
@@ -81,6 +81,7 @@ private fun declaredPermissions(context: Context): List<String> = runCatching {
 @Composable
 fun PermissionCenterScreen(
     onOpenSettings: () -> Unit = {},
+    onBack: () -> Unit = {},
     viewModel: PermissionCenterViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -91,7 +92,7 @@ fun PermissionCenterScreen(
         declaredPermissions(context).partition { isRuntimePermission(context, it) }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Permissions & Access") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Permissions & Access", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

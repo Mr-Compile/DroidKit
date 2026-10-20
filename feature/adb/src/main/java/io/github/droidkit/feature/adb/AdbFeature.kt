@@ -8,6 +8,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -24,6 +25,8 @@ object AdbFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SYSTEM_CHANGE,
             requiredCapabilities = setOf(Capability.ADB_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("wireless", "pair", "debug", "wifi adb"),
+            iconKey = ToolIconKeys.LINK,
         ),
         Tool(
             id = "adb.actions",
@@ -34,12 +37,14 @@ object AdbFeature : FeatureContribution {
             safetyLevel = SafetyLevel.ADVANCED,
             requiredCapabilities = setOf(Capability.ADB_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("shell", "command", "logs", "power"),
+            iconKey = ToolIconKeys.TERMINAL,
         ),
     )
 }
 
 fun NavGraphBuilder.adbGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(AdbFeature.ROUTE) {
-        AdbScreen()
+        AdbScreen(onBack = { nav.navigateUp() })
     }
 }

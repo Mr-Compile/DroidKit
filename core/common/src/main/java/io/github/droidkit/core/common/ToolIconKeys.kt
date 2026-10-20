@@ -10,6 +10,7 @@ object ToolIconKeys {
     const val DEVICE = "device"
     const val INSPECTOR = "inspector"
     const val STORAGE = "storage"
+    const val PALETTE = "palette"
     const val BATTERY = "battery"
     const val CHARGING = "charging"
     const val DEAD_PIXEL = "deadPixel"
@@ -73,7 +74,7 @@ object ToolIconKeys {
     const val TOOLS = "tools"
 
     val ALL: Set<String> = setOf(
-        DEVICE, INSPECTOR, STORAGE, BATTERY, CHARGING,
+        DEVICE, INSPECTOR, STORAGE, PALETTE, BATTERY, CHARGING,
         DEAD_PIXEL, TOUCH, DISPLAY_MODES, MOTION,
         SPEAKER, MIC, VIBRATION, AUDIO_ROUTE,
         CAMERA, FLASH, CAMERA_DETAIL,

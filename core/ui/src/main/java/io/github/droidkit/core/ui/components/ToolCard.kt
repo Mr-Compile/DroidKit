@@ -1,6 +1,5 @@
 package io.github.droidkit.core.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,45 +12,62 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolPhase
+import io.github.droidkit.core.privileges.BlockedReason
+import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.privileges.ToolResolution
 
 /**
- * Non-interactive label chip. Real chips advertise click semantics to
- * assistive tech — these are status tags, so they must not.
+ * Reason-aware availability badge (UI v6 plan files 11/22): the label names
+ * the dominant blocking reason instead of a generic "Blocked", mapped through
+ * the same priority as the problem dialog (provider > permission > device).
  */
 @Composable
-private fun TagChip(label: String, color: androidx.compose.ui.graphics.Color) {
-    Surface(
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceVariant,
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        )
-    }
-}
-
-@Composable
 fun AvailabilityBadge(resolution: ToolResolution) {
-    val (label, color) = when (resolution) {
-        ToolResolution.Ready -> "Ready" to MaterialTheme.colorScheme.primary
-        is ToolResolution.Blocked -> "Blocked" to MaterialTheme.colorScheme.error
+    when (resolution) {
+        ToolResolution.Ready ->
+            StatusBadge(StatusKind.Info, "Ready")
+        is ToolResolution.Blocked -> {
+            val (kind, label) = when (val reason = dominantReason(resolution.reasons)) {
+                is BlockedReason.NeedsProvider -> when (reason.status) {
+                    is ProviderStatus.Unavailable ->
+                        StatusKind.Unsupported to "Unavailable"
+                    else -> StatusKind.SetupRequired to "Setup required"
+                }
+                is BlockedReason.MissingPermission ->
+                    StatusKind.SetupRequired to "Permission required"
+                is BlockedReason.MissingHardware ->
+                    StatusKind.Unsupported to "Not supported"
+                is BlockedReason.RequiresApi ->
+                    StatusKind.Unsupported to "Needs API ${reason.minSdk}+"
+                null -> StatusKind.Neutral to "Unavailable"
+            }
+            StatusBadge(kind, label)
+        }
     }
-    TagChip(label, color)
 }
 
+/** Same ordering the UiProblem mapper uses: provider > permission > device. */
+private fun dominantReason(reasons: List<BlockedReason>): BlockedReason? =
+    reasons.maxByOrNull {
+        when (it) {
+            is BlockedReason.NeedsProvider -> 3
+            is BlockedReason.MissingPermission -> 2
+            else -> 1
+        }
+    }
+
+/**
+ * Standard tool card (UI v6 plan file 05): semantic icon, name, short
+ * description, category/release subtitle, one primary status badge and the
+ * affordances. Detailed requirements live in [ToolInfoDialog], not the card.
+ */
 @Composable
 fun ToolCard(
     tool: Tool,
@@ -66,18 +82,29 @@ fun ToolCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            ToolIcon(ToolIcons.forTool(tool))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp),
+            ) {
                 Text(tool.title, style = MaterialTheme.typography.titleMedium)
-                Text(tool.description, style = MaterialTheme.typography.bodySmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    TagChip(tool.category.name, MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (tool.safetyLevel != SafetyLevel.SAFE) {
-                        TagChip("L${tool.safetyLevel.ordinal}", MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (tool.phase != ToolPhase.V1) {
-                        TagChip(tool.phase.name, MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
+                Text(
+                    tool.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    buildString {
+                        append(
+                            tool.category.name.lowercase()
+                                .replaceFirstChar { it.uppercase() },
+                        )
+                        if (tool.phase != ToolPhase.V1) append(" · ${tool.phase.name}")
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             AvailabilityBadge(resolution)
             if (onInfo != null) {

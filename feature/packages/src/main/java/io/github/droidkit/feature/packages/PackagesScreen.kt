@@ -21,7 +21,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,12 +34,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PackagesScreen(
     onOpenAdb: () -> Unit,
+    onBack: () -> Unit,
     viewModel: PackagesViewModel = hiltViewModel(),
 ) {
     val elevated by viewModel.elevated.collectAsStateWithLifecycle()
@@ -65,7 +66,7 @@ fun PackagesScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Package Controls") }) },
+        topBar = { DroidKitTopAppBar("Package Controls", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(

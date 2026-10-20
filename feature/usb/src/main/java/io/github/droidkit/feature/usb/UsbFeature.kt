@@ -9,6 +9,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -28,6 +29,8 @@ object UsbFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredFeatures = setOf("android.hardware.usb.host"),
             phase = ToolPhase.V1,
+            keywords = setOf("usb", "otg", "host", "device", "connected"),
+            iconKey = ToolIconKeys.USB,
         ),
         Tool(
             id = "usb.descriptors",
@@ -38,13 +41,18 @@ object UsbFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SAFE,
             requiredFeatures = setOf("android.hardware.usb.host"),
             phase = ToolPhase.V1,
+            keywords = setOf("vid", "pid", "endpoints", "interfaces", "descriptors", "accessory"),
+            iconKey = ToolIconKeys.USB_DETAIL,
         ),
     )
 }
 
 fun NavGraphBuilder.usbGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(UsbFeature.ROUTE) {
-        UsbScreen(onOpenDetail = { name -> nav.navigate(UsbFeature.detailRoute(name)) })
+        UsbScreen(
+            onOpenDetail = { name -> nav.navigate(UsbFeature.detailRoute(name)) { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
+        )
     }
     composable(UsbFeature.DETAIL_ROUTE) { backStackEntry ->
         val deviceName = backStackEntry.arguments?.getString("deviceName").orEmpty()
@@ -52,6 +60,7 @@ fun NavGraphBuilder.usbGraph(nav: NavHostController, resolve: (Tool) -> ToolReso
         UsbDetailScreen(
             deviceName = deviceName,
             viewModel = hiltViewModel(parentEntry),
+            onBack = { nav.navigateUp() },
         )
     }
 }

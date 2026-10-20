@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 
 object DeviceInfoFeature : FeatureContribution {
     const val ROUTE = "deviceinfo"
@@ -17,7 +18,8 @@ object DeviceInfoFeature : FeatureContribution {
             description = "Identity, OS, hardware, memory, storage, display, battery, capabilities",
             category = ToolCategory.DEVICE,
             route = ROUTE,
-            keywords = setOf("phone info", "build", "hardware"),
+            keywords = setOf("phone info", "build", "hardware", "specs", "model"),
+            iconKey = ToolIconKeys.INSPECTOR,
         ),
         Tool(
             id = "deviceinfo.storage",
@@ -25,12 +27,15 @@ object DeviceInfoFeature : FeatureContribution {
             description = "Volumes, capacity, free space, storage warnings",
             category = ToolCategory.DEVICE,
             route = "$ROUTE/storage",
-            keywords = setOf("disk", "space", "memory"),
+            keywords = setOf("disk", "space", "memory", "volumes", "free"),
+            iconKey = ToolIconKeys.STORAGE,
         ),
     )
 }
 
 fun NavGraphBuilder.deviceInfoGraph(nav: NavHostController) {
     composable(DeviceInfoFeature.ROUTE) { DeviceInfoScreen(nav) }
-    composable("${DeviceInfoFeature.ROUTE}/storage") { StorageLabScreen() }
+    composable("${DeviceInfoFeature.ROUTE}/storage") {
+        StorageLabScreen(onBack = { nav.navigateUp() })
+    }
 }

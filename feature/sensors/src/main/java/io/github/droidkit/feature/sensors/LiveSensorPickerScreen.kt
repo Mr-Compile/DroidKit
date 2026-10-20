@@ -13,13 +13,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 
 /** Entry point for the `sensors.live` tool — lists only sensors that support live streaming. */
@@ -31,7 +31,7 @@ fun LiveSensorPickerScreen(
 ) {
     val sensors = viewModel.probe.sensors.filter { SensorsViewModel.LIVE_TYPES.contains(it.type) }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Live Sensor Monitor") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Live Sensor Monitor", onBack = { nav.navigateUp() }) }) { padding ->
         if (sensors.isEmpty()) {
             Column(Modifier.padding(padding)) {
                 EmptyState("No sensors on this device support live monitoring.")
@@ -48,7 +48,7 @@ fun LiveSensorPickerScreen(
             ) {
                 items(sensors, key = { it.type }) { s ->
                     Card(
-                        onClick = { nav.navigate("sensors/live/${s.type}") },
+                        onClick = { nav.navigate("sensors/live/${s.type}") { launchSingleTop = true } },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {

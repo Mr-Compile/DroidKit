@@ -24,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +39,7 @@ import androidx.core.graphics.drawable.toBitmap
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import java.text.DateFormat
 import java.util.Date
@@ -49,6 +49,7 @@ import java.util.Date
 fun AppDetailScreen(
     packageName: String,
     viewModel: AppsViewModel,
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val pm = context.packageManager
@@ -61,7 +62,7 @@ fun AppDetailScreen(
         loaded = true
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("App detail") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("App detail", onBack = onBack) }) { padding ->
         when {
             !loaded -> Text(
                 "Loading…",

@@ -1,6 +1,5 @@
 package io.github.droidkit.feature.diagnostics
 
-import androidx.compose.material3.Text
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -8,8 +7,11 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.Capability
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
+import io.github.droidkit.core.common.SearchEntry
+import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 
 object DiagnosticsFeature : FeatureContribution {
     const val ROUTE = "diagnose"
@@ -28,6 +30,8 @@ object DiagnosticsFeature : FeatureContribution {
             route = GUIDED_ROUTE,
             safetyLevel = SafetyLevel.SAFE,
             requiredCapabilities = setOf(Capability.STANDARD_API),
+            keywords = setOf("phone doctor", "checkup", "health check", "all tests"),
+            iconKey = ToolIconKeys.MONITOR_HEART,
         ),
         Tool(
             id = "diagnostics.quick",
@@ -35,16 +39,85 @@ object DiagnosticsFeature : FeatureContribution {
             description = "Jump straight to a single hardware test",
             category = ToolCategory.DIAGNOSTICS,
             route = ROUTE,
+            keywords = setOf("single test", "check", "test"),
+            iconKey = ToolIconKeys.FACT_CHECK,
         ),
     )
+
+    /** Per-test icon identity — one key drives every surface a test appears on. */
+    private val testIcons: Map<String, String> = mapOf(
+        "display.color" to ToolIconKeys.PALETTE,
+        "display.dead_pixel" to ToolIconKeys.DEAD_PIXEL,
+        "touch.grid" to ToolIconKeys.TOUCH,
+        "touch.multitouch" to ToolIconKeys.TOUCH,
+        "haptics.vibration" to ToolIconKeys.VIBRATION,
+        "sensor.accelerometer" to ToolIconKeys.SENSORS,
+        "sensor.gyroscope" to ToolIconKeys.SENSORS,
+        "sensor.proximity" to ToolIconKeys.SENSORS,
+        "sensor.light" to ToolIconKeys.SENSORS,
+        "sensor.magnetometer" to ToolIconKeys.COMPASS,
+        "audio.speaker" to ToolIconKeys.SPEAKER,
+        "audio.microphone" to ToolIconKeys.MIC,
+        "camera.front" to ToolIconKeys.CAMERA,
+        "camera.rear" to ToolIconKeys.CAMERA,
+        "camera.flash" to ToolIconKeys.FLASH,
+        "connectivity.wifi" to ToolIconKeys.WIFI,
+        "connectivity.bluetooth" to ToolIconKeys.BLUETOOTH,
+        "connectivity.location" to ToolIconKeys.GPS,
+        "connectivity.nfc" to ToolIconKeys.NFC,
+        "connectivity.usb" to ToolIconKeys.USB,
+        "power.charging" to ToolIconKeys.CHARGING,
+    )
+
+    private val testKeywords: Map<String, Set<String>> = mapOf(
+        "display.color" to setOf("screen", "color", "banding", "tint"),
+        "display.dead_pixel" to setOf("pixel", "stuck", "screen", "dot"),
+        "touch.grid" to setOf("touch", "dead zone", "screen"),
+        "touch.multitouch" to setOf("fingers", "multi touch", "points"),
+        "haptics.vibration" to setOf("vibrate", "haptic", "motor", "buzz"),
+        "sensor.accelerometer" to setOf("tilt", "motion"),
+        "sensor.gyroscope" to setOf("rotation", "spin"),
+        "sensor.proximity" to setOf("earpiece", "near", "far"),
+        "sensor.light" to setOf("lux", "brightness", "ambient"),
+        "sensor.magnetometer" to setOf("magnet", "compass", "field"),
+        "audio.speaker" to setOf("sound", "tone", "output", "loudspeaker"),
+        "audio.microphone" to setOf("record", "mic", "voice"),
+        "camera.front" to setOf("selfie", "preview", "photo"),
+        "camera.rear" to setOf("back", "preview", "photo"),
+        "camera.flash" to setOf("torch", "led", "light"),
+        "connectivity.wifi" to setOf("wifi", "wireless", "radio"),
+        "connectivity.bluetooth" to setOf("bt", "radio"),
+        "connectivity.location" to setOf("gps", "gnss", "location"),
+        "connectivity.nfc" to setOf("nfc", "contactless", "tag"),
+        "connectivity.usb" to setOf("usb", "otg", "host"),
+        "power.charging" to setOf("charge", "charger", "plug", "battery"),
+    )
+
+    /**
+     * Every Phone Doctor test is searchable as a DIAGNOSTIC result
+     * (plan file 10). Entries are generated from the catalog so a new test
+     * can never drift out of search; [testIcons] is asserted complete by
+     * PhoneDoctorCatalogTest.
+     */
+    override val searchEntries: List<SearchEntry> = PhoneDoctorTests.ALL.map { test ->
+        SearchEntry(
+            id = "diag.${test.id}",
+            title = test.title,
+            subtitle = "${test.category} test",
+            route = testRoute(test.id),
+            type = SearchResultType.DIAGNOSTIC,
+            iconKey = testIcons.getValue(test.id),
+            keywords = testKeywords[test.id].orEmpty(),
+        )
+    }
 }
 
 fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
     composable(DiagnosticsFeature.ROUTE) {
         DiagnosticsScreen(
-            onStartGuided = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) },
-            onOpenTool = { route -> nav.navigate(route) },
-            onOpenReports = { nav.navigate("reports") },
+            onStartGuided = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) { launchSingleTop = true } },
+            onOpenTool = { route -> nav.navigate(route) { launchSingleTop = true } },
+            onOpenReports = { nav.navigate("reports") { launchSingleTop = true } },
         )
     }
     composable(DiagnosticsFeature.GUIDED_ROUTE) {
@@ -55,18 +128,20 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
                     popUpTo(DiagnosticsFeature.GUIDED_ROUTE) { inclusive = true }
                 }
             },
+            onBack = { nav.navigateUp() },
             viewModel = hiltViewModel(parentEntry),
         )
     }
     composable(DiagnosticsFeature.REVIEW_ROUTE) {
         val parentEntry = nav.getBackStackEntry(DiagnosticsFeature.ROUTE)
         SessionReviewScreen(
-            onRetry = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) },
+            onRetry = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) { launchSingleTop = true } },
             onSaved = {
                 nav.navigate(DiagnosticsFeature.ROUTE) {
                     popUpTo(DiagnosticsFeature.ROUTE) { inclusive = true }
                 }
             },
+            onBack = { nav.navigateUp() },
             viewModel = hiltViewModel(parentEntry),
         )
     }
@@ -74,11 +149,13 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
         val testId = backStackEntry.arguments?.getString("testId").orEmpty()
         val test = PhoneDoctorTests.findById(testId)
         if (test == null) {
-            Text("Unknown test: $testId")
+            UnknownTestScreen(onBack = { nav.navigateUp() })
         } else {
-            PhoneDoctorTestScreen(test = test) { _, _ ->
-                nav.popBackStack()
-            }
+            PhoneDoctorTestScreen(
+                test = test,
+                onResult = { _, _ -> nav.popBackStack() },
+                onBack = { nav.navigateUp() },
+            )
         }
     }
 }

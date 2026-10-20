@@ -8,6 +8,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -23,6 +24,8 @@ object PermissionsFeature : FeatureContribution {
             route = ROUTE,
             safetyLevel = SafetyLevel.SAFE,
             phase = ToolPhase.V1,
+            keywords = setOf("runtime", "granted", "denied", "declared"),
+            iconKey = ToolIconKeys.SECURITY,
         ),
         Tool(
             id = "permissions.inspector",
@@ -32,6 +35,8 @@ object PermissionsFeature : FeatureContribution {
             route = ROUTE,
             requiredCapabilities = setOf(Capability.SHIZUKU_SERVICE),
             phase = ToolPhase.V2,
+            keywords = setOf("perms", "apps", "granted", "declared"),
+            iconKey = ToolIconKeys.APP_PERMS,
         ),
     )
 }
@@ -39,7 +44,8 @@ object PermissionsFeature : FeatureContribution {
 fun NavGraphBuilder.permissionsGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(PermissionsFeature.ROUTE) {
         PermissionCenterScreen(
-            onOpenSettings = { nav.navigate("settings") },
+            onOpenSettings = { nav.navigate("settings") { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
         )
     }
 }

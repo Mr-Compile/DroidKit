@@ -16,7 +16,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlinx.coroutines.launch
 
@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 fun UsbDetailScreen(
     deviceName: String,
     viewModel: UsbViewModel,
+    onBack: () -> Unit,
 ) {
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val permissionVersion by viewModel.permissionVersion.collectAsStateWithLifecycle()
@@ -49,7 +50,7 @@ fun UsbDetailScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(device?.productName ?: "USB device") }) },
+        topBar = { DroidKitTopAppBar(device?.productName ?: "USB device", onBack = onBack) },
     ) { padding ->
         if (device == null) {
             EmptyState("Device disconnected.")

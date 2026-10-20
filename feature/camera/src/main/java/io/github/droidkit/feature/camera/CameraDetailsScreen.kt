@@ -14,13 +14,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private fun facingName(facing: Int?): String = when (facing) {
     CameraCharacteristics.LENS_FACING_FRONT -> "Front"
@@ -40,12 +40,12 @@ private fun hardwareLevelName(level: Int?): String = when (level) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CameraDetailsScreen() {
+fun CameraDetailsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val cm = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
     val cameraIds = runCatching { cm?.cameraIdList?.toList().orEmpty() }.getOrDefault(emptyList())
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Camera Capabilities") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Camera Capabilities", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

@@ -11,4 +11,5 @@ dependencies {
     implementation(projects.core.permissions)
     implementation(projects.core.privileges)
     implementation(libs.androidx.activity.compose)
+    testImplementation(libs.androidx.junit)
 }

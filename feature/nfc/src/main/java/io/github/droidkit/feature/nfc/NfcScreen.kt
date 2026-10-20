@@ -18,7 +18,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,6 +35,7 @@ import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.feature.nfc.NfcViewModel.Verdict
 
@@ -43,6 +43,7 @@ import io.github.droidkit.feature.nfc.NfcViewModel.Verdict
 @Composable
 fun NfcScreen(
     onOpenWrite: () -> Unit,
+    onBack: () -> Unit,
     viewModel: NfcViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -65,7 +66,7 @@ fun NfcScreen(
         onDispose { activity?.let { viewModel.stopScan(it) } }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("NFC Lab") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("NFC Lab", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlin.math.abs
 import kotlin.math.min
@@ -41,6 +41,7 @@ private const val MAX_SAMPLES = 2000
 @Composable
 fun LiveSensorScreen(
     sensorType: Int,
+    onBack: () -> Unit,
     viewModel: SensorsViewModel = hiltViewModel(),
 ) {
     val supported = SensorsViewModel.LIVE_TYPES.contains(sensorType)
@@ -78,7 +79,7 @@ fun LiveSensorScreen(
         else -> listOf("x", "y", "z")
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(sensor?.name ?: "Live Sensor") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar(sensor?.name ?: "Live Sensor", onBack = onBack) }) { padding ->
         when {
             !supported -> Column(Modifier.padding(padding)) {
                 EmptyState("This sensor type is not in the live-monitor safe list.")

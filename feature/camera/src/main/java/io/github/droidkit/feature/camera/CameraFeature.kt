@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.ui.LabEntry
 import io.github.droidkit.core.ui.LabIndexScreen
 
@@ -21,6 +22,8 @@ object CameraFeature : FeatureContribution {
             route = ROUTE,
             requiredPermissions = listOf("android.permission.CAMERA"),
             requiredFeatures = setOf("android.hardware.camera.any"),
+            keywords = setOf("photo", "preview", "capture", "selfie"),
+            iconKey = ToolIconKeys.CAMERA,
         ),
         Tool(
             id = "camera.flash",
@@ -29,6 +32,8 @@ object CameraFeature : FeatureContribution {
             category = ToolCategory.DIAGNOSTICS,
             route = ROUTE,
             requiredFeatures = setOf("android.hardware.camera.flash"),
+            keywords = setOf("torch", "led", "light"),
+            iconKey = ToolIconKeys.FLASH,
         ),
         Tool(
             id = "camera.details",
@@ -37,6 +42,8 @@ object CameraFeature : FeatureContribution {
             category = ToolCategory.DIAGNOSTICS,
             route = "$ROUTE/details",
             requiredFeatures = setOf("android.hardware.camera.any"),
+            keywords = setOf("camera2", "lens", "sensor", "capabilities"),
+            iconKey = ToolIconKeys.CAMERA_DETAIL,
         ),
     )
 }
@@ -67,10 +74,11 @@ fun NavGraphBuilder.cameraGraph(nav: NavHostController) {
                         "Needs camera permission.",
                 ),
             ),
-            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
+            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
         )
     }
     composable("${CameraFeature.ROUTE}/details") {
-        CameraDetailsScreen()
+        CameraDetailsScreen(onBack = { nav.navigateUp() })
     }
 }

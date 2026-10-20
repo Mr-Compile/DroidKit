@@ -8,6 +8,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 
 object DeveloperFeature : FeatureContribution {
@@ -21,6 +22,8 @@ object DeveloperFeature : FeatureContribution {
             category = ToolCategory.DEVELOPER,
             route = ROUTE,
             safetyLevel = SafetyLevel.MINOR,
+            keywords = setOf("intent", "launch", "developer options", "activity"),
+            iconKey = ToolIconKeys.INTENT,
         ),
         Tool(
             id = "developer.display",
@@ -28,6 +31,8 @@ object DeveloperFeature : FeatureContribution {
             description = "Resolution, density, refresh rate and HDR capabilities",
             category = ToolCategory.DEVELOPER,
             route = ROUTE,
+            keywords = setOf("resolution", "density", "dpi", "refresh", "hdr"),
+            iconKey = ToolIconKeys.METRICS,
         ),
         Tool(
             id = "developer.deeplink",
@@ -36,6 +41,8 @@ object DeveloperFeature : FeatureContribution {
             category = ToolCategory.DEVELOPER,
             route = ROUTE,
             safetyLevel = SafetyLevel.MINOR,
+            keywords = setOf("uri", "url", "link", "resolve"),
+            iconKey = ToolIconKeys.LINK,
         ),
         Tool(
             id = "developer.logs",
@@ -46,12 +53,14 @@ object DeveloperFeature : FeatureContribution {
             safetyLevel = SafetyLevel.ADVANCED,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("logcat", "logs", "read"),
+            iconKey = ToolIconKeys.ARTICLE,
         ),
     )
 }
 
 fun NavGraphBuilder.developerGraph(nav: NavHostController) {
     composable(DeveloperFeature.ROUTE) {
-        DeveloperLabScreen()
+        DeveloperLabScreen(onBack = { nav.navigateUp() })
     }
 }

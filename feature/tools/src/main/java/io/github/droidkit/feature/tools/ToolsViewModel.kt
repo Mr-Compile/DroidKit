@@ -3,6 +3,7 @@ package io.github.droidkit.feature.tools
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.droidkit.core.common.SearchEntry
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolRegistry
@@ -49,6 +50,9 @@ class ToolsViewModel @Inject constructor(
             }
         } else base
     }
+
+    /** Ranked non-tool destinations (pages, settings, diagnostics, help, reports). */
+    fun searchEntries(query: String): List<SearchEntry> = registry.searchEntries(query)
 
     fun resolve(tool: Tool): ToolResolution = capabilityManager.resolve(tool)
 

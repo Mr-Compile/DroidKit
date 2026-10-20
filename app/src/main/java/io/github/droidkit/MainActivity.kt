@@ -101,7 +101,9 @@ private fun DroidKitScaffold(
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != "onboarding") {
+            // Bottom nav lives only on top-level destinations (UI v6 plan 16);
+            // secondary/detail surfaces use the Up affordance instead.
+            if (currentRoute in topLevelDestinations.map { it.route }) {
                 NavigationBar {
                     topLevelDestinations.forEach { dest ->
                         NavigationBarItem(

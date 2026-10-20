@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -29,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import java.text.DateFormat
 import java.util.Date
@@ -38,6 +38,7 @@ import java.util.Date
 fun ReportsScreen(
     onOpenDetail: (String) -> Unit,
     onCompare: () -> Unit,
+    onBack: () -> Unit,
     viewModel: ReportsViewModel = hiltViewModel(),
 ) {
     val rows by viewModel.rows.collectAsStateWithLifecycle()
@@ -47,8 +48,9 @@ fun ReportsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Reports") },
+            DroidKitTopAppBar(
+                title = "Reports",
+                onBack = onBack,
                 actions = {
                     TextButton(onClick = { menuOpen = true }) { Text("⋮") }
                     DropdownMenu(

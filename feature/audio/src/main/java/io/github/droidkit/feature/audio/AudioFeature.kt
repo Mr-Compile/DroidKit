@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.ui.LabEntry
 import io.github.droidkit.core.ui.LabIndexScreen
 
@@ -19,6 +20,8 @@ object AudioFeature : FeatureContribution {
             description = "Play test tones through each output",
             category = ToolCategory.DIAGNOSTICS,
             route = ROUTE,
+            keywords = setOf("tone", "sound", "loudspeaker", "output"),
+            iconKey = ToolIconKeys.SPEAKER,
         ),
         Tool(
             id = "audio.microphone",
@@ -27,6 +30,8 @@ object AudioFeature : FeatureContribution {
             category = ToolCategory.DIAGNOSTICS,
             route = ROUTE,
             requiredPermissions = listOf("android.permission.RECORD_AUDIO"),
+            keywords = setOf("record", "mic", "voice", "input"),
+            iconKey = ToolIconKeys.MIC,
         ),
         Tool(
             id = "audio.vibration",
@@ -35,6 +40,8 @@ object AudioFeature : FeatureContribution {
             category = ToolCategory.DIAGNOSTICS,
             route = ROUTE,
             requiredPermissions = listOf("android.permission.VIBRATE"),
+            keywords = setOf("haptic", "motor", "buzz"),
+            iconKey = ToolIconKeys.VIBRATION,
         ),
         Tool(
             id = "audio.routing",
@@ -42,6 +49,8 @@ object AudioFeature : FeatureContribution {
             description = "Audio devices, active mode, routing and capabilities",
             category = ToolCategory.DIAGNOSTICS,
             route = "$ROUTE/routing",
+            keywords = setOf("route", "devices", "bluetooth audio", "headset"),
+            iconKey = ToolIconKeys.AUDIO_ROUTE,
         ),
     )
 }
@@ -70,10 +79,11 @@ fun NavGraphBuilder.audioGraph(nav: NavHostController) {
                     blurb = "Buzz the haptic motor and confirm the response.",
                 ),
             ),
-            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") },
+            onOpenTest = { testId -> nav.navigate("diagnose/test/$testId") { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
         )
     }
     composable("${AudioFeature.ROUTE}/routing") {
-        AudioRoutingScreen()
+        AudioRoutingScreen(onBack = { nav.navigateUp() })
     }
 }

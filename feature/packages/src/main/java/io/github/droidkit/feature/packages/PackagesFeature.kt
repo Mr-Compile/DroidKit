@@ -8,6 +8,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -24,6 +25,8 @@ object PackagesFeature : FeatureContribution {
             safetyLevel = SafetyLevel.HIGH_IMPACT,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("bloatware", "enable", "disable", "freeze"),
+            iconKey = ToolIconKeys.BLOCK,
         ),
         Tool(
             id = "packages.clear",
@@ -34,6 +37,8 @@ object PackagesFeature : FeatureContribution {
             safetyLevel = SafetyLevel.HIGH_IMPACT,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("wipe", "data", "reset", "clear"),
+            iconKey = ToolIconKeys.DELETE_SWEEP,
         ),
         Tool(
             id = "packages.uninstall",
@@ -44,12 +49,17 @@ object PackagesFeature : FeatureContribution {
             safetyLevel = SafetyLevel.HIGH_IMPACT,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("remove", "uninstall", "delete"),
+            iconKey = ToolIconKeys.DELETE,
         ),
     )
 }
 
 fun NavGraphBuilder.packagesGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(PackagesFeature.ROUTE) {
-        PackagesScreen(onOpenAdb = { nav.navigate("adb") })
+        PackagesScreen(
+            onOpenAdb = { nav.navigate("adb") { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
+        )
     }
 }

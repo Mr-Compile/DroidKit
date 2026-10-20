@@ -18,7 +18,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import io.github.droidkit.core.database.SessionHealth
 import io.github.droidkit.core.database.TestAttention
 import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
 import kotlin.math.abs
@@ -40,12 +40,13 @@ import kotlin.math.abs
 fun InsightsScreen(
     onOpenTool: (String) -> Unit,
     onStartDiagnostic: () -> Unit,
+    onBack: () -> Unit,
     viewModel: InsightsViewModel = hiltViewModel(),
 ) {
     val health by viewModel.health.collectAsStateWithLifecycle()
     val activity by viewModel.activity.collectAsStateWithLifecycle()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Insights") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Insights", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

@@ -15,7 +15,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -27,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.DroidKitWordmark
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -58,7 +58,7 @@ fun DashboardScreen(
     val quickTools = remember(providerStatuses) { viewModel.quickTools() }
     var infoTool by remember { mutableStateOf<Tool?>(null) }
 
-    Scaffold(topBar = { TopAppBar(title = { DroidKitWordmark() }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar(title = { DroidKitWordmark() }) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

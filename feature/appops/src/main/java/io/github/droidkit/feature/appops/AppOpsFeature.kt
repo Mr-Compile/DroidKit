@@ -8,6 +8,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -23,6 +24,8 @@ object AppOpsFeature : FeatureContribution {
             route = ROUTE,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("appops", "modes", "usage access", "overlay"),
+            iconKey = ToolIconKeys.APP_SETTINGS,
         ),
         Tool(
             id = "appops.set",
@@ -33,12 +36,17 @@ object AppOpsFeature : FeatureContribution {
             safetyLevel = SafetyLevel.SYSTEM_CHANGE,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
+            keywords = setOf("appops", "change", "modes", "background"),
+            iconKey = ToolIconKeys.TUNE,
         ),
     )
 }
 
 fun NavGraphBuilder.appOpsGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(AppOpsFeature.ROUTE) {
-        AppOpsScreen(onOpenAdb = { nav.navigate("adb") })
+        AppOpsScreen(
+            onOpenAdb = { nav.navigate("adb") { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
+        )
     }
 }

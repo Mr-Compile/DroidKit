@@ -7,6 +7,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
 
@@ -25,6 +26,8 @@ object BluetoothFeature : FeatureContribution {
             requiredFeatures = setOf("android.hardware.bluetooth"),
             minSdk = 31,
             phase = ToolPhase.V1,
+            keywords = setOf("bt", "adapter", "bonded", "paired"),
+            iconKey = ToolIconKeys.BLUETOOTH,
         ),
         Tool(
             id = "bluetooth.scan",
@@ -37,6 +40,8 @@ object BluetoothFeature : FeatureContribution {
             requiredFeatures = setOf("android.hardware.bluetooth_le"),
             minSdk = 31,
             phase = ToolPhase.V2,
+            keywords = setOf("ble", "scan", "nearby", "low energy"),
+            iconKey = ToolIconKeys.BLE,
         ),
         Tool(
             id = "bluetooth.gatt",
@@ -49,6 +54,8 @@ object BluetoothFeature : FeatureContribution {
             requiredFeatures = setOf("android.hardware.bluetooth_le"),
             minSdk = 31,
             phase = ToolPhase.V2,
+            keywords = setOf("gatt", "services", "characteristics", "connect"),
+            iconKey = ToolIconKeys.GATT,
         ),
     )
 
@@ -58,10 +65,11 @@ object BluetoothFeature : FeatureContribution {
 fun NavGraphBuilder.bluetoothGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(BluetoothFeature.ROUTE) {
         BluetoothScreen(
-            onOpenDevice = { address -> nav.navigate(BluetoothFeature.gattRoute(address)) },
+            onOpenDevice = { address -> nav.navigate(BluetoothFeature.gattRoute(address)) { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
         )
     }
     composable("${BluetoothFeature.ROUTE}/gatt/{address}") {
-        GattExplorerScreen()
+        GattExplorerScreen(onBack = { nav.navigateUp() })
     }
 }

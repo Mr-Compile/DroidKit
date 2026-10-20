@@ -29,32 +29,35 @@ object SettingsFeature : FeatureContribution {
 fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
     composable(SettingsFeature.ROUTE) {
         SettingsScreen(
-            onOpenAdb = { nav.navigate("adb") },
-            onOpenAiChat = { nav.navigate(SettingsFeature.AI_CHAT_ROUTE) },
-            onOpenAbout = { nav.navigate(SettingsFeature.ABOUT_ROUTE) },
-            onOpenPermissions = { nav.navigate("permissions") },
-            onOpenPrivacy = { nav.navigate(SettingsFeature.PRIVACY_ROUTE) },
-            onOpenHelp = { nav.navigate(SettingsFeature.ABOUT_HELP_ROUTE) },
-            onOpenWhatsNew = { nav.navigate(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) },
+            onOpenAdb = { nav.navigate("adb") { launchSingleTop = true } },
+            onOpenAiChat = { nav.navigate(SettingsFeature.AI_CHAT_ROUTE) { launchSingleTop = true } },
+            onOpenAbout = { nav.navigate(SettingsFeature.ABOUT_ROUTE) { launchSingleTop = true } },
+            onOpenPermissions = { nav.navigate("permissions") { launchSingleTop = true } },
+            onOpenPrivacy = { nav.navigate(SettingsFeature.PRIVACY_ROUTE) { launchSingleTop = true } },
+            onOpenHelp = { nav.navigate(SettingsFeature.ABOUT_HELP_ROUTE) { launchSingleTop = true } },
+            onOpenWhatsNew = { nav.navigate(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) { launchSingleTop = true } },
         )
     }
     composable(SettingsFeature.AI_CHAT_ROUTE) {
-        AiChatScreen(onNavigate = { route -> nav.navigate(route) })
+        AiChatScreen(
+            onNavigate = { route -> nav.navigate(route) { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
+        )
     }
     composable(SettingsFeature.PRIVACY_ROUTE) {
         PrivacyCenterScreen(
             onBack = { nav.navigateUp() },
-            onOpenPermissions = { nav.navigate("permissions") },
+            onOpenPermissions = { nav.navigate("permissions") { launchSingleTop = true } },
         )
     }
     composable(SettingsFeature.ABOUT_ROUTE) {
         AboutScreen(
             onBack = { nav.navigateUp() },
-            onOpenWhatIs = { nav.navigate(SettingsFeature.ABOUT_WHAT_IS_ROUTE) },
-            onOpenFeatures = { nav.navigate(SettingsFeature.ABOUT_FEATURES_ROUTE) },
-            onOpenWhatsNew = { nav.navigate(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) },
-            onOpenHelp = { nav.navigate(SettingsFeature.ABOUT_HELP_ROUTE) },
-            onOpenLicenses = { nav.navigate(SettingsFeature.ABOUT_LICENSES_ROUTE) },
+            onOpenWhatIs = { nav.navigate(SettingsFeature.ABOUT_WHAT_IS_ROUTE) { launchSingleTop = true } },
+            onOpenFeatures = { nav.navigate(SettingsFeature.ABOUT_FEATURES_ROUTE) { launchSingleTop = true } },
+            onOpenWhatsNew = { nav.navigate(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) { launchSingleTop = true } },
+            onOpenHelp = { nav.navigate(SettingsFeature.ABOUT_HELP_ROUTE) { launchSingleTop = true } },
+            onOpenLicenses = { nav.navigate(SettingsFeature.ABOUT_LICENSES_ROUTE) { launchSingleTop = true } },
         )
     }
     composable(SettingsFeature.ABOUT_WHAT_IS_ROUTE) {
@@ -63,7 +66,7 @@ fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
     composable(SettingsFeature.ABOUT_FEATURES_ROUTE) {
         AboutFeaturesScreen(
             onBack = { nav.navigateUp() },
-            onOpenTool = { route -> nav.navigate(route) },
+            onOpenTool = { route -> nav.navigate(route) { launchSingleTop = true } },
         )
     }
     composable(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) {

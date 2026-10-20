@@ -8,6 +8,7 @@ import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 import io.github.droidkit.core.common.ToolPhase
 
 object ReportsFeature : FeatureContribution {
@@ -24,6 +25,8 @@ object ReportsFeature : FeatureContribution {
             route = ROUTE,
             safetyLevel = SafetyLevel.MINOR,
             phase = ToolPhase.V1,
+            keywords = setOf("share", "pdf", "history", "session", "text"),
+            iconKey = ToolIconKeys.REPORTS,
         ),
         Tool(
             id = "reports.compare",
@@ -32,6 +35,8 @@ object ReportsFeature : FeatureContribution {
             category = ToolCategory.REPORTS,
             route = COMPARE_ROUTE,
             safetyLevel = SafetyLevel.SAFE,
+            keywords = setOf("diff", "before after", "sessions", "repair"),
+            iconKey = ToolIconKeys.COMPARE,
         ),
     )
 }
@@ -39,12 +44,13 @@ object ReportsFeature : FeatureContribution {
 fun NavGraphBuilder.reportsGraph(nav: NavHostController) {
     composable(ReportsFeature.ROUTE) {
         ReportsScreen(
-            onOpenDetail = { id -> nav.navigate("reports/detail/$id") },
-            onCompare = { nav.navigate(ReportsFeature.COMPARE_ROUTE) },
+            onOpenDetail = { id -> nav.navigate("reports/detail/$id") { launchSingleTop = true } },
+            onCompare = { nav.navigate(ReportsFeature.COMPARE_ROUTE) { launchSingleTop = true } },
+            onBack = { nav.navigateUp() },
         )
     }
     composable(ReportsFeature.COMPARE_ROUTE) {
-        SessionCompareScreen()
+        SessionCompareScreen(onBack = { nav.navigateUp() })
     }
     composable("reports/detail/{sessionId}") { backStackEntry ->
         val sessionId = backStackEntry.arguments?.getString("sessionId").orEmpty()
@@ -52,6 +58,7 @@ fun NavGraphBuilder.reportsGraph(nav: NavHostController) {
         ReportDetailScreen(
             sessionId = sessionId,
             onDeleted = { nav.popBackStack() },
+            onBack = { nav.navigateUp() },
             viewModel = hiltViewModel(parentEntry),
         )
     }

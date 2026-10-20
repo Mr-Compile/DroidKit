@@ -825,6 +825,19 @@ Plan pack `01_plans/droidkit_ux_plan/` (16 docs). Execution plan + audit map:
 - [x] Targeted validation: compile + unit tests on changed modules
 - [ ] Device run: TalkBack, font scaling, dark/light on new surfaces — pending hardware
 
+---
+
+# UI v6 Consolidation
+
+Plan pack `01_plans/droidkit_ui_v6_plan/` (27 docs). Audit: `docs/04_audits/2026-10-20-ui-v6-repo-audit.md`.
+
+- [x] `core:common` — `Tool.iconKey`, `SearchEntry`/`SearchResultType`, `FeatureContribution.searchEntries`, ranked search, registry validation (commit 7919646)
+- [x] `core:ui` — `ToolIcons` registry + `ToolIcon`, `DroidKitTopAppBar`, `ToolCard` v6 (leading icon, category subtitle, single status badge), reason-aware `AvailabilityBadge`
+- [x] Feature metadata — `iconKey` + keywords on all tools; 21 diagnostics tests as `DIAGNOSTIC` search entries; `SearchPages` folded into `ToolsFeature.searchEntries`
+- [x] Navigation — `DroidKitTopAppBar` + `onBack` across all screens/graphs; bottom bar on the four top-level routes only; `launchSingleTop` on tool/page opens; `UnknownTestScreen` friendly fallback for invalid `diagnose/test/{testId}`
+- [ ] Settings — dynamic-color user toggle (audit step 5)
+- [ ] Targeted UI/navigation QA (plan 25) + final audit report (plan 26)
+
 Use Semantic Versioning:
 
 `MAJOR.MINOR.PATCH`

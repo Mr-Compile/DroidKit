@@ -14,13 +14,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private fun deviceTypeName(type: Int): String = when (type) {
     AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "Earpiece"
@@ -56,11 +56,11 @@ private fun modeName(mode: Int): String = when (mode) {
 @Suppress("DEPRECATION")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AudioRoutingScreen() {
+fun AudioRoutingScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Audio Routing") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Audio Routing", onBack = onBack) }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

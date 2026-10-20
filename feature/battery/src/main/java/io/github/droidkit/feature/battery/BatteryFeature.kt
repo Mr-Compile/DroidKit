@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
+import io.github.droidkit.core.common.ToolIconKeys
 
 object BatteryFeature : FeatureContribution {
     const val ROUTE = "battery"
@@ -17,11 +18,14 @@ object BatteryFeature : FeatureContribution {
             description = "Charge level, status, temperature, voltage, power draw",
             category = ToolCategory.DEVICE,
             route = ROUTE,
-            keywords = setOf("charge", "health", "temperature", "voltage"),
+            keywords = setOf("charge", "charging", "health", "temperature", "voltage", "power", "capacity"),
+            iconKey = ToolIconKeys.BATTERY,
         ),
     )
 }
 
 fun NavGraphBuilder.batteryGraph(nav: NavHostController) {
-    composable(BatteryFeature.ROUTE) { BatteryScreen() }
+    composable(BatteryFeature.ROUTE) {
+        BatteryScreen(onBack = { nav.navigateUp() })
+    }
 }

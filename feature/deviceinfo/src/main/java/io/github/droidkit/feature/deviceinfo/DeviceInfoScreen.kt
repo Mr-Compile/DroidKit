@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -34,6 +33,7 @@ import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.system.formatHz
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private data class Section(
     val title: String,
@@ -56,8 +56,9 @@ fun DeviceInfoScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Device Inspector") },
+            DroidKitTopAppBar(
+                title = "Device Inspector",
+                onBack = { nav.navigateUp() },
                 actions = {
                     IconButton(onClick = {
                         val send = Intent(Intent.ACTION_SEND).apply {
@@ -91,7 +92,7 @@ fun DeviceInfoScreen(
                             copySection(context, section)
                         }) { Text("Copy section") }
                         if (section.labRoute != null && section.labLabel != null) {
-                            TextButton(onClick = { nav.navigate(section.labRoute) }) {
+                            TextButton(onClick = { nav.navigate(section.labRoute) { launchSingleTop = true } }) {
                                 Text(section.labLabel)
                             }
                         }
@@ -104,7 +105,7 @@ fun DeviceInfoScreen(
                     fields = sections
                         .flatMap { s -> s.rows.map { (l, v) -> "${s.title} / $l" to v } }
                         .toMap(),
-                    onNavigate = { nav.navigate(it) },
+                    onNavigate = { nav.navigate(it) { launchSingleTop = true } },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

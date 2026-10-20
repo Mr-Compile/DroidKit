@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -25,12 +26,16 @@ fun SectionHeader(text: String) {
     )
 }
 
+/** Empty state; optionally offers the one correct next action. */
 @Composable
-fun EmptyState(text: String) {
+fun EmptyState(text: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(32.dp),
     ) {
         Text(text, style = MaterialTheme.typography.bodyMedium)
+        if (actionLabel != null && onAction != null) {
+            TextButton(onClick = onAction) { Text(actionLabel) }
+        }
     }
 }
 

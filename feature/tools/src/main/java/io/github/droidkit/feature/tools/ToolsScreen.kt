@@ -3,6 +3,7 @@ package io.github.droidkit.feature.tools
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -34,13 +35,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.common.RecoveryAction
+import io.github.droidkit.core.common.SearchEntry
+import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.privileges.ToolResolution
 import io.github.droidkit.core.privileges.toUiProblem
+import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.PermissionRequestEffect
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.components.ToolCard
+import io.github.droidkit.core.ui.components.ToolIcon
+import io.github.droidkit.core.ui.components.ToolIcons
 import io.github.droidkit.core.ui.components.ToolInfoDialog
 import io.github.droidkit.core.ui.components.UiProblemCard
 import io.github.droidkit.core.ui.components.openAppSettings
@@ -65,7 +71,7 @@ fun ToolsScreen(
         PermissionRequestEffect(permission) { pendingPermission = null }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Tools") }) }) { padding ->
+    Scaffold(topBar = { DroidKitTopAppBar("Tools") }) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -107,28 +113,31 @@ fun ToolsScreen(
                 }
             }
             val tools = viewModel.visibleTools()
-            val pages = SearchPages.search(query)
-            if (pages.isNotEmpty() && category == null) {
-                item { SectionHeader("Pages") }
-                items(pages, key = { "page_${it.route}" }) { page ->
-                    Card(
-                        onClick = { onOpenTool(page.route) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(page.title, style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                page.subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            val entries = if (category == null) viewModel.searchEntries(query) else emptyList()
+            val grouped = entries.groupBy { it.type }
+            if (grouped.isNotEmpty()) {
+                SearchResultType.entries.forEach { type ->
+                    val group = grouped[type].orEmpty()
+                    if (group.isNotEmpty()) {
+                        item { SectionHeader(type.label) }
+                        items(group, key = { "entry_${it.id}" }) { entry ->
+                            SearchResultRow(
+                                entry = entry,
+                                onClick = { onOpenTool(entry.route) },
                             )
                         }
                     }
                 }
                 item { SectionHeader("Tools") }
             }
-            if (tools.isEmpty() && pages.isEmpty()) {
-                item { EmptyState("No tools or pages match.") }
+            if (tools.isEmpty() && entries.isEmpty()) {
+                item {
+                    EmptyState(
+                        text = "No tools or pages match.",
+                        actionLabel = if (query.isNotBlank()) "Clear search" else null,
+                        onAction = if (query.isNotBlank()) ({ viewModel.setQuery("") }) else null,
+                    )
+                }
             } else {
                 items(tools, key = { it.id }) { tool ->
                     val resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) }
@@ -191,5 +200,26 @@ fun ToolsScreen(
             resolution = viewModel.resolve(tool),
             onDismiss = { infoTool = null },
         )
+    }
+}
+
+/** Uniform search-result row: icon, title, contextual subtitle (plan file 08). */
+@Composable
+private fun SearchResultRow(entry: SearchEntry, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ToolIcon(ToolIcons.forEntry(entry))
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text(entry.title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    entry.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
