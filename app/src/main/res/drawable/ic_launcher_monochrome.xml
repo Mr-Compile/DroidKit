@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Flat silhouette of the Candidate-9 head; themed-icon mask punches the eyes. -->
+    <path
+        android:pathData="M30.6 74.3 A23.4 23.4 0 0 1 77.4 74.3 Z M41.1 61.8 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0 Z M59.9 61.8 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0 Z"
+        android:fillType="evenOdd"
+        android:fillColor="#FF000000" />
+    <path
+        android:pathData="M42.3 54 L34.5 40.7 M65.7 54 L73.5 40.7"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="4.7"
+        android:strokeLineCap="round" />
+</vector>

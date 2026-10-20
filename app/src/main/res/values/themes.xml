@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.DroidKit" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash_loading</item>
+        <item name="android:windowBackground">@color/splash_background</item>
         <!-- API 31+ system splash: keep it on the splash's near-black green. -->
-        <item name="android:windowSplashScreenBackground">#040808</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
     </style>
 </resources>

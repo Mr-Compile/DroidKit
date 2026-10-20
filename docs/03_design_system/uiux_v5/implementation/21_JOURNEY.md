@@ -3,7 +3,7 @@
 - [ ] inventory theme/components/routes/states/errors
 - [ ] identify v4/v5/code conflicts
 ## V5-1 Foundation
-- [ ] production Candidate-4 assets task
+- [ ] production Candidate-9 assets task
 - [ ] correct Android system splash
 - [ ] dark/light semantic tokens
 - [ ] typography/spacing/shapes/motion

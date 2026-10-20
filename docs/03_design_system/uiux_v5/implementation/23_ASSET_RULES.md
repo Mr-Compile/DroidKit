@@ -1,5 +1,5 @@
 # Brand Asset Rules
-Included references: logo candidate board and approved splash where available. Selected direction: Candidate 4.
+Included references: logo candidate board and approved splash where available. Selected direction: Candidate 9 (glowing Android head on near-black ink; `assets/references/logo_candidate9_selected.png`).
 
 Before release, create/approve clean production assets: adaptive icon foreground/background, monochrome icon where applicable, standalone mark, optional wordmark and splash icon. Do not crop the candidate-board screenshot as the final launcher icon.
 

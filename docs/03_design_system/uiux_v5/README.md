@@ -11,7 +11,7 @@ Supersedes v4 for UI/UX decisions while preserving DroidKit architecture, securi
 - Aurora/Gradient: brand moments.
 - Glass: rare elevated/contextual surfaces.
 
-Selected brand direction: **Logo Candidate 4**. The approved dark green/teal splash is the startup visual reference.
+Selected brand direction: **Logo Candidate 9** (futuristic glowing Android head, "Deeper insights. Better devices."). The Compose-drawn ink/glow splash is the startup visual; see `assets/references/logo_candidate9_selected.png`.
 
 ## UX promise
 Friendly enough for a normal Android user, precise enough for a technician, detailed enough for a developer.

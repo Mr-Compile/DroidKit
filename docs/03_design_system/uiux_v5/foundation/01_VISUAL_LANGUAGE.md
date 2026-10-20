@@ -14,7 +14,7 @@ Dark-first graphite surfaces, crisp text, technical typography for raw values, s
 Home and selected overview dashboards only. Avoid in dense inspectors/settings/forms.
 
 ## Aurora / Gradient
-Candidate-4 green -> teal identity for splash, hero accents, AI identity, onboarding and focus moments. Not every card/button.
+Candidate-9 green -> teal glow identity for splash, hero accents, AI identity, onboarding and focus moments. Not every card/button.
 
 ## Restrained Glass
 Only rare elevated contextual/AI surfaces when contrast and performance remain good. Dense data stays solid.

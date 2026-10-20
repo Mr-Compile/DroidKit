@@ -53,3 +53,16 @@ Owner approval required?: no
 Files/docs updated: `core/common/UiProblem.kt`, `core/ui/components/*`, `core/ui/theme/Tokens.kt`, tracker DK-020/030/031/032
 Migration completed? [x]
 Notes: Tools/Settings surface adoption deferred to parallel UX workstream (droidkit_ux_plan).
+
+## Entry
+Date: 2026-10-20
+Feature: Brand identity + splash
+Old document/decision: uiux_v4 + uiux_v5 — Logo Candidate 4 (geometric hex mark); baked splash_loading.png artwork
+Improved v2 decision: Owner selected Logo Candidate 9 (futuristic glowing Android head) + Compose-drawn splash with loading indicator
+Repository reality: brand mark, launcher icon, and splash rebuilt to the Candidate-9 direction in this session
+Conflict classification: owner-driven design change (supersedes the v4/v5 candidate selection)
+Decision: Candidate 9 wins; brand kit, v5 canonical docs, code assets updated; superseded v4 docs left as history
+Owner approval required?: yes — given in session
+Files/docs updated: `docs/03_design_system/branding/*`, `docs/03_design_system/uiux_v5/{README.md, foundation/01, implementation/21,23}`, `core/ui/.../theme/Brand.kt`, `app/.../SplashScreen.kt`, `ic_launcher_foreground.xml`, `themes.xml`, `colors.xml`, `mockups/index.html`, master journey checklist; deleted `splash_loading.png` + stale branding PNG
+Migration completed? [x]
+Notes: splash tagline switched to the candidate's own "Deeper insights. Better devices."; old primary tagline retained as alternate for onboarding/store copy.

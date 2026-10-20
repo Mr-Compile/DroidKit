@@ -742,7 +742,7 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 - [ ] `docs/04_audits/V5_UI_AUDIT.md` — inventory, state/error gaps, per-feature file lists, conflicts logged
 
 ## V5-1 Foundation
-- [ ] Production Candidate-4 assets (adaptive + monochrome icon, splash) — plan Task 1
+- [ ] Production Candidate-9 assets (adaptive + monochrome icon, splash) — plan Task 1
 - [ ] `core-splashscreen` cold-start splash, no artificial delay
 - [ ] Dark + light semantic tokens in `:core:ui` (`SemanticColors.kt`, `Spacing.kt`, `Shape.kt`, `Type.kt`) — plan Task 2
 - [ ] `J03_DESIGN_TOKENS.md` v5-name mapping appended

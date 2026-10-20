@@ -4,32 +4,37 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
 
 /**
- * Brand tokens for the DroidKit mark (Candidate 4 — abstract/geometric).
- * Source of truth and usage rules: docs/03_design_system/branding/README.md.
+ * Brand tokens for the DroidKit mark (Candidate 9 — futuristic glowing
+ * Android head). Source of truth and usage rules:
+ * docs/03_design_system/branding/README.md.
  */
 object DroidKitBrand {
     val Green = Color(0xFF3CE88A)
     val Teal = Color(0xFF14B8CC)
     val GreenOnLight = Color(0xFF0E9E6B)
-    val CapsuleGreen = Color(0xFF86F595)
+    val Glow = Color(0x593CE88A)
+    val GlassTop = Color(0xFF1A2C31)
+    val GlassBottom = Color(0xFF0A1214)
     val Ink = Color(0xFF0C1416)
+    val SplashInk = Color(0xFF040808)
 
     val gradient: Brush
         get() = Brush.linearGradient(listOf(Green, Teal))
+
+    val glass: Brush
+        get() = Brush.verticalGradient(listOf(GlassTop, GlassBottom))
 }
 
 /**
- * The DroidKit mark as a Compose vector: a bold hexagonal band split into a
- * large left C-piece (wrapping the top vertex, left side, and bottom vertex)
- * and a right bracket, open at the upper-right edge and the bottom vertex,
- * around a light-green vertical capsule "tool bit". 108-unit viewport, same
- * geometry as docs/03_design_system/branding/droidkit-mark.svg.
+ * The DroidKit mark as a Compose vector: a glass Android head — dark domed
+ * skull with a gradient rim and sheen, two antennae, and glowing green eyes
+ * (soft halo + solid core). 108-unit viewport, same geometry as
+ * docs/03_design_system/branding/droidkit-mark.svg.
  */
 val DroidKitMark: ImageVector by lazy(LazyThreadSafetyMode.NONE) {
     ImageVector.Builder(
@@ -39,26 +44,30 @@ val DroidKitMark: ImageVector by lazy(LazyThreadSafetyMode.NONE) {
         viewportWidth = 108f,
         viewportHeight = 108f,
     ).addPath(
-        pathData = addPathNodes(
-            "M54 82 L27 66.5 L27 42 L52.5 26 L56.5 28",
-        ),
+        pathData = addPathNodes("M39 54 L29 37 M69 54 L79 37"),
         stroke = DroidKitBrand.gradient,
-        strokeLineWidth = 14f,
+        strokeLineWidth = 6f,
         strokeLineCap = StrokeCap.Round,
-        strokeLineJoin = StrokeJoin.Round,
+    ).addPath(
+        pathData = addPathNodes("M24 80 A30 30 0 0 1 84 80 Z"),
+        fill = DroidKitBrand.glass,
+        stroke = DroidKitBrand.gradient,
+        strokeAlpha = 0.9f,
+        strokeLineWidth = 1.6f,
+    ).addPath(
+        pathData = addPathNodes("M30 58 a24 10 0 1 0 48 0 a24 10 0 1 0 -48 0 Z"),
+        fill = SolidColor(Color.White.copy(alpha = 0.07f)),
     ).addPath(
         pathData = addPathNodes(
-            "M74.5 37.6 L81.5 42 L81.5 65.5 L64.6 75.6",
+            "M32 64 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z " +
+                "M56 64 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 Z",
         ),
-        stroke = DroidKitBrand.gradient,
-        strokeLineWidth = 14f,
-        strokeLineCap = StrokeCap.Round,
-        strokeLineJoin = StrokeJoin.Round,
+        fill = SolidColor(DroidKitBrand.Green.copy(alpha = 0.25f)),
     ).addPath(
         pathData = addPathNodes(
-            "M46.5 42.5 Q46.5 35 54 35 Q61.5 35 61.5 42.5 " +
-                "L61.5 65.5 Q61.5 73 54 73 Q46.5 73 46.5 65.5 Z",
+            "M37.5 64 a4.5 4.5 0 1 0 9 0 a4.5 4.5 0 1 0 -9 0 Z " +
+                "M61.5 64 a4.5 4.5 0 1 0 9 0 a4.5 4.5 0 1 0 -9 0 Z",
         ),
-        fill = SolidColor(DroidKitBrand.CapsuleGreen),
+        fill = SolidColor(DroidKitBrand.Green),
     ).build()
 }

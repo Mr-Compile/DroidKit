@@ -29,7 +29,7 @@
 
 ## Current State (audit snapshot, verified 2026-10-19)
 
-- `core/ui/.../theme/Brand.kt` — `DroidKitBrand` colors + `DroidKitMark` vector (Candidate-4 hexagon/capsule mark; source SVG `docs/03_design_system/branding/droidkit-mark.svg`).
+- `core/ui/.../theme/Brand.kt` — `DroidKitBrand` colors + `DroidKitMark` vector (Candidate-4 hexagon/capsule mark at audit time; superseded by Candidate 9 glowing-head mark on 2026-10-20 — see `docs/03_design_system/branding/`).
 - `core/ui/.../theme/Theme.kt` — `DroidKitTheme(darkTheme, dynamicColor = true)` wrapping raw M3 schemes. **No semantic token layer, dynamic color ON by default (conflicts with v5 brand identity).**
 - `core/ui/.../components/` — `DroidKitWordmark`, `Feedback.kt` (`SectionHeader`, `EmptyState`, `BlockedReason.describe()`, `BlockedReasonList`), `ToolCard`.
 - `core/ui/` root — `FeatureStubScreen`, `InfoRow`, `LabIndexScreen`, `SectionCard`.
