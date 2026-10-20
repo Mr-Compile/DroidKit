@@ -1376,7 +1376,7 @@ function bindTest(test, mode){
       S.sensorLast = () => `Last reading: ${vals.join(", ")}`;
     },300);
   }
-  if(test.capKey){
+  if(test.capKey && mode==="guided"){
     const r=capReading(test.capKey);
     later(()=>emitResult(test, r.supported?"PASS":"NOT_SUPPORTED", r.supported?`${r.label}: ${r.value}`:r.label),1100);
   }
