@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,6 +34,7 @@ import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.system.DeviceSystemProbe
 import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.system.formatHz
+import io.github.droidkit.core.system.formatUptime
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -54,6 +57,9 @@ fun DeviceInfoScreen(
     val context = LocalContext.current
 
     val providerStatuses by viewModel.providerStatuses.collectAsStateWithLifecycle()
+    val elevatedProvider by viewModel.elevatedProvider.collectAsStateWithLifecycle()
+    val advanced by viewModel.advanced.collectAsStateWithLifecycle()
+    val advancedLoading by viewModel.advancedLoading.collectAsStateWithLifecycle()
     val sections = buildSections(probe, providerStatuses.mapKeys { it.key.name })
 
     Scaffold(
@@ -101,6 +107,31 @@ fun DeviceInfoScreen(
                     }
                 }
             }
+
+            item {
+                SectionCard(title = "Advanced detail") {
+                    Text(
+                        "Read-only deep snapshot via the active elevated provider " +
+                            "(Shizuku, root or wireless ADB): system props, thermal zones, " +
+                            "/proc details, partitions, battery and Wi-Fi dumpsys fields. " +
+                            "Nothing here is modified.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    when {
+                        elevatedProvider == null && advanced == null ->
+                            InfoRow("Elevated provider", "Not available — set up Shizuku, root or ADB in Permission Center")
+                        advanced == null && !advancedLoading ->
+                            Button(onClick = { viewModel.loadAdvancedDetail() }) {
+                                Text("Load advanced detail")
+                            }
+                    }
+                    if (advancedLoading) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    advanced?.let { adv -> AdvancedDetailRows(adv, onRefresh = { viewModel.loadAdvancedDetail() }) }
+                }
+            }
+
             val aiFields = sections
                 .flatMap { s -> s.rows.map { (l, v) -> "${s.title} / $l" to v } }
                 .toMap()
@@ -122,6 +153,52 @@ fun DeviceInfoScreen(
     }
 }
 
+@Composable
+private fun AdvancedDetailRows(adv: AdvancedDetail, onRefresh: () -> Unit) {
+    InfoRow("Source provider", adv.provider?.name)
+    adv.cpu?.let { cpu ->
+        InfoRow(
+            "CPU",
+            listOfNotNull(
+                "${cpu.coreCount} cores".takeIf { cpu.coreCount > 0 },
+                cpu.modelName,
+                cpu.hardware?.let { "HW $it" },
+            ).joinToString(" — ").ifBlank { null },
+        )
+    }
+    adv.mem?.let { mem ->
+        InfoRow("MemTotal / MemFree", listOfNotNull(
+            mem.totalKb?.let { formatBytes(it * 1024) },
+            mem.freeKb?.let { formatBytes(it * 1024) },
+        ).joinToString(" / "))
+    }
+    adv.thermalZones.forEach { zone ->
+        InfoRow(zone.name, "${zone.type} — %.1f °C".format(zone.milliCelsius / 1000f))
+    }
+    if (adv.partitions.isNotEmpty()) {
+        InfoRow("Block devices", "${adv.partitions.size} partitions")
+    }
+    adv.learnedCapacityHint?.let { InfoRow("Learned battery capacity", it) }
+    adv.wifiLink?.let { link ->
+        InfoRow("Wi-Fi link", listOfNotNull(
+            link.ssid,
+            link.wifiGeneration,
+            link.frequencyMhz?.let { "$it MHz" },
+        ).joinToString(" · ").ifBlank { null })
+        InfoRow("RSSI / link speed", listOfNotNull(
+            link.rssiDbm?.let { "$it dBm" },
+            link.linkSpeedMbps?.let { "$it Mbps" },
+        ).joinToString(" / "))
+    }
+    adv.props.forEach { prop -> InfoRow(prop.name, prop.value.ifBlank { "empty" }) }
+    InfoRow("System props total", adv.propsTotal.toString())
+    adv.batteryDetail.forEach { (k, v) -> InfoRow("battery: $k", v) }
+    if (adv.failures.isNotEmpty()) {
+        InfoRow("Not exposed", adv.failures.joinToString())
+    }
+    TextButton(onClick = onRefresh) { Text("Refresh") }
+}
+
 private fun buildSections(
     probe: DeviceSystemProbe,
     providerStatuses: Map<String, *>,
@@ -140,13 +217,32 @@ private fun buildSections(
             "Product" to probe.product,
             "App version" to probe.appVersionName,
         )),
-        Section("OS", listOf(
+        Section("OS & build", listOf(
             "Android release" to probe.androidRelease,
             "API level" to probe.sdkInt.toString(),
             "Security patch" to probe.securityPatch,
+            "Fingerprint" to probe.fingerprint,
+            "Build ID / display" to "${probe.buildId} / ${probe.buildDisplay}",
+            "Incremental" to probe.buildIncremental,
+            "Type / tags" to "${probe.buildType} / ${probe.buildTags}",
+            "Build date" to probe.buildTimeMs.takeIf { it > 0 }
+                ?.let { java.text.DateFormat.getDateInstance().format(java.util.Date(it)) },
+            "Kernel" to (probe.kernelDetail ?: probe.kernelRelease),
+            "ART runtime" to probe.artVersion,
+            "Uptime" to formatUptime(probe.uptimeMs()),
+            "Deep sleep (approx.)" to formatUptime(probe.deepSleepMs()),
         )),
         Section("Hardware", listOf(
+            "SoC" to listOfNotNull(probe.socManufacturer, probe.socModel)
+                .joinToString(" ").ifBlank { null },
+            "Board / hardware" to "${probe.board} / ${probe.hardware}",
+            "CPU cores" to probe.cpuCoreCount.toString(),
             "Supported ABIs" to probe.supportedAbis.joinToString(),
+            "Baseband" to probe.radioVersion,
+            "Bootloader" to probe.bootloader,
+            "Media codecs" to probe.codecSummary
+                ?.let { "${it.decoders} decoders / ${it.encoders} encoders" },
+            "Widevine security level" to probe.widevineSecurityLevel,
             "Cameras" to "${cameras.total} (back ${cameras.backFacing}, front ${cameras.frontFacing}, external ${cameras.external})",
             "Sensors" to probe.sensors.size.toString(),
         ), labRoute = "sensors", labLabel = "Sensor inventory"),
@@ -162,6 +258,8 @@ private fun buildSections(
             "Density" to "${display.densityDpi} dpi",
             "Current refresh rate" to formatHz(display.refreshHz),
             "Supported modes" to probe.displayModeRatesHz.joinToString { formatHz(it) }.ifBlank { null },
+            "HDR" to (probe.displayHdrTypes.takeIf { it.isNotEmpty() }?.joinToString() ?: "None"),
+            "Wide color gamut" to probe.displayWideColorGamut?.toString(),
         )),
         Section("Battery", listOf(
             "Charge level" to battery.levelPct.takeIf { it >= 0f }?.let { "${it.toInt()}%" },
