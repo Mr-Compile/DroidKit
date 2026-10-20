@@ -1081,6 +1081,7 @@ function bindTest(test, mode){
       else if(i<colors.length-1){i++;box.style.background=colors[i];label.textContent=`Showing ${names[i]} (${i+1}/5) — ${test.id==="display.dead_pixel"?"inspect every pixel before tapping":"tap to switch color"}`;}
       else {hidden=false;card.style.display="block";}
     });
+    S.displayProgress = () => `inspected through ${names[i]} (${i+1}/5)`;
   }
   if(test.id==="touch.grid"){
     const wrap=$("#tgcanvas"), label=$("#tglabel"), pass=$("#passbtn");
@@ -1136,11 +1137,12 @@ function bindTest(test, mode){
     const el=$("#sread");
     let n=0;
     every(()=>{ n++;
-      el.innerHTML = s.axes.map(ax=>{
+      const vals = s.axes.map(ax=>{
         const base={x:0.4,y:9.4,z:0.8,value:s.type===5?Math.abs(Math.sin(n/6))*400+40:s.type===8?(n%20<10?0:5):1013.2,w:0.5}[ax]??0;
-        const v = base + Math.sin(n/4 + ax.charCodeAt(0))* (ax==="value"&&s.type===5?30:0.25);
-        return `<div class="row"><span class="grow t-body">${ax}</span><span class="t-body">${v.toFixed(3)} ${s.unit}</span></div>`;
-      }).join("");
+        return (base + Math.sin(n/4 + ax.charCodeAt(0))* (ax==="value"&&s.type===5?30:0.25)).toFixed(3);
+      });
+      el.innerHTML = s.axes.map((ax,i)=>`<div class="row"><span class="grow t-body">${ax}</span><span class="t-body">${vals[i]} ${s.unit}</span></div>`).join("");
+      S.sensorLast = () => `Last reading: ${vals.join(", ")}`;
     },300);
   }
   if(test.capKey){
@@ -1148,11 +1150,20 @@ function bindTest(test, mode){
     later(()=>emitResult(test, r.supported?"PASS":"NOT_SUPPORTED", r.supported?`${r.label}: ${r.value}`:r.label),1100);
   }
 }
-function emitResult(test, state){
+function emitResult(test, state, auto){
   const note = $("#tnote")?.value?.trim() || null;
-  let full = note;
-  if(test.id==="touch.grid" && S.tgCoverage) full=[note,S.tgCoverage()].filter(Boolean).join("; ");
-  if(test.id==="touch.multitouch" && S.mtMax) full=[note,S.mtMax()].filter(Boolean).join("; ");
+  let autoNote = auto;
+  if(test.id==="touch.grid" && S.tgCoverage) autoNote=S.tgCoverage();
+  if(test.id==="touch.multitouch" && S.mtMax) autoNote=S.mtMax();
+  if(test.id.startsWith("display.") && S.displayProgress) autoNote=S.displayProgress();
+  if(test.sensor!==undefined && S.sensorLast) autoNote=S.sensorLast();
+  if(test.id==="audio.speaker"){ const n=+($("#playcount")?.dataset.n||0); autoNote=n?`tone played ${n} time(s)`:"tone never played"; }
+  if(test.id==="audio.microphone") autoNote=$("#micplay")?.disabled===false?"recording captured":"no recording captured";
+  if(test.id==="haptics.vibration") autoNote=S.vib?`buzz triggered ${S.vib} time(s)`:"buzz never triggered";
+  if(test.id==="camera.front"||test.id==="camera.rear") autoNote="preview rendered";
+  if(test.id==="camera.flash"){ const n=+($("#torchbtn")?.dataset.n||0); autoNote=n?`torch toggled ${n} time(s)`:"torch never toggled"; }
+  if(test.id==="power.charging"){ const b=DEVICE.battery; autoNote=`Level ${b.level}%, ${b.status}, plug ${b.plug}`; }
+  const full = [note, autoNote].filter(Boolean).join("; ") || null;
   if(S.engine && S.stack.includes("diagnose/guided") || cur()==="diagnose/guided"){
     const e=S.engine;
     e.results[test.id]=state; if(full)e.notes[test.id]=full;
@@ -2617,7 +2628,7 @@ function handleAct(act, el, e){
       const tb=$("#testbar");
       tb.insertAdjacentHTML("afterbegin",`<input class="field" id="tnote" placeholder="Note (optional)" style="margin-bottom:8px">`);
       $("#tnote").focus(); break; }
-    case "vibrate": navigator.vibrate?.(400); tone(180,.12,.08); toast("Buzz (simulated on desktop)"); break;
+    case "vibrate": S.vib=(S.vib||0)+1; navigator.vibrate?.(400); tone(180,.12,.08); toast("Buzz (simulated on desktop)"); break;
     case "playtone": { tone(440,1); const c=$("#playcount"); c.dataset.n=(+c.dataset.n||0)+1; c.textContent=`Played ${c.dataset.n} time(s)`; break; }
     case "mic-rec": { const b=$("#micrec"),st=$("#micstate");
       if(b.dataset.rec){ b.dataset.rec="";b.textContent="Record 3s+";st.textContent="Recording saved (3.0 s)";$("#micplay").disabled=false; }
@@ -2625,7 +2636,7 @@ function handleAct(act, el, e){
         later(()=>{ if($("#micrec")?.dataset.rec){$("#micrec").dataset.rec="";$("#micrec").textContent="Record 3s+";$("#micstate").textContent="Recording saved (3.0 s)";$("#micplay").disabled=false;} },3000); }
       break; }
     case "mic-play": tone(330,.5); later(()=>tone(392,.5),400); toast("Playing back recording"); break;
-    case "torch": { const b=$("#torchbtn"),on=b.dataset.on==="1";b.dataset.on=on?"":"1";
+    case "torch": { const b=$("#torchbtn"),on=b.dataset.on==="1";b.dataset.on=on?"":"1";b.dataset.n=(+b.dataset.n||0)+1;
       b.textContent=on?"Turn torch ON":"Turn torch OFF";
       $("#torchstate").textContent=on?"":"Torch is ON — check the LED on the back.";
       $(".camview, .phone").classList?.toggle?.("torch-on",!on); break; }

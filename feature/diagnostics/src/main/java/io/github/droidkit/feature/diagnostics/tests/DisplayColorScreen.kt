@@ -100,7 +100,16 @@ fun DisplayColorScreen(
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
         ) {
-            TestResultBar(onResult = onResult)
+            TestResultBar(
+                onResult = { state, note ->
+                    val detail = listOfNotNull(
+                        note,
+                        "inspected through ${colorNames[colorIndex]} " +
+                            "(${colorIndex + 1}/${colors.size})",
+                    ).joinToString("; ")
+                    onResult(state, detail)
+                },
+            )
         }
     }
 }

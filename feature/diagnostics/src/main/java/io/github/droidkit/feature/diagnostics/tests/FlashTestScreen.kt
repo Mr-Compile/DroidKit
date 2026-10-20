@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,6 +46,7 @@ private fun FlashContent(
     var provider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     var hasFlash by remember { mutableStateOf<Boolean?>(null) }
     var torchOn by remember { mutableStateOf(false) }
+    var toggleCount by remember { mutableIntStateOf(0) }
     var initError by remember { mutableStateOf<String?>(null) }
     var boundCamera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
 
@@ -110,6 +112,7 @@ private fun FlashContent(
                 onClick = {
                     torchOn = !torchOn
                     boundCamera?.cameraControl?.enableTorch(torchOn)
+                    toggleCount++
                 },
                 enabled = hasFlash == true,
                 modifier = Modifier.fillMaxWidth(),
@@ -124,6 +127,16 @@ private fun FlashContent(
                 )
             }
         }
-        TestResultBar(onResult = onResult)
+        TestResultBar(
+            onResult = { state, note ->
+                val detail = listOfNotNull(
+                    note,
+                    initError?.let { "camera init error: $it" },
+                    if (toggleCount == 0) "torch never toggled"
+                    else "torch toggled $toggleCount time(s)",
+                ).joinToString("; ").ifBlank { null }
+                onResult(state, detail)
+            },
+        )
     }
 }

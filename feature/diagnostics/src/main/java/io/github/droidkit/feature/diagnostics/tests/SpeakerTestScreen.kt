@@ -91,6 +91,12 @@ fun SpeakerTestScreen(
                 )
             }
         }
-        TestResultBar(onResult = onResult)
+        TestResultBar(
+            onResult = { state, note ->
+                val played =
+                    if (playCount == 0) "tone never played" else "tone played $playCount time(s)"
+                onResult(state, listOfNotNull(note, played).joinToString("; "))
+            },
+        )
     }
 }

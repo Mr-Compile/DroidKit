@@ -15,7 +15,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,7 @@ fun VibrationScreen(
         }
     }
     val hasVibrator = remember { vibrator?.hasVibrator() == true }
+    var pulseCount by remember { mutableIntStateOf(0) }
 
     if (!hasVibrator) {
         LaunchedEffect(test.id) {
@@ -66,6 +70,7 @@ fun VibrationScreen(
                     vibrator?.vibrate(
                         VibrationEffect.createOneShot(400, VibrationEffect.DEFAULT_AMPLITUDE),
                     )
+                    pulseCount++
                 },
                 enabled = hasVibrator,
                 modifier = Modifier.fillMaxWidth(),
@@ -80,6 +85,15 @@ fun VibrationScreen(
                 )
             }
         }
-        TestResultBar(onResult = onResult)
+        TestResultBar(
+            onResult = { state, note ->
+                val buzz = if (pulseCount == 0) {
+                    "buzz never triggered"
+                } else {
+                    "buzz triggered $pulseCount time(s)"
+                }
+                onResult(state, listOfNotNull(note, buzz).joinToString("; "))
+            },
+        )
     }
 }

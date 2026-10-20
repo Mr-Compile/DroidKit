@@ -125,6 +125,19 @@ private fun CameraContent(
                 )
             }
         }
-        TestResultBar(onResult = onResult)
+        TestResultBar(
+            onResult = { state, note ->
+                val detail = listOfNotNull(
+                    note,
+                    initError?.let { "camera init error: $it" },
+                    when (cameraAvailable) {
+                        true -> "preview rendered"
+                        false -> "preview not rendered"
+                        null -> null
+                    },
+                ).joinToString("; ").ifBlank { null }
+                onResult(state, detail)
+            },
+        )
     }
 }

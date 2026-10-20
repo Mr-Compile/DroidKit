@@ -148,6 +148,15 @@ private fun MicContent(
                 )
             }
         }
-        TestResultBar(onResult = onResult)
+        TestResultBar(
+            onResult = { state, note ->
+                val detail = listOfNotNull(
+                    note,
+                    error?.let { "error: $it" },
+                    if (recordedFile != null) "recording captured" else "no recording captured",
+                ).joinToString("; ")
+                onResult(state, detail)
+            },
+        )
     }
 }
