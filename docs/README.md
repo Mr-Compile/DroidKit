@@ -28,6 +28,7 @@ Numbered in workflow order. Read `00` for the rules, `01` for what to do next.
 - `droidkit_v1_completion_plan/` — V1 completion AI execution pack (master prompt, tracker, DoD, device verification matrix)
 - `droidkit_navigation_plan/` — navigation hardening AI pack (master navigation prompt, QA matrix, route contract, AI-first prompt)
 - `droidkit_ux_plan/` — UX enhancement AI pack (permissions/privacy/search/settings/a11y; executed via `2026-10-19-ux-enhancement-execution.md`)
+- `droidkit_ui_v6_plan/` — UI v6 consolidation AI pack (icons, search, chips, states, navigation polish; final report in `04_audits/`)
 
 ## What's inside `02_foundations/`
 
