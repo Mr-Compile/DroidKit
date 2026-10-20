@@ -19,8 +19,8 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 applicationId = "io.github.droidkit"
                 minSdk = 28
                 targetSdk = 36
-                versionCode = 8
-                versionName = "0.8.0"
+                versionCode = 9
+                versionName = "0.9.0-alpha.1"
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             }
             compileOptions {

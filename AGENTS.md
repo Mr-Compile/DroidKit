@@ -89,3 +89,6 @@ DoD: `playbook/27`. Audit templates: `playbook/26`.
 ## Versions
 Use SemVer for versionName and monotonically increasing Android versionCode.
 Update CHANGELOG and Git tags only when appropriate to the milestone/release (`playbook/25`).
+- `versionCode`/`versionName` live only in `build-logic/src/main/kotlin/droidkit/AndroidApplicationConventionPlugin.kt` — never hardcode them in `app/build.gradle.kts` or the manifest.
+- At each release gate the agent bumps `versionName` to the newest CHANGELOG section, increments `versionCode`, tags `vX.Y.Z`, and pushes with `--tags`.
+- At each milestone the agent also checks `gradle/libs.versions.toml` for dependency updates and proposes bumps; the catalog changes only with user approval.

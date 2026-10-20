@@ -48,3 +48,6 @@ Never mark checklist items complete based only on scaffolding.
 ## Versions
 Use SemVer for versionName and monotonically increasing Android versionCode.
 Update CHANGELOG and Git tags only when appropriate to the milestone/release.
+- `versionCode`/`versionName` live only in `build-logic/src/main/kotlin/droidkit/AndroidApplicationConventionPlugin.kt`.
+- At each release gate: bump `versionName` to the newest CHANGELOG section, increment `versionCode`, tag `vX.Y.Z`, push `--tags`.
+- At each milestone: check `gradle/libs.versions.toml` for dependency updates and propose bumps; catalog changes only with user approval.
