@@ -41,13 +41,13 @@
     --surface: #111318; --card: #1d2129; --card2: #262b34;
     --text: #e3e7ee; --sub: #a3aab8; --outline: #4a5160;
     --primary: #a8c7fa; --on-primary: #0a2a5e; --error: #f2b8b5;
-    --tonal: #2a2f3a; --ok: #a8c7fa; --field: #171a20;
+    --tonal: #2a2f3a; --ok: #a8c7fa; --field: #171a20; --kit: #3CE88A;
   }
   .phone[data-theme="light"] {
     --surface: #fbf8fd; --card: #f0edf4; --card2: #e6e1ea;
     --text: #1b1b21; --sub: #49454f; --outline: #c9c4d4;
     --primary: #425e91; --on-primary: #ffffff; --error: #b3261e;
-    --tonal: #e6e1ea; --ok: #425e91; --field: #f3f0f7;
+    --tonal: #e6e1ea; --ok: #425e91; --field: #f3f0f7; --kit: #0E9E6B;
   }
   .statusbar {
     height: 26px; flex: none; display: flex; align-items: center;
@@ -291,7 +291,7 @@
 "use strict";
 /* DroidKit brand mark (Candidate 9, docs/03_design_system/branding/) */
 const DK_MARK = `<svg viewBox="0 0 108 108" width="SIZE" height="SIZE" style="display:block"><defs><linearGradient id="dkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3CE88A"/><stop offset="1" stop-color="#14B8CC"/></linearGradient><linearGradient id="dkglass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A2C31"/><stop offset="1" stop-color="#0A1214"/></linearGradient></defs><path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="url(#dkg)" stroke-width="6" stroke-linecap="round"/><path d="M24 80 A30 30 0 0 1 84 80 Z" fill="url(#dkglass)" stroke="url(#dkg)" stroke-width="1.6" stroke-opacity="0.9"/><ellipse cx="54" cy="58" rx="24" ry="10" fill="#FFFFFF" opacity="0.07"/><circle cx="42" cy="64" r="10" fill="#3CE88A" opacity="0.25"/><circle cx="66" cy="64" r="10" fill="#3CE88A" opacity="0.25"/><circle cx="42" cy="64" r="4.5" fill="#3CE88A"/><circle cx="66" cy="64" r="4.5" fill="#3CE88A"/></svg>`;
-const DK_WORDMARK = `<span style="display:inline-flex;align-items:center;gap:8px">${DK_MARK.replaceAll("SIZE","22")}<span><span style="color:var(--text,#e8ecf1)">Droid</span><span style="color:#3CE88A">Kit</span></span></span>`;
+const DK_WORDMARK = `<span style="display:inline-flex;align-items:center;gap:8px">${DK_MARK.replaceAll("SIZE","22")}<span><span style="color:var(--text,#e8ecf1)">Droid</span><span style="color:var(--kit,#3CE88A)">Kit</span></span></span>`;
 /* =====================================================================
    MOCK DEVICE STATE — a Pixel-8-Pro-ish phone, mid-setup:
    CAMERA granted; RECORD_AUDIO / BLUETOOTH_CONNECT / BLUETOOTH_SCAN not
@@ -363,7 +363,7 @@ const S = {
   pkgQuery: "", pkgRestore: "",
   nsd: null, ports: null,
   cmp: { before:null, after:null, done:false },
-  obPage: 0,
+  obPage: 0, upd: "idle",
   timers: [],
 };
 /* ---------------- tools (mirrors every *Feature.kt tools list) ------- */
@@ -386,7 +386,7 @@ const TOOLS = [
   t("sensors.orientation","Orientation Helper","Azimuth/pitch/roll from the rotation-vector sensor",CAT.DEVICE,"sensors/orientation"),
   t("diagnostics.full","Full Diagnostic","Guided end-to-end hardware check with a saved report",CAT.DIAGNOSTICS,"diagnose/guided"),
   t("diagnostics.quick","Quick Tests","Jump straight to a single hardware test",CAT.DIAGNOSTICS,"diagnose"),
-  t("sensors.live","Live Sensor Monitor","Stream live readings from supported sensors",CAT.DIAGNOSTICS,"sensors/live/1"),
+  t("sensors.live","Live Sensor Monitor","Stream live readings from supported sensors",CAT.DIAGNOSTICS,"sensors/live"),
   t("display.deadpixel","Dead Pixel Test","Full-screen color slides to spot dead pixels",CAT.DIAGNOSTICS,"display"),
   t("display.touch","Touch Test","Count simultaneous touch points",CAT.DIAGNOSTICS,"display"),
   t("display.modes","Display Modes","Current and supported display modes, refresh rates, HDR",CAT.DIAGNOSTICS,"display/modes"),
@@ -643,7 +643,7 @@ function infoRow(k,v,copy=true){
     ${copy && !na ? `<span class="copybtn" data-copy="${esc(k)}: ${esc(v)}">Copy</span>` : ``}</div>`;
 }
 function sectionCard(title, inner){ return `<div class="card"><div class="sec-head" style="padding:0 0 6px">${esc(title)}</div>${inner}</div>`; }
-function toolCard(tool,{fav=false}={}){
+function toolCard(tool,{fav=null}={}){
   const r = resolve(tool);
   const chips = [`<span class="chip">${tool.category}</span>`];
   if (tool.safety!==SAFE) chips.push(`<span class="chip">L${tool.safety}</span>`);
@@ -655,11 +655,13 @@ function toolCard(tool,{fav=false}={}){
       <div>${chips.join("")}</div>
     </div>
     <span class="badge ${r.ready?"ready":"blocked"}">${r.ready?"Ready":"Blocked"}</span>
-    ${fav!==undefined?`<span class="star ${fav?"on":""}" data-fav="${tool.id}" title="Favorite">${fav?"★":"☆"}</span>`:""}
+    <span class="iconbtn" data-info="${tool.id}" title="About ${esc(tool.title)}" style="flex:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/></svg></span>
+    ${fav!==null?`<span class="star ${fav?"on":""}" data-fav="${tool.id}" title="Favorite">${fav?"★":"☆"}</span>`:""}
   </div>`;
 }
-function appbar(title, actions=""){
-  $("#appbar").innerHTML = title==null ? "" : `<span class="title">${title==="DroidKit"?DK_WORDMARK:esc(title)}</span>${actions?`<span class="actions">${actions}</span>`:""}`;
+function appbar(title, actions="", back=false){
+  const bk = back ? `<span class="iconbtn" data-act="go-back" title="Back" style="flex:none;margin:0 4px 0 -8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></span>` : "";
+  $("#appbar").innerHTML = title==null ? "" : `${bk}<span class="title">${title==="DroidKit"?DK_WORDMARK:esc(title)}</span>${actions?`<span class="actions">${actions}</span>`:""}`;
   $("#appbar").style.display = title==null ? "none":"flex";
 }
 function testResultBar(opts={}){
@@ -709,7 +711,7 @@ function render(){
   renderBNav(); renderFlow();
   const parts = r.split("/");
   const base = parts[0];
-  let body = "", title = "", actions = "";
+  let body = "", title = "", actions = "", back = false;
   switch(base){
     /* ---------- tabs ---------- */
     case "home": body = scrHome(); title="DroidKit"; break;
@@ -721,6 +723,16 @@ function render(){
       body = scrDiagnose(); title="Diagnose"; break;
     case "settings":
       if(parts[1]==="ai_chat"){ body = scrAiChat(); title="DroidKit Chat"; }
+      else if(parts[1]==="privacy"){ body = scrPrivacy(); title="Privacy Center"; back=true; }
+      else if(parts[1]==="about"){
+        back=true;
+        if(parts[2]==="what_is"){ body = scrAboutWhatIs(); title="What is DroidKit?"; }
+        else if(parts[2]==="features"){ body = scrAboutFeatures(); title="Features"; }
+        else if(parts[2]==="whats_new"){ body = scrAboutWhatsNew(); title="What's New"; }
+        else if(parts[2]==="help"){ body = scrAboutHelp(); title="Help & FAQ"; }
+        else if(parts[2]==="licenses"){ body = scrAboutLicenses(); title="Open-Source Licenses"; }
+        else { body = scrAbout(); title="About DroidKit"; }
+      }
       else { body = scrSettings(); title="Settings"; }
       break;
     case "splash": return renderSplash();
@@ -731,7 +743,7 @@ function render(){
       else { body=scrDeviceInfo(); title="Device Inspector"; actions=`<span class="iconbtn" data-act="share-device" title="Share summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L8.9 12.7a3.2 3.2 0 0 0 0-1.4l7-4a3 3 0 1 0-.9-1.7l-7 4a3 3 0 1 0 0 4.8l7.1 4.1A3 3 0 1 0 18 16z"/></svg></span>`; }
       break;
     case "battery": body = scrBattery(); title="Battery Lab"; break;
-    case "insights": body = scrInsights(); title="Insights"; break;
+    case "insights": body = scrInsights(); title="Insights"; back=true; break;
     case "display":
       if(parts[1]==="modes"){ body = scrDisplayModes(); title="Display Modes"; }
       else if(parts[1]==="motion"){ body = scrMotion(); title="Motion pattern"; }
@@ -760,7 +772,8 @@ function render(){
       break;
     case "sensors":
       if(parts[1]==="orientation"){ body = scrOrientation(); title="Orientation"; }
-      else if(parts[1]==="live"){ body = scrLiveSensor(parseInt(parts[2]||"1")); title = SENSORS.find(s=>s.type===parseInt(parts[2]))?.name || "Live Sensor"; }
+      else if(parts[1]==="live"&&!parts[2]){ body = scrLiveSensorPicker(); title = "Live Sensor Monitor"; }
+      else if(parts[1]==="live"){ body = scrLiveSensor(parseInt(parts[2])); title = SENSORS.find(s=>s.type===parseInt(parts[2]))?.name || "Live Sensor"; }
       else { body = scrSensors(); title="Sensor Lab"; }
       break;
     case "network": body = scrNetwork(); title="Network Lab"; break;
@@ -780,11 +793,11 @@ function render(){
       if(parts[1]==="detail"){ body=scrAppDetail(parts.slice(2).join("/")); title="App detail"; }
       else { body=scrApps(); title="App Inspector"; }
       break;
-    case "permissions": body = scrPermCenter(); title="Permission Center"; break;
-    case "appops": body = scrAppOps(); title = S.appopsSel || "AppOps"; break;
-    case "packages": body = scrPackages(); title="Package Controls"; break;
-    case "adb": body = scrAdb(); title="Wireless ADB"; break;
-    case "developer": body = scrDeveloper(); title="Developer Lab"; break;
+    case "permissions": body = scrPermCenter(); title="Permission Center"; back=true; break;
+    case "appops": body = scrAppOps(); title = S.appopsSel || "AppOps"; back=true; break;
+    case "packages": body = scrPackages(); title="Package Controls"; back=true; break;
+    case "adb": body = scrAdb(); title="Wireless ADB"; back=true; break;
+    case "developer": body = scrDeveloper(); title="Developer Lab"; back=true; break;
     case "reports":
       if(parts[1]==="compare"){ body=scrCompare(); title="Compare sessions"; }
       else if(parts[1]==="detail"){ body=scrReportDetail(parts.slice(2).join("/")); title="Report detail"; }
@@ -792,7 +805,8 @@ function render(){
       break;
     default: body = `<div class="pad empty">Unknown route: ${esc(r)}</div>`;
   }
-  appbar(title, actions);
+  if(parts.length>1) back=true;
+  appbar(title, actions, back);
   $("#body").innerHTML = body;
   afterRender(r);
 }
@@ -800,7 +814,7 @@ function renderBNav(){
   const items = [
     ["home","Home",`<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>`],
     ["tools","Tools",`<svg viewBox="0 0 24 24"><path d="M21.7 18.3 13.4 10a5.5 5.5 0 0 0-7-7L9.9 6.5 6.5 9.9 3 6.4a5.5 5.5 0 0 0 7 7l8.3 8.3a1.5 1.5 0 0 0 2.1 0l1.3-1.3a1.5 1.5 0 0 0 0-2.1z"/></svg>`],
-    ["diagnose","Diagnose",`<svg viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18z"/><path d="M7 12h3l1.5-4 2 8L15 12h2"/></svg>`],
+    ["diagnose","Diagnose",`<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5h2v2h-2zm0 4h2v6h-2z"/></svg>`],
     ["settings","Settings",`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/></svg>`],
   ];
   $("#bottomnav").innerHTML = items.map(([r,l,ic]) =>
@@ -1148,6 +1162,13 @@ function emitResult(test, state){
 }
 /* ---------- settings ---------- */
 const AI_MODELS = ["openai/gpt-oss-120b","openai/gpt-oss-20b","qwen/qwen3.8-27b"];
+function navRow(title,sub,o={}){
+  const tag = o.route ? `data-nav="${o.route}"` : o.act ? `data-act="${o.act}"` : "";
+  const icon = o.ext ? `<span class="sub" style="font-size:13px">↗</span>`
+    : o.chev===false ? "" : `<span class="sub">›</span>`;
+  return `<div class="row ${tag?"clickable":""}" ${tag} style="padding:11px 0;${tag?"cursor:pointer":""}">
+    <div class="grow"><div class="t-body">${esc(title)}</div>${sub?`<div class="t-mini sub">${esc(sub)}</div>`:""}</div>${icon}</div>`;
+}
 function scrSettings(){
   const modes=["SYSTEM","DARK","LIGHT"];
   const sel = S.theme==="dark"?"DARK":S.theme==="light"?"LIGHT":"SYSTEM";
@@ -1157,7 +1178,7 @@ function scrSettings(){
     <div class="card">${modes.map(m=>`
       <label class="row" style="padding:4px 0;cursor:pointer">
         <input type="radio" name="theme" value="${m}" ${m===sel?"checked":""} data-theme-opt="${m}" style="accent-color:var(--primary)">
-        <span class="t-body">${m.charAt(0)+m.slice(1).toLowerCase()}</span></label>`).join("")}</div>
+        <span class="t-body">${m}</span></label>`).join("")}</div>
     <div class="sec-head">Reports</div>
     <div class="card">
       <span class="flabel">Technician name / signature</span>
@@ -1198,9 +1219,238 @@ function scrSettings(){
     </div>
     <div class="sec-head">Safety</div>
     <div class="card"><div class="t-body">High-impact actions always show their exact consequence and ask for explicit confirmation. DroidKit never performs security or credential bypass operations.</div></div>
+    <div class="sec-head">Support &amp; privacy</div>
+    <div class="card">
+      ${navRow("Permissions & Access","Android permissions and elevated providers",{route:"permissions"})}
+      ${navRow("Privacy Center","What stays on-device and what can go online",{route:"settings/privacy"})}
+      ${navRow("Help & FAQ","Guides, permissions and troubleshooting",{route:"settings/about/help"})}
+      ${navRow("What's New","Release notes for this build",{route:"settings/about/whats_new"})}
+      ${navRow("Reset settings","Theme, favorites, recents and preferences",{act:"reset-settings",chev:false})}
+    </div>
     <div class="sec-head">About</div>
-    <div class="card"><div class="t-small">DroidKit ${DEVICE.appVersion}</div><div class="t-body">Android technician &amp; power toolkit.</div></div>
+    <div class="card clickable" data-nav="settings/about"><div class="row" style="gap:12px">
+      ${DK_MARK.replaceAll("SIZE","24")}
+      <div class="grow"><div class="t-small">About DroidKit</div>
+        <div class="t-mini sub">App information, support and legal information</div></div>
+      <span class="sub">›</span></div></div>
   </div>`;
+}
+/* ---------- privacy center ---------- */
+function privInfo(title,detail){
+  return `<div style="padding:6px 0"><div class="t-body">${esc(title)}</div>
+    <div class="t-mini sub">${esc(detail)}</div></div>`;
+}
+function scrPrivacy(){
+  const ai=S.ai;
+  const dataRow=(label,count,which)=>`<div class="row" style="margin-top:8px">
+    <span class="grow t-body">${label} (${count})</span>
+    <button class="textbtn" data-act="privacy-clear" data-which="${which}" ${count?"":"disabled"}>Clear</button></div>`;
+  return `<div class="pad col">
+    <div class="sec-head">On this device</div>
+    <div class="card"><div class="t-body">Diagnostic sessions, reports, favorites, recent tools, preferences and the elevated-action history are stored on this device only.</div>
+      ${dataRow("Favorite tools",S.favorites.size,"fav")}
+      ${dataRow("Recent tools and usage counters",S.recentTools.length,"rec")}
+      ${dataRow("Elevated action history",S.elevLog.length,"elev")}
+      <div class="t-mini sub" style="margin-top:8px">Sessions and reports are deleted individually from the Reports screen.</div></div>
+    <div class="sec-head">Network activity</div>
+    <div class="card">
+      ${privInfo("DroidKit Intelligence (Groq)",ai.enabled?"On. Sends a minimized, redacted context to Groq only when you use an AI action.":"Off. Nothing is sent — enable it in Settings → DroidKit Intelligence with your own API key.")}
+      ${privInfo("Update checks","Manual only — contacts the GitHub Releases API when you tap Check for updates in About DroidKit.")}
+      ${privInfo("Everything else","All tools and diagnostics work fully offline. No analytics or crash reporting leave the device.")}
+    </div>
+    <div class="sec-head">AI requests</div>
+    <div class="card"><div class="t-body">When AI features run, DroidKit sends only the context the action needs — device or test summaries you chose to explain. Keys, tokens, private keys, MAC addresses and serial numbers are stripped before anything leaves.</div>
+      <div class="t-mini sub" style="margin-top:8px">Your API key is stored encrypted on this device and is never included in requests to anything but the provider's own API.</div></div>
+    <div class="sec-head">Controls &amp; policies</div>
+    <div class="card">
+      ${navRow("Permissions & Access","See what Android permissions DroidKit uses",{route:"permissions"})}
+      ${navRow("Privacy Policy","Not published yet",{act:"privacy-policy"})}
+      <div class="t-mini sub" style="margin-top:8px">This screen describes real behavior — it is not a legal privacy policy.</div></div>
+  </div>`;
+}
+/* ---------- about ---------- */
+const RELEASE_NOTES=[
+  ["0.9.0-alpha.1","Unreleased",[
+    "Insights: on-device analytics dashboard with verdict ring, pass-rate trends and activity counters",
+    "Elevated access groundwork: Shizuku, wireless ADB and root providers behind a shared ElevatedOps layer",
+    "AppOps viewer, package controls and the ADB Lab for pairing and structured actions",
+    "DroidKit Intelligence: optional Groq-powered assistant with your own key, personas, chat and confirmed proposals",
+    "Technician workflow: session intake labels, technician signature on reports and before/after session compare",
+    "Storage snapshots, NFC scan history, NDEF write presets and sensor session recording",
+    "USB class inspectors, network interface inventory with mDNS discovery and a sensor orientation helper",
+    "One-time onboarding intro covering honest results, optional capabilities and local-first privacy"]],
+  ["0.8.0","Unreleased",[
+    "NFC Lab: tag scanning, NDEF reading and honest tag verdicts",
+    "NDEF Writer: text/URI record builder with confirmed writes",
+    "Network Lab: connection inspector, ping probe, DNS lookup and per-layer diagnostics",
+    "Bluetooth Lab: adapter state, feature detection and bonded-device list"]],
+  ["0.7.0","Unreleased",[
+    "USB Lab: host-mode capability card and live attach/detach device list",
+    "Per-device detail with VID/PID, USB version and class names",
+    "Interface/endpoint tree with transfer types and power flags",
+    "USB permission flow with honest handling when descriptors are withheld"]],
+  ["0.6.0","Unreleased",[
+    "App Inspector: installed apps with search and user/system filters",
+    "App detail: version, SDK levels, install times, installer and actions",
+    "Permission Inspector grouped by granted and not granted",
+    "Component Explorer for activities, services, receivers and providers"]],
+  ["0.5.0","Unreleased",[
+    "Report detail screen with device snapshot and grouped results",
+    "Canonical text report builder with honest empty/unsupported wording",
+    "Report export as text or PDF through the share sheet",
+    "Report history with filters and confirmed deletes"]],
+  ["0.4.0","Unreleased",[
+    "Phone Doctor hardware set: speaker, microphone, cameras, torch and connectivity checks",
+    "Runtime permission gates that report PERMISSION_REQUIRED instead of failing",
+    "Session review with state-count summary and per-category grouping"]],
+  ["0.3.0","Unreleased",[
+    "Phone Doctor: guided diagnostic sessions with retry and notes",
+    "Display color-cycle, dead-pixel and touch coverage tests",
+    "Sensor tests with live readings; absent hardware reports NOT_SUPPORTED"]],
+  ["0.2.0","Unreleased",[
+    "Device Inspector rebuild: sectioned dashboard with per-field copy and share",
+    "Storage Lab volumes, Battery Lab readings and full sensor inventory",
+    "Live sensor monitor for safe sensor types"]],
+  ["0.1.0","Unreleased",[
+    "Multi-module project skeleton and Material3 design system",
+    "ToolRegistry, CapabilityManager and permission handling foundations",
+    "Home, Tools, Diagnose and Settings shells with Device Inspector"]],
+];
+const HELP_CATS=[
+  ["Getting started",[
+    ["What is DroidKit?","DroidKit brings useful Android tools into one organized experience. It is designed to make common device utilities easier to discover and use without unnecessary complexity."],
+    ["Where do I start?","The Home tab summarizes your device and pinned tools. The Tools tab lists every lab, Diagnose runs guided Phone Doctor sessions, and Reports keeps your saved results."]]],
+  ["Using DroidKit tools",[
+    ["How do diagnostics work?","Open Diagnose and run a guided session or a single test. You judge the result of human-observation tests (screen, speaker, vibration); automatic checks report their own readings. Missing hardware shows NOT_SUPPORTED rather than a failure."],
+    ["Where do saved results go?","Sessions and reports are stored on-device and listed under Reports. You can export a report as text or PDF, compare two sessions, or delete them individually."]]],
+  ["Permissions",[
+    ["Why does a tool ask for a permission?","Some tools need Android runtime permissions — for example the camera test needs CAMERA and the microphone test needs RECORD_AUDIO. Denying a permission shows PERMISSION_REQUIRED; the rest of the app keeps working."],
+    ["What is Advanced access?","Settings lists optional elevated providers (Shizuku, wireless ADB, root) for technician actions like AppOps changes. They are opt-in and off by default — every standard tool works without them."]]],
+  ["Troubleshooting",[
+    ["A field says \"Not exposed\" — is something broken?","No. Android hides some values on certain devices or versions. DroidKit reports what the system actually provides instead of guessing."],
+    ["An elevated action says a provider is needed.","Open Settings → Advanced access, check the provider status and run its grant flow, or pair a wireless ADB session from the ADB Lab."]]],
+  ["Privacy",[
+    ["What leaves my device?","Nothing by default — sessions, reports and preferences stay in local storage. Optional DroidKit Intelligence features send a minimized context to Groq only when you enable AI and add your own key."]]],
+  ["Updates",[
+    ["How are updates delivered?","DroidKit is distributed through GitHub Releases. Use Check for updates in About DroidKit to see whether a newer release exists."]]],
+];
+const OSS_LICENSES=[
+  ["Kotlin","JetBrains"],["Jetpack Compose (UI, Material3, Icons)","Google"],
+  ["AndroidX Activity, Core, Lifecycle, Navigation","Google"],["AndroidX Room","Google"],
+  ["AndroidX DataStore","Google"],["AndroidX CameraX","Google"],["Dagger Hilt","Google"],
+  ["kotlinx.coroutines","JetBrains"],["Shizuku API","RikkaApps"],
+];
+function scrAbout(){
+  const updSub = S.upd==="checking" ? "Checking for updates…"
+    : S.upd==="none" ? "No published updates found yet."
+    : "Check GitHub Releases for a newer version";
+  return `<div class="pad col">
+    <div style="display:flex;flex-direction:column;align-items:center;padding:16px 0">
+      <span style="display:inline-flex;align-items:center;gap:8px">${DK_MARK.replaceAll("SIZE","40")}<span style="font-size:22px;font-weight:700"><span style="color:var(--text)">Droid</span><span style="color:var(--kit)">Kit</span></span></span>
+      <div class="t-body sub" style="margin-top:8px">Your Android utility toolkit.</div></div>
+    <div class="t-body sub" style="padding:0 8px">DroidKit is an Android utility toolkit designed to bring useful device tools, diagnostics, file utilities, and everyday Android features together in one clean and easy-to-use application.</div>
+    <div class="sec-head">App information</div>
+    <div class="card">
+      <div class="row" style="padding:11px 0"><span class="grow t-body">Version</span><span class="t-body sub">${DEVICE.appVersion}</span></div>
+      <div class="row" style="padding:11px 0"><span class="grow t-body">Build number</span><span class="t-body sub">1</span></div>
+      ${navRow("Check for updates",updSub,{act:"update-check"})}
+    </div>
+    <div class="sec-head">DroidKit</div>
+    <div class="card">
+      ${navRow("What is DroidKit?",null,{route:"settings/about/what_is"})}
+      ${navRow("Features",null,{route:"settings/about/features"})}
+      ${navRow("What's New",null,{route:"settings/about/whats_new"})}
+    </div>
+    <div class="sec-head">Support</div>
+    <div class="card">
+      ${navRow("Help & FAQ",null,{route:"settings/about/help"})}
+      ${navRow("Report a problem","GitHub Issues",{act:"ext:github.com/Mr-Compile/DroidKit/issues/new",ext:true})}
+      ${navRow("Send feedback","GitHub Issues",{act:"ext:github.com/Mr-Compile/DroidKit/issues",ext:true})}
+    </div>
+    <div class="sec-head">Legal</div>
+    <div class="card">
+      ${navRow("Privacy Policy",null,{act:"privacy-policy"})}
+      ${navRow("Terms of Use",null,{act:"terms"})}
+      ${navRow("Open-Source Licenses",null,{route:"settings/about/licenses"})}
+    </div>
+    <div class="sec-head">Developer</div>
+    <div class="card">
+      <div class="row" style="padding:11px 0"><span class="grow t-body">Developer</span><span class="t-body sub">Mr-Compile</span></div>
+      ${navRow("GitHub","Source and releases",{act:"ext:github.com/Mr-Compile/DroidKit",ext:true})}
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;padding:24px 0">
+      ${DK_MARK.replaceAll("SIZE","48")}
+      <div class="t-small" style="margin-top:8px">DroidKit</div>
+      <div class="t-mini sub">Built to make Android utilities simpler.</div>
+      <div class="t-mini sub" style="margin-top:4px">Version ${DEVICE.appVersion}</div></div>
+  </div>`;
+}
+function scrAboutWhatIs(){
+  return `<div class="pad col"><div class="card">
+    <div class="t-body">DroidKit brings useful Android tools into one organized experience. It is designed to make common device utilities easier to discover and use without unnecessary complexity.</div>
+    <div class="t-body sub" style="margin-top:8px">It includes device inspection, guided diagnostics, hardware labs, app and permission inspection, connectivity tools and report export — all kept honest about what the device actually reports.</div>
+  </div></div>`;
+}
+function scrAboutFeatures(){
+  const cats=[...new Set(TOOLS.map(x=>x.category))];
+  return `<div class="pad col">${cats.map(c=>`
+    <div class="sec-head">${c.charAt(0)+c.slice(1).toLowerCase()}</div>
+    <div class="card">${TOOLS.filter(x=>x.category===c).map(x=>navRow(x.title,x.description,{route:x.route})).join("")}</div>`).join("")}
+  </div>`;
+}
+function scrAboutWhatsNew(){
+  return `<div class="pad col">${RELEASE_NOTES.map(([v,d,hs])=>`
+    <div class="card"><div class="t-small">DroidKit ${v}</div><div class="t-mini sub">${d}</div>
+      ${hs.map(h=>`<div class="t-body" style="margin-top:6px">• ${h}</div>`).join("")}</div>`).join("")}
+  </div>`;
+}
+function scrAboutHelp(){
+  return `<div class="pad col">${HELP_CATS.map(([cat,entries])=>`
+    <div class="sec-head">${esc(cat)}</div>
+    ${entries.map(([q,a])=>`<div class="card"><div class="t-small">${esc(q)}</div>
+      <div class="t-body sub" style="margin-top:4px">${esc(a)}</div></div>`).join("")}`).join("")}
+  </div>`;
+}
+function scrAboutLicenses(){
+  return `<div class="pad col">
+    <div class="t-body sub" style="padding:0 8px">DroidKit ships with these third-party components.</div>
+    ${OSS_LICENSES.map(([c,h])=>`<div class="card"><div class="t-small">${esc(c)}</div>
+      <div class="t-body sub" style="margin-top:4px">© ${esc(h)} — Apache License 2.0</div></div>`).join("")}
+  </div>`;
+}
+/* ---------- live sensor picker ---------- */
+function scrLiveSensorPicker(){
+  const live=SENSORS.filter(s=>s.live);
+  if(!live.length) return `<div class="empty">No sensors on this device support live monitoring.</div>`;
+  return `<div class="pad col">${live.map(s=>`
+    <div class="card clickable" data-nav="sensors/live/${s.type}">
+      <div class="t-med" style="font-weight:600">${esc(s.name)}</div>
+      ${infoRow("Type",`${s.stype} (${s.type})`,false)}
+      ${infoRow("Max range",`${s.range} ${s.unit}`.trim(),false)}</div>`).join("")}
+  </div>`;
+}
+/* ---------- tool info dialog ---------- */
+function showToolInfo(id){
+  const tool=TOOLS.find(x=>x.id===id); if(!tool) return;
+  const r=resolve(tool);
+  const rows=[];
+  const row=(k,v)=>rows.push(`<div><div class="t-mini pri" style="font-weight:600">${k}</div><div class="t-mini" style="margin-top:1px">${v}</div></div>`);
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  row("Category",cap(tool.category.toLowerCase()));
+  row("Availability", r.ready ? "Ready to use" : r.blocked.map(b=>"• "+esc(b)).join("<br>"));
+  if(tool.safety!==SAFE) row("Impact level","Level "+tool.safety+" — "+["safe","minor","system change","high","advanced"][tool.safety]);
+  const elev=tool.caps.filter(c=>c!=="STANDARD_API");
+  if(elev.length) row("Elevated access","Uses "+elev.map(c=>c.toLowerCase().replaceAll("_"," ")).join(", "));
+  if(tool.perms.length) row("Permissions",tool.perms.map(p=>esc(p.split(".").pop())).join("<br>"));
+  if(tool.feats.length) row("Hardware required",tool.feats.map(f=>esc(f.split(".").pop())).join("<br>"));
+  if(tool.minSdk) row("Android version","API "+tool.minSdk+" or newer");
+  row("Internet", tool.perms.includes("android.permission.INTERNET")?"Used by this tool":"Not required — works offline");
+  if(tool.phase!=="V1") row("Release",tool.phase);
+  $("#overlay").innerHTML=`<div class="scrim" data-act="dlg-close"></div>
+    <div class="dialog"><h3>${esc(tool.title)}</h3>
+      <div class="dtext" style="margin-bottom:8px">${esc(tool.description)}</div>
+      <div class="col" style="gap:8px">${rows.join("")}</div>
+      <div class="dbtns"><button class="textbtn" data-act="dlg-close">Close</button></div></div>`;
 }
 /* ---------- insights ---------- */
 function sessStats(s){
@@ -1954,7 +2204,7 @@ function renderSplash(){
   /* Mirrors app SplashScreen.kt — Candidate-9 direction:
      ink #040808, corner washes, watermark head, pulsing halo behind the
      glass mark, two-tone wordmark, letterspaced tagline, spinning ring,
-     "Initializing…" caption, side word column. Tap or ~2.8s → onboarding. */
+     "Initializing…" caption, side word column. Tap or ~1.8s → onboarding. */
   $("#phone").insertAdjacentHTML("beforeend",`<div id="splashroot" data-act="splash-next" style="position:absolute;inset:0;z-index:25;background:#040808;color:#e8ecf1;cursor:pointer;overflow:hidden">
     <div style="position:absolute;width:430px;height:430px;left:-230px;top:-250px;background:radial-gradient(circle,rgba(60,232,138,.14),rgba(60,232,138,0) 70%)"></div>
     <div style="position:absolute;width:460px;height:460px;right:-250px;bottom:-270px;background:radial-gradient(circle,rgba(60,232,138,.14),rgba(60,232,138,0) 70%)"></div>
@@ -1974,15 +2224,15 @@ function renderSplash(){
       <div style="font-size:10px;font-weight:500;letter-spacing:3px;color:#7E9497;line-height:1.9">YOUR ANDROID<br>TOOLKIT<br>COMPANION</div>
     </div>
   </div>`);
-  later(()=>{ if(cur()==="splash") replace("onboarding"); },2800);
+  later(()=>{ if(cur()==="splash") replace("onboarding"); },1800);
 }
 /* ---------- onboarding (first run, outside nav graph) ---------- */
 function renderOnboarding(){
   const pages=[
     [DK_MARK.replaceAll("SIZE","72"),"Welcome to DroidKit","A technician's toolkit for Android: diagnostics, device inspection, connectivity labs, and repair reports — all running natively on this device.","TOOLS FOR A HEALTHIER ANDROID"],
-    ["✓","Honest results, always","DroidKit never fabricates a reading. Missing hardware shows NOT SUPPORTED, denied permissions show PERMISSION REQUIRED — neither is a failure, both are facts about the device."],
-    ["🛡","Optional capabilities","Core tools work with standard Android access. Shizuku, wireless ADB, and root are optional providers you connect later in Settings → Advanced access — nothing requires them."],
-    ["🔒","Your data stays here","Reports, scan history, and diagnostics are stored locally. AI assistance is off by default and opt-in only — you choose what leaves the device."],
+    [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,"Honest results, always","DroidKit never fabricates a reading. Missing hardware shows NOT SUPPORTED, denied permissions show PERMISSION REQUIRED — neither is a failure, both are facts about the device."],
+    [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`,"Optional capabilities","Core tools work with standard Android access. Shizuku, wireless ADB, and root are optional providers you connect later in Settings → Advanced access — nothing requires them."],
+    [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>`,"Your data stays here","Reports, scan history, and diagnostics are stored locally. AI assistance is off by default and opt-in only — you choose what leaves the device."],
   ];
   const i=Math.min(S.obPage,pages.length-1), [ic,ti,bo,tag]=pages[i];
   appbar(null); $("#bottomnav").innerHTML=""; $("#testbar").innerHTML="";
@@ -2120,7 +2370,8 @@ const FLOW = [
   ]},
   {h:"Device labs", nodes:[
     ["Device Inspector","deviceinfo"],["Storage Lab","deviceinfo/storage",1],
-    ["Battery Lab","battery"],["Sensor Lab","sensors"],["Live Sensor Monitor","sensors/live/1",1],
+    ["Battery Lab","battery"],["Sensor Lab","sensors"],["Live sensor picker","sensors/live",1],
+    ["Live Sensor Monitor","sensors/live/1",2],
     ["Orientation Helper","sensors/orientation",1],
   ]},
   {h:"Hardware & connectivity", nodes:[
@@ -2136,7 +2387,16 @@ const FLOW = [
     ["Permission Center","permissions"],["Developer Lab","developer"],
     ["AppOps","appops"],["Package Controls","packages"],["Wireless ADB","adb"],
   ]},
-  {h:"Intelligence", nodes:[["DroidKit Chat","settings/ai_chat"]]},
+  {h:"Settings & about", nodes:[
+    ["DroidKit Chat","settings/ai_chat",1],
+    ["Privacy Center","settings/privacy",1],
+    ["About DroidKit","settings/about",1],
+    ["What is DroidKit?","settings/about/what_is",2],
+    ["Features","settings/about/features",2],
+    ["What's New","settings/about/whats_new",2],
+    ["Help & FAQ","settings/about/help",2],
+    ["Open-Source Licenses","settings/about/licenses",2],
+  ]},
 ];
 function renderFlow(){
   const r=cur();
@@ -2154,6 +2414,9 @@ function renderFlow(){
 }
 /* ============================== events ============================== */
 document.addEventListener("click", e => {
+  const inf = e.target.closest("[data-info]"); if(inf){ e.stopPropagation(); showToolInfo(inf.dataset.info); return; }
+  const fv = e.target.closest("[data-fav]"); if(fv){ e.stopPropagation();
+    const id=fv.dataset.fav; S.favorites.has(id)?S.favorites.delete(id):S.favorites.add(id); renderToolList(); return; }
   const nv = e.target.closest("[data-nav]");
   if(nv){ const tool=nv.dataset.tool; if(tool)recordRecent(tool); nav(nv.dataset.nav); return; }
   const tb = e.target.closest("[data-tab]"); if(tb){ goTab(tb.dataset.tab); return; }
@@ -2169,8 +2432,6 @@ document.addEventListener("click", e => {
   const cat = e.target.closest("[data-cat]"); if(cat){ S.toolsCategory = cat.dataset.cat==="All"?null:cat.dataset.cat; render(); return; }
   const af = e.target.closest("[data-appfilter]"); if(af){ S.appsFilter=af.dataset.appfilter; render(); return; }
   const rf = e.target.closest("[data-repfilter]"); if(rf){ S.reportsFilter=rf.dataset.repfilter; render(); return; }
-  const fv = e.target.closest("[data-fav]"); if(fv){ e.stopPropagation();
-    const id=fv.dataset.fav; S.favorites.has(id)?S.favorites.delete(id):S.favorites.add(id); renderToolList(); return; }
   const cp = e.target.closest("[data-copy]"); if(cp){ e.stopPropagation(); navigator.clipboard?.writeText(cp.dataset.copy).catch(()=>{}); toast("Copied"); return; }
   const bd = e.target.closest("[data-bledev]"); if(bd){
     if(S.perms[P.BTC]){ S.ble.scanning=false; nav("bluetooth/gatt/"+encodeURIComponent(bd.dataset.bledev)); }
@@ -2205,8 +2466,22 @@ document.addEventListener("click", e => {
   if(ac){ handleAct(ac.dataset.act, ac, e); return; }
 });
 function handleAct(act, el, e){
+  if(act.startsWith("ext:")){ toast("Would open "+act.slice(4)+" (mock)"); return; }
   switch(act){
     case "dlg-close": closeOverlay(); break;
+    case "go-back": goBack(); break;
+    case "reset-settings": dialog({title:"Reset settings?",
+      text:"Resets the theme, technician name, favorite tools, recent tools and usage counters to defaults. Your AI key and provider setup are not affected, and the intro will not play again.",
+      confirm:"Reset",cancel:"Cancel",onConfirm:"reset-settings"}); break;
+    case "privacy-clear": { const w=el.dataset.which;
+      if(w==="fav"){ S.favorites.clear(); toast("Favorites cleared"); }
+      else if(w==="rec"){ S.recentTools=[]; S.toolUse={}; toast("Recent tools cleared"); }
+      else { S.elevLog=[]; toast("Elevated history cleared"); }
+      render(); break; }
+    case "privacy-policy": toast("The privacy policy isn't published yet."); break;
+    case "terms": toast("Terms of use aren't published yet."); break;
+    case "update-check": if(S.upd!=="checking"){ S.upd="checking"; render();
+      later(()=>{ S.upd="none"; if(cur()==="settings/about")render(); },900); } break;
     case "dlg-ok": { const cb=$("#overlay").dataset.dlgOk||""; closeOverlay(); dlgOk(cb); break; }
     case "start-diag": intakeSheet(); break;
     case "intake-skip": closeOverlay(); startGuided(null,null); break;
@@ -2408,6 +2683,9 @@ function dlgOk(cb){
   if(!cb)return;
   if(cb.startsWith("grant:")){ const p=cb.slice(6); S.perms[p]=true; render(); return; }
   switch(true){
+    case cb==="reset-settings": S.theme="dark"; $("#phone").dataset.theme="dark";
+      S.technician=""; S.favorites.clear(); S.recentTools=[]; S.toolUse={};
+      render(); toast("Settings reset"); break;
     case cb==="bt-on": S.btEnabled=true; render(); break;
     case cb==="del-all": S.sessions=[]; S.engine=null; render(); break;
     case cb.startsWith("del-report:"): { const id=cb.split(":")[1];
