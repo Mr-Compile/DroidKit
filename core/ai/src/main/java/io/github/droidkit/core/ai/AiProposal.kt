@@ -49,6 +49,54 @@ object AiProposalParser {
         return emptyList()
     }
 
+    /**
+     * Extracts follow-up prompt strings from a {"suggestions":[...]} array
+     * that may sit beside "proposals" in the same JSON block. Suggestions
+     * are plain text — the UI only sends one back as user input on tap.
+     */
+    fun parseSuggestions(text: String): List<String> {
+        var start = text.indexOf('{')
+        while (start >= 0) {
+            val end = balancedEnd(text, start)
+            if (end < 0) return emptyList()
+            val obj = MiniJson.parseObject(text.substring(start, end + 1))
+            val list = obj?.get("suggestions") as? List<*>
+            if (list != null) {
+                return list.filterIsInstance<String>()
+                    .map { it.trim().take(SUGGESTION_MAX_LEN) }
+                    .filter { it.isNotEmpty() }
+                    .take(SUGGESTION_MAX_COUNT)
+            }
+            start = text.indexOf('{', start + 1)
+        }
+        return emptyList()
+    }
+
+    /**
+     * Removes JSON blocks carrying "proposals"/"suggestions" payloads so
+     * chat bubbles show only the human-facing reply text. Braces that are
+     * not structured payloads are left untouched.
+     */
+    fun stripStructuredBlocks(text: String): String {
+        val sb = StringBuilder()
+        var cursor = 0
+        var start = text.indexOf('{')
+        while (start >= 0) {
+            val end = balancedEnd(text, start)
+            if (end < 0) break
+            val obj = MiniJson.parseObject(text.substring(start, end + 1))
+            if (obj != null && (obj["proposals"] is List<*> || obj["suggestions"] is List<*>)) {
+                sb.append(text, cursor, start)
+                cursor = end + 1
+                start = text.indexOf('{', cursor)
+            } else {
+                start = text.indexOf('{', start + 1)
+            }
+        }
+        sb.append(text, cursor, text.length)
+        return sb.toString().trim()
+    }
+
     private fun toProposal(el: Any?): AiProposal? {
         val obj = el as? Map<*, *> ?: return null
         return when (obj.str("type")) {
@@ -103,6 +151,9 @@ object AiProposalParser {
         }
         return -1
     }
+
+    private const val SUGGESTION_MAX_COUNT = 3
+    private const val SUGGESTION_MAX_LEN = 48
 
     private val TOOL_ID_RE = Regex("^[a-z0-9_.-]{1,64}$")
     private val KEY_RE = Regex("^[A-Za-z0-9._\\[\\]-]{1,64}$")
@@ -273,6 +324,9 @@ class AiActionValidator @Inject constructor(
 
     /** Route for a known tool id, or null. Used by the confirm-then-navigate path. */
     fun toolRoute(toolId: String): String? = registry.byId(toolId)?.route
+
+    /** Display title for a known tool id, or null. Used for proposal chip labels. */
+    fun toolTitle(toolId: String): String? = registry.byId(toolId)?.title
 
     private fun describe(reason: BlockedReason): String = when (reason) {
         is BlockedReason.MissingPermission -> "missing permission ${reason.permission}"

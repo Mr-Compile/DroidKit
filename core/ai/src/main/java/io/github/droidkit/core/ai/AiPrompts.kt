@@ -62,7 +62,10 @@ object PromptRegistry {
                 "supplied context. You may propose read-only actions as JSON: " +
                 "{\"proposals\":[...]}. Valid types: open_tool(tool_id), " +
                 "elevated(action=getprop|getappops|listpackages|whoami, " +
-                "key|package). Never invent tool ids or commands."
+                "key|package). Never invent tool ids or commands. In the same " +
+                "JSON block you may add \"suggestions\": up to 3 short " +
+                "follow-up questions (max 40 chars each) the user might " +
+                "naturally ask next."
     }
 
     const val PING = "Reply with the single word: ok"

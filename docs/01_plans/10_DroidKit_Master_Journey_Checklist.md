@@ -668,10 +668,18 @@ DroidKit Intelligence (BYOK, AES/GCM key under AndroidKeyStore,
 `PrivacyFilter` redaction, typed errors, 20s timeout/fail-fast). All ten
 assistant personas live via `PromptRegistry` + `AiUseCase.assist`, wired
 into device/diagnostics/USB/NFC/app/network/report surfaces plus a
-Contextual Chat screen under Settings. Structured actions use an
-allow-listed proposal schema (`AiProposalParser`/`AiActionValidator`):
-navigation + read-only elevated reads only, executed solely on explicit
-user tap — mutations are unrepresentable in the schema. AI-5 partially
+Contextual Chat screen — registered as the `ai.chat` tool (Device
+group) so it surfaces in Tools/search/home alongside the Settings
+entry. The chat UI is a Meta-style bubble conversation: empty-state
+hero with capability prompts, gradient user bubbles, assistant
+avatar + typing indicator, monospace code blocks, proposal action
+chips, and follow-up suggestion chips driven by an optional
+`"suggestions"` array in the model's JSON block
+(`AiProposalParser.parseSuggestions`, capped 3×48 chars). Structured
+actions use an allow-listed proposal schema
+(`AiProposalParser`/`AiActionValidator`): navigation + read-only
+elevated reads only, executed solely on explicit user tap — mutations
+are unrepresentable in the schema. AI-5 partially
 covered by unit tests (malformed output, prompt injection, redaction);
 live-key, offline, timeout, and rate-limit behavior remain unverified
 against the real provider. Core app remains fully functional with AI
