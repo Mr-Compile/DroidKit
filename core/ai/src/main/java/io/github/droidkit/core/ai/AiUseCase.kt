@@ -69,6 +69,21 @@ class AiUseCase @Inject constructor(
             )
     }
 
+    /**
+     * Plain-language verdict over the values a screen currently displays.
+     * User-invoked, or auto-invoked only when the user enabled auto-summarize.
+     */
+    suspend fun summarizeValues(
+        screenTitle: String,
+        fields: Map<String, String?>,
+    ): AiResult =
+        run(
+            system = PromptRegistry.SUMMARIZE_VALUES,
+            context = contextBuilder.build(
+                mapOf("Screen" to screenTitle) + fields,
+            ),
+        )
+
     /** Summarize a diagnostic report — optional, user-invoked only. */
     suspend fun summarizeReport(reportText: String): AiResult =
         run(

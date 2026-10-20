@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.system.DeviceSystemProbe
 import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.system.formatHz
@@ -99,12 +100,19 @@ fun DeviceInfoScreen(
                     }
                 }
             }
+            val aiFields = sections
+                .flatMap { s -> s.rows.map { (l, v) -> "${s.title} / $l" to v } }
+                .toMap()
+            item {
+                AiSummaryCard(
+                    screenTitle = "Device info",
+                    fields = aiFields,
+                )
+            }
             item {
                 AiExplainButton(
                     assistant = AiAssistant.DEVICE_EXPLAINER,
-                    fields = sections
-                        .flatMap { s -> s.rows.map { (l, v) -> "${s.title} / $l" to v } }
-                        .toMap(),
+                    fields = aiFields,
                     onNavigate = { nav.navigate(it) { launchSingleTop = true } },
                     modifier = Modifier.fillMaxWidth(),
                 )

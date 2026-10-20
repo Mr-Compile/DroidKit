@@ -358,7 +358,7 @@ const S = {
   preset: "FULL",
   technician: "",
   elevLog: [],
-  ai: { enabled:false, hasKey:false, model:"openai/gpt-oss-120b", status:null, testing:false,
+  ai: { enabled:false, hasKey:false, autoSum:false, model:"openai/gpt-oss-120b", status:null, testing:false,
         turns:[], busy:false },
   adb: { paired:false, session:null, busy:false, props:null, log:"", logLines:"200", useTls:true,
          pairHost:"192.168.1.37", pairPort:"", pairCode:"", connHost:"", connPort:"",
@@ -834,6 +834,23 @@ function infoRow(k,v,copy=true){
     ${copy && !na ? `<span class="copybtn" data-copy="${esc(k)}: ${esc(v)}">Copy</span>` : ``}</div>`;
 }
 function sectionCard(title, inner){ return `<div class="card"><div class="sec-head" style="padding:0 0 6px">${esc(title)}</div>${inner}</div>`; }
+/* Inline AI value summary — shown when AI is enabled + key stored.
+   Auto mode (S.ai.autoSum) renders the verdict immediately; otherwise a
+   "Summarize with AI" button fills it in on tap. */
+const VSUM = {
+  "diag-review": "NEEDS ATTENTION — Touch grid failed (74/96 cells, dead zone top-left): usually a digitizer fault or damaged panel region. The proximity sensor is absent on this device, which is missing hardware, not a failure. Everything else that ran looks normal.",
+  "battery": "ALL GOOD — 72% and discharging normally for screen-on use. Temperature 31.4 °C is well inside the healthy range, voltage looks normal, and the reported health is Good.",
+};
+function aiSumCard(id){
+  if(!(S.ai.enabled&&S.ai.hasKey)) return "";
+  const v = (S.ai.vsum&&S.ai.vsum[id]) || (S.ai.autoSum ? VSUM[id] : null);
+  return `<div class="card">
+    <div class="row"><span class="t-small grow">AI summary</span>
+      <button class="textbtn" data-act="ai-vsum" data-id="${id}">↻</button></div>
+    ${v?`<div class="t-body" style="margin-top:6px">${esc(v)}</div>`
+       :`<button class="btn-outline full" data-act="ai-vsum" data-id="${id}" style="margin-top:8px">Summarize with AI</button>`}
+  </div>`;
+}
 function toolCard(tool,{fav=null}={}){
   const r = resolve(tool);
   const catline = tool.category.charAt(0)+tool.category.slice(1).toLowerCase() + (tool.phase!=="V1" ? ` · ${tool.phase}` : "");
@@ -1154,6 +1171,7 @@ function scrReview(){
   const retryable = Object.entries(e.results).filter(([,st])=>st==="FAIL"||st==="NOT_TESTED").map(([k])=>k);
   return `<div class="pad col">
     <div class="card"><div class="t-small">${summary}</div></div>
+    ${aiSumCard("diag-review")}
     ${(S.ai.enabled&&S.ai.hasKey)?`<div class="row" style="gap:8px">
       <button class="btn-outline grow" data-act="ai-explain" data-kind="analyze">Explain with AI</button>
       ${counts.FAIL?`<button class="btn-outline grow" data-act="ai-explain" data-kind="repair">Explain with AI</button>`:""}
@@ -1446,6 +1464,9 @@ function scrSettings(){
         ${AI_MODELS.map(m=>`<label class="row" style="padding:2px 0;cursor:pointer">
           <input type="radio" name="aimodel" value="${m}" ${ai.model===m?"checked":""} data-aimodel="${m}" style="accent-color:var(--primary)">
           <span class="t-mini">${m}</span></label>`).join("")}
+        <div class="row" style="margin-top:8px"><span class="grow t-body">Auto-summarize results</span>
+          <input type="checkbox" data-act="ai-autosum" ${ai.autoSum?"checked":""} style="width:20px;height:20px;accent-color:var(--primary)"></div>
+        <div class="t-mini sub">When on, result screens send the values they show to Groq for a plain-language summary as soon as they appear. Uses your key more often.</div>
         ${ai.status?`<div class="t-mini ${ai.status==="Connected"?"pri":"err"}" style="margin-top:4px">${ai.status}</div>`:""}
         <button class="textbtn" data-nav="settings/ai_chat">Open DroidKit Chat</button>`:""}
     </div>
@@ -1862,6 +1883,7 @@ function scrBattery(){
     ${sectionCard("Charge", infoRow("Level",b.level+"%",false)+infoRow("Status",b.status,false)+infoRow("Source",b.plug,false))}
     ${sectionCard("Conditions", infoRow("Temperature",b.tempC.toFixed(1)+" °C",false)+infoRow("Voltage",b.voltageMv+" mV",false)+infoRow("Technology",b.tech,false)+infoRow("Health (as reported)",b.health,false))}
     ${sectionCard("Power", infoRow("Current now",b.currentMa+" mA (instantaneous)",false)+infoRow("Battery saver",String(b.saver),false))}
+    ${aiSumCard("battery")}
   </div>`;
 }
 function labIndex(title, subtitle, entries){
@@ -2756,6 +2778,9 @@ function handleAct(act, el, e){
     case "pkg-grant": toast("No Shizuku/root provider on this mock device — pair wireless ADB instead"); break;
     case "clear-elevlog": S.elevLog=[]; render(); break;
     case "ai-toggle": S.ai.enabled=!S.ai.enabled; render(); break;
+    case "ai-autosum": S.ai.autoSum=!S.ai.autoSum; render(); break;
+    case "ai-vsum": { const id=el.dataset.id; S.ai.vsum=S.ai.vsum||{};
+      S.ai.vsum[id]=VSUM[id]||"All values shown look within typical ranges."; render(); break; }
     case "myout-toggle": S.materialYou=!S.materialYou; render(); break;
     case "ai-savekey": { const v=$("#aiKey")?.value.trim();
       if(v){ S.ai.hasKey=true; S.ai.status=null; render(); toast("Key stored (AES/GCM, AndroidKeyStore)"); } break; }

@@ -715,6 +715,10 @@ disabled.
 - [x] Network Troubleshooter
 - [x] Tool Recommender
 - [x] Contextual Chat
+- [x] Value Summaries — inline `AiSummaryCard` verdicts (normal/unusual/
+  failing vs typical) on result screens; auto-once mode behind the new
+  `ai_auto_summarize` setting plus manual "Summarize with AI" + refresh;
+  read-only text, no proposals (plan `01_plans/2026-10-20-ai-value-summaries.md`)
 
 ## AI-4 Structured Actions
 - [x] Allow-listed action schema

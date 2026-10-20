@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -93,6 +94,28 @@ fun DashboardScreen(
                         }
                     }
                 }
+            }
+
+            item {
+                AiSummaryCard(
+                    screenTitle = "Dashboard",
+                    fields = buildMap {
+                        put("Device", viewModel.probe.summary())
+                        providerStatuses.forEach { (kind, status) ->
+                            put(
+                                "Elevated ${kind.name}",
+                                when (status) {
+                                    ProviderStatus.Ready -> "ready"
+                                    is ProviderStatus.NeedsSetup -> "setup required"
+                                    is ProviderStatus.Unavailable -> status.reason
+                                },
+                            )
+                        }
+                        latestInsight?.let { h ->
+                            put("Latest diagnostic", "${h.pass}/${h.total} passed, ${h.fail} failed")
+                        }
+                    },
+                )
             }
 
             latestInsight?.let { h ->

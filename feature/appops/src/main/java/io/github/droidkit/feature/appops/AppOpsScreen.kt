@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.privileges.AppOpMode
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
@@ -224,6 +225,15 @@ private fun OpsDetail(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item {
+                AiSummaryCard(
+                    screenTitle = "AppOps for $packageName",
+                    fields = buildMap {
+                        put("Package", packageName)
+                        ops.forEach { put(it.op, it.mode) }
+                    },
+                )
+            }
             items(ops, key = { it.op }) { entry ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {

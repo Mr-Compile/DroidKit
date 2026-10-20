@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -84,6 +85,22 @@ fun BatteryScreen(onBack: () -> Unit, viewModel: BatteryViewModel = hiltViewMode
                     )
                     InfoRow("Battery saver", powerSave?.toString())
                 }
+            }
+            item {
+                AiSummaryCard(
+                    screenTitle = "Battery lab",
+                    fields = mapOf(
+                        "Level" to status.levelPct.takeIf { it >= 0f }?.let { "${it.toInt()}%" },
+                        "Status" to status.statusText,
+                        "Source" to status.pluggedText,
+                        "Temperature" to status.temperatureC.takeIf { it >= 0f }?.let { "%.1f °C".format(it) },
+                        "Voltage" to status.voltageMv.takeIf { it > 0 }?.let { "$it mV" },
+                        "Technology" to status.technology,
+                        "Health (as reported)" to status.healthText,
+                        "Current now" to status.currentNowUa?.let { "${it / 1000} mA" },
+                        "Battery saver" to powerSave?.toString(),
+                    ),
+                )
             }
         }
     }

@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.droidkit.core.ai.AiSummaryContent
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -359,6 +360,29 @@ private fun DisplayMetricsCard() {
                     ?.takeIf { it.isNotEmpty() }
                     ?.joinToString(", ") { hdrTypeName(it) }
                     ?: "None reported",
+            )
+            AiSummaryContent(
+                screenTitle = "Display metrics",
+                fields = mapOf(
+                    "Resolution" to (bounds?.let { "${it.width()} × ${it.height()} px" }
+                        ?: "${metrics.widthPixels} × ${metrics.heightPixels} px"),
+                    "Size (dp)" to "%.0f × %.0f dp".format(
+                        metrics.widthPixels / metrics.density,
+                        metrics.heightPixels / metrics.density,
+                    ),
+                    "Density" to "${metrics.densityDpi} dpi (×${metrics.density})",
+                    "Scaled density" to "×${metrics.scaledDensity}",
+                    "Physical dpi (x/y)" to "${metrics.xdpi.toInt()} / ${metrics.ydpi.toInt()}",
+                    "Refresh rate" to (display?.refreshRate?.let { "%.1f Hz".format(it) }
+                        ?: "Not exposed"),
+                    "Supported modes" to (display?.supportedModes
+                        ?.joinToString(", ") { "%d×%d@%.0f".format(it.physicalWidth, it.physicalHeight, it.refreshRate) }
+                        ?: "Not exposed"),
+                    "HDR" to (display?.hdrCapabilities?.supportedHdrTypes
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.joinToString(", ") { hdrTypeName(it) }
+                        ?: "None reported"),
+                ),
             )
         }
     }

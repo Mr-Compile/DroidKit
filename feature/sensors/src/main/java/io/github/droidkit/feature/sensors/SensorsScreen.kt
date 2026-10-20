@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -44,6 +45,15 @@ fun SensorsScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    AiSummaryCard(
+                        screenTitle = "Sensor inventory",
+                        fields = mapOf(
+                            "Sensors reported" to sensors.size.toString(),
+                            "Sensor names" to sensors.joinToString { it.name },
+                        ),
+                    )
+                }
                 items(sensors.size) { i ->
                     val s = sensors[i]
                     val live = SensorsViewModel.LIVE_TYPES.contains(s.type)

@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -115,6 +116,21 @@ fun DisplayModesScreen(onBack: () -> Unit) {
                             modifier = Modifier.padding(top = 8.dp),
                         )
                     }
+                }
+                item {
+                    val current = display.mode
+                    AiSummaryCard(
+                        screenTitle = "Display modes",
+                        fields = mapOf(
+                            "Resolution" to "${current.physicalWidth} x ${current.physicalHeight}",
+                            "Refresh rate" to "%.2f Hz".format(current.refreshRate),
+                            "HDR capable" to display.isHdr.toString(),
+                            "Wide color" to display.isWideColorGamut.toString(),
+                            "Supported modes" to display.supportedModes.joinToString("; ") {
+                                "${it.physicalWidth}x${it.physicalHeight} @ %.0f Hz".format(it.refreshRate)
+                            },
+                        ),
+                    )
                 }
             }
         }

@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.ResultBadge
@@ -92,6 +93,11 @@ fun SessionReviewScreen(
                 val failFields = engineState.results.entries
                     .filter { it.value == TestResultState.FAIL }
                     .associate { (id, state) -> field(id, state) }
+                AiSummaryCard(
+                    screenTitle = "Diagnostic review",
+                    fields = mapOf("Summary" to summary) + resultFields,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AiExplainButton(
                         assistant = AiAssistant.DIAGNOSTIC_ANALYZER,

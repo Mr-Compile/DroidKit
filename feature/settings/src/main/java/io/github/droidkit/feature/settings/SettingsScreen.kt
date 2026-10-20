@@ -205,6 +205,7 @@ fun SettingsScreen(
             item { SectionHeader("DroidKit Intelligence") }
             item {
                 val aiEnabled by viewModel.aiEnabled.collectAsState()
+                val aiAutoSummarize by viewModel.aiAutoSummarize.collectAsState()
                 val aiModel by viewModel.aiModel.collectAsState()
                 val aiHasKey by viewModel.aiHasKey.collectAsState()
                 val aiStatus by viewModel.aiStatus.collectAsState()
@@ -266,6 +267,23 @@ fun SettingsScreen(
                                     Text(m, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 8.dp),
+                            ) {
+                                Text("Auto-summarize results", modifier = Modifier.weight(1f))
+                                androidx.compose.material3.Switch(
+                                    checked = aiAutoSummarize,
+                                    onCheckedChange = { viewModel.setAiAutoSummarize(it) },
+                                )
+                            }
+                            Text(
+                                "When on, result screens send the values they show to Groq " +
+                                    "for a plain-language summary as soon as they appear. " +
+                                    "Uses your key more often.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                             aiStatus?.let {
                                 Text(
                                     it,

@@ -28,10 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.permissions.RuntimePermissionState
 import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
+import io.github.droidkit.core.ui.components.RuntimePermissionRequest
 import io.github.droidkit.core.ui.components.openAppSettings
 import io.github.droidkit.core.ui.components.rememberRuntimePermission
 
@@ -91,6 +93,9 @@ fun PermissionCenterScreen(
     val (runtime, installTime) = remember {
         declaredPermissions(context).partition { isRuntimePermission(context, it) }
     }
+    // Hoisted once per permission — the row and the AI summary share the same
+    // request so a grant updates both.
+    val runtimeRequests = runtime.associateWith { rememberRuntimePermission(it) }
 
     Scaffold(topBar = { DroidKitTopAppBar("Permissions & Access", onBack = onBack) }) { padding ->
         LazyColumn(
@@ -113,10 +118,34 @@ fun PermissionCenterScreen(
 
             item { SectionHeader("Runtime permissions") }
             items(runtime, key = { "rt_$it" }) { permission ->
-                RuntimePermissionRow(
-                    permission = permission,
-                    affectedTools = viewModel.permissionToTools[permission].orEmpty()
-                        .map { it.title },
+                runtimeRequests[permission]?.let { req ->
+                    RuntimePermissionRow(
+                        permission = permission,
+                        request = req,
+                        affectedTools = viewModel.permissionToTools[permission].orEmpty()
+                            .map { it.title },
+                    )
+                }
+            }
+
+            item {
+                AiSummaryCard(
+                    screenTitle = "Permissions & access",
+                    fields = buildMap {
+                        runtimeRequests.forEach { (p, r) ->
+                            put(p.substringAfterLast('.'), r.state.name)
+                        }
+                        providerStatuses.forEach { (kind, status) ->
+                            put(
+                                "Elevated ${kind.name}",
+                                when (status) {
+                                    ProviderStatus.Ready -> "ready"
+                                    is ProviderStatus.NeedsSetup -> "setup required"
+                                    is ProviderStatus.Unavailable -> status.reason
+                                },
+                            )
+                        }
+                    },
                 )
             }
 
@@ -206,8 +235,12 @@ fun PermissionCenterScreen(
 }
 
 @Composable
-private fun RuntimePermissionRow(permission: String, affectedTools: List<String>) {
-    val perm = rememberRuntimePermission(permission)
+private fun RuntimePermissionRow(
+    permission: String,
+    request: RuntimePermissionRequest,
+    affectedTools: List<String>,
+) {
+    val perm = request
     val granted = perm.state == RuntimePermissionState.GRANTED
 
     Card(modifier = Modifier.fillMaxWidth()) {

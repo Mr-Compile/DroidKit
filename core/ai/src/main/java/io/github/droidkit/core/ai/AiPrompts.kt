@@ -71,6 +71,14 @@ object PromptRegistry {
         BASE + "Explain the diagnostic data briefly and accurately. " +
             "Do not invent values. Recommend at most one next step."
 
+    const val SUMMARIZE_VALUES =
+        BASE + "Explain these on-screen values in plain language for a " +
+            "non-technical user. Judge each value against typical or standard " +
+            "values and label it normal, unusual, or failing; when a value " +
+            "cannot be judged from general knowledge, say so instead of " +
+            "guessing. Open with a one-line overall verdict: ALL GOOD, " +
+            "WORTH CHECKING, or NEEDS ATTENTION. Keep it under 150 words."
+
     const val SUMMARIZE = BASE +
         "Summarize this device diagnostic report in 4-6 bullets. " +
         "Lead with failures, then notable observations."

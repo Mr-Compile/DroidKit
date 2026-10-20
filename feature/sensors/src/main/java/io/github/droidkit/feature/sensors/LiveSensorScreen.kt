@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -171,6 +172,24 @@ fun LiveSensorScreen(
                         InfoRow("Type", sensor.stringType ?: sensorType.toString())
                         InfoRow("Max range", "${sensor.maximumRange} $unit".trim())
                         InfoRow("Resolution", sensor.resolution.toString())
+                    }
+                }
+                val v = values
+                if (v != null) {
+                    item {
+                        AiSummaryCard(
+                            screenTitle = "Live sensor ${sensor.name}",
+                            fields = buildMap {
+                                put("Sensor", sensor.name)
+                                put("Type", sensor.stringType ?: sensorType.toString())
+                                put("Unit", unit)
+                                axes.forEachIndexed { i, axis ->
+                                    put("Reading $axis", "%.3f %s".format(v.getOrNull(i) ?: 0f, unit).trim())
+                                }
+                                put("Updates received", updates.toString())
+                                put("Max range", "${sensor.maximumRange} $unit".trim())
+                            },
+                        )
                     }
                 }
             }

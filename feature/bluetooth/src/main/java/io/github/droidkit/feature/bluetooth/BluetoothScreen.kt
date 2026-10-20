@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -209,6 +210,29 @@ fun BluetoothScreen(
                         }
                     }
                 }
+            }
+
+            item {
+                AiSummaryCard(
+                    screenTitle = "Bluetooth lab",
+                    fields = buildMap {
+                        put("Adapter present", viewModel.adapterPresent.toString())
+                        put("Classic Bluetooth", viewModel.classicSupported.toString())
+                        put("Bluetooth LE", viewModel.leSupported.toString())
+                        put("Adapter enabled", enabled.toString())
+                        put("Bonded device count", bonded.size.toString())
+                        bonded.take(10).forEach {
+                            put("Bonded ${it.typeName}", it.bondStateName)
+                        }
+                        put("BLE scan running", scanning.toString())
+                        put("Nearby devices seen", scanResults.size.toString())
+                        // MACs/names stay local — signal strength alone is
+                        // enough for a normality judgment.
+                        scanResults.take(10).forEachIndexed { i, e ->
+                            put("Nearby device ${i + 1}", "${e.rssi} dBm")
+                        }
+                    },
+                )
             }
         }
     }

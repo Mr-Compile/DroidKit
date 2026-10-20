@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
@@ -73,6 +74,24 @@ fun GattExplorerScreen(
                         Text(
                             s.deviceName ?: "Connected device",
                             style = MaterialTheme.typography.titleSmall,
+                        )
+                    }
+                    item {
+                        AiSummaryCard(
+                            screenTitle = "GATT services",
+                            fields = buildMap {
+                                put("Services discovered", s.services.size.toString())
+                                s.services.take(20).forEach { svc ->
+                                    put(
+                                        "Service ${svc.uuid.take(8)}",
+                                        (if (svc.isPrimary) "primary" else "secondary") +
+                                            "; characteristics " +
+                                            svc.characteristics.joinToString { c ->
+                                                "${c.uuid.take(8)}(${c.properties.joinToString("|")})"
+                                            },
+                                    )
+                                }
+                            },
                         )
                     }
                     if (s.services.isEmpty()) {

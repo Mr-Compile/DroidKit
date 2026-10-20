@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -141,6 +142,20 @@ fun AudioRoutingScreen(onBack: () -> Unit) {
                             )
                         }
                     }
+                }
+                item {
+                    AiSummaryCard(
+                        screenTitle = "Audio routing",
+                        fields = mapOf(
+                            "Mode" to modeName(am.mode),
+                            "Speakerphone" to am.isSpeakerphoneOn.toString(),
+                            "Bluetooth SCO" to am.isBluetoothScoOn.toString(),
+                            "Music stream" to "${am.getStreamVolume(AudioManager.STREAM_MUSIC)}/${am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}",
+                            "Music muted" to am.isStreamMute(AudioManager.STREAM_MUSIC).toString(),
+                            "Output devices" to outputs.joinToString { deviceTypeName(it.type) },
+                            "Input devices" to inputs.joinToString { deviceTypeName(it.type) },
+                        ),
+                    )
                 }
             }
         }

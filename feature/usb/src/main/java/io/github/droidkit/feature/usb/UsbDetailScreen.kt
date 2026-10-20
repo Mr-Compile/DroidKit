@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -59,6 +60,20 @@ fun UsbDetailScreen(
         // permissionVersion forces recomposition after a permission response.
         val hasPermission = permissionVersion.let { viewModel.hasPermission(device) }
         val serial = permissionVersion.let { viewModel.serialOrNull(device) }
+
+        val usbAiFields = buildMap<String, String?> {
+            put("Device path", device.deviceName)
+            put("Vendor ID", UsbDescriptors.hex4(device.vendorId))
+            put("Product ID", UsbDescriptors.hex4(device.productId))
+            put("USB version", device.version)
+            put("Manufacturer", device.manufacturerName)
+            put("Product", device.productName)
+            put("Class", UsbDescriptors.className(device.deviceClass))
+            put("Subclass", UsbDescriptors.hex2(device.deviceSubclass))
+            put("Protocol", UsbDescriptors.hex2(device.deviceProtocol))
+            put("Interfaces", device.interfaceCount.toString())
+            put("USB permission", hasPermission.toString())
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -226,22 +241,17 @@ fun UsbDetailScreen(
                         }) { Text("Share") }
                         AiExplainButton(
                             assistant = AiAssistant.USB_ASSISTANT,
-                            fields = buildMap {
-                                put("Device path", device.deviceName)
-                                put("Vendor ID", UsbDescriptors.hex4(device.vendorId))
-                                put("Product ID", UsbDescriptors.hex4(device.productId))
-                                put("USB version", device.version)
-                                put("Manufacturer", device.manufacturerName)
-                                put("Product", device.productName)
-                                put("Class", UsbDescriptors.className(device.deviceClass))
-                                put("Subclass", UsbDescriptors.hex2(device.deviceSubclass))
-                                put("Protocol", UsbDescriptors.hex2(device.deviceProtocol))
-                                put("Interfaces", device.interfaceCount.toString())
-                                put("USB permission", hasPermission.toString())
-                            },
+                            fields = usbAiFields,
                         )
                     }
                 }
+            }
+
+            item {
+                AiSummaryCard(
+                    screenTitle = "USB device",
+                    fields = usbAiFields,
+                )
             }
         }
     }

@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 
@@ -88,6 +89,17 @@ fun ConnectivityCheckScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+        if (!autoResult) {
+            AiSummaryCard(
+                screenTitle = test.title,
+                fields = mapOf(
+                    "Hardware capability" to if (reading.supported) "present" else "absent",
+                    reading.stateLabel to (reading.stateValue ?: "not applicable"),
+                    "Result" to if (reading.supported) "PASS" else "NOT SUPPORTED",
+                ),
+                modifier = Modifier.padding(top = 16.dp),
+            )
         }
     }
 }

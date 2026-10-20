@@ -31,16 +31,22 @@ class AiSettingsStore @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val enabledKey = booleanPreferencesKey("ai_enabled")
+    private val autoSummarizeKey = booleanPreferencesKey("ai_auto_summarize")
     private val modelKey = stringPreferencesKey("ai_model")
     private val keyCipherKey = stringPreferencesKey("ai_key_cipher")
     private val keyIvKey = stringPreferencesKey("ai_key_iv")
 
     val enabled: Flow<Boolean> = context.aiStore.data.map { it[enabledKey] ?: false }
+    val autoSummarize: Flow<Boolean> = context.aiStore.data.map { it[autoSummarizeKey] ?: false }
     val model: Flow<String> = context.aiStore.data.map { it[modelKey] ?: DEFAULT_MODEL }
     val hasKey: Flow<Boolean> = context.aiStore.data.map { !it[keyCipherKey].isNullOrBlank() }
 
     suspend fun setEnabled(value: Boolean) {
         context.aiStore.edit { it[enabledKey] = value }
+    }
+
+    suspend fun setAutoSummarize(value: Boolean) {
+        context.aiStore.edit { it[autoSummarizeKey] = value }
     }
 
     suspend fun setModel(value: String) {

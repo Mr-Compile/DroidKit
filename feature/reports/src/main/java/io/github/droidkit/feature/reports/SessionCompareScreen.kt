@@ -29,6 +29,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.database.DiagnosticSessionEntity
 import io.github.droidkit.core.database.DiagnosticSessionDao
 import io.github.droidkit.core.database.DiagnosticResultDao
@@ -175,6 +176,25 @@ fun SessionCompareScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                    }
+
+                    item {
+                        AiSummaryCard(
+                            screenTitle = "Session comparison",
+                            fields = buildMap {
+                                put("Tests changed", interesting.size.toString())
+                                put("Tests unchanged", unchanged.toString())
+                                interesting.take(15).forEach { t ->
+                                    put(
+                                        t.testId,
+                                        "${t.transition.name}: ${t.before ?: "—"} → ${t.after ?: "—"}",
+                                    )
+                                }
+                                r.snapshotDiffs.take(15).forEach { d ->
+                                    put(d.label, "${d.before ?: "—"} → ${d.after ?: "—"}")
+                                }
+                            },
+                        )
                     }
 
                     if (r.snapshotDiffs.isNotEmpty()) {

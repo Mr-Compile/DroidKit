@@ -87,6 +87,8 @@ class SettingsViewModel @Inject constructor(
         aiStore.model.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AiSettingsStore.DEFAULT_MODEL)
     val aiHasKey: StateFlow<Boolean> =
         aiStore.hasKey.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val aiAutoSummarize: StateFlow<Boolean> =
+        aiStore.autoSummarize.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private val _aiStatus = MutableStateFlow<String?>(null)
     val aiStatus: StateFlow<String?> = _aiStatus.asStateFlow()
@@ -96,6 +98,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setAiEnabled(value: Boolean) {
         viewModelScope.launch { aiStore.setEnabled(value) }
+    }
+
+    fun setAiAutoSummarize(value: Boolean) {
+        viewModelScope.launch { aiStore.setAutoSummarize(value) }
     }
 
     fun setAiModel(value: String) {

@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 
@@ -127,6 +128,24 @@ fun SensorTestScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+        }
+        if (!autoResult) {
+            values?.let { v ->
+                AiSummaryCard(
+                    screenTitle = test.title,
+                    fields = buildMap {
+                        put("Sensor", sensor.name)
+                        v.forEachIndexed { index, value ->
+                            put(
+                                "Reading ${axisLabels.getOrElse(index) { "v$index" }}",
+                                "%.3f".format(value),
+                            )
+                        }
+                        accuracy?.let { put("Reported accuracy", it) }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
             }
         }
         TestResultBar(

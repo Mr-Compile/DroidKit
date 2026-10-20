@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -74,6 +75,37 @@ fun CameraDetailsScreen(onBack: () -> Unit) {
                     } else {
                         CameraCard(id, chars)
                     }
+                }
+                item {
+                    AiSummaryCard(
+                        screenTitle = "Camera capabilities",
+                        fields = buildMap<String, String?> {
+                            put("Cameras reported", cameraIds.size.toString())
+                            cameraIds.forEach { id ->
+                                val c = runCatching { cm?.getCameraCharacteristics(id) }.getOrNull()
+                                    ?: return@forEach
+                                put(
+                                    "Camera $id facing",
+                                    facingName(c.get(CameraCharacteristics.LENS_FACING)),
+                                )
+                                put(
+                                    "Camera $id hardware level",
+                                    hardwareLevelName(
+                                        c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL),
+                                    ),
+                                )
+                                put(
+                                    "Camera $id sensor",
+                                    c.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
+                                        ?.let { "${it.width}x${it.height}" },
+                                )
+                                put(
+                                    "Camera $id flash",
+                                    c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)?.toString(),
+                                )
+                            }
+                        },
+                    )
                 }
             }
         }

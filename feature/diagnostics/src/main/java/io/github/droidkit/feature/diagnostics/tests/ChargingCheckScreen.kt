@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 
@@ -112,6 +113,19 @@ fun ChargingCheckScreen(
                         Text("Refresh reading")
                     }
                 }
+            }
+        }
+        if (!autoResult) {
+            reading?.let { r ->
+                AiSummaryCard(
+                    screenTitle = test.title,
+                    fields = mapOf(
+                        "Level" to "${r.levelPercent}%",
+                        "Status" to r.statusLabel,
+                        "Plug" to r.plugLabel,
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
             }
         }
         TestResultBar(

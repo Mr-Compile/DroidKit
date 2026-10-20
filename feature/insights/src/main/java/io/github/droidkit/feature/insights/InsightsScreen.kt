@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.database.InsightRange
 import io.github.droidkit.core.database.SessionHealth
 import io.github.droidkit.core.database.TestAttention
@@ -94,6 +95,30 @@ fun InsightsScreen(
                 }
             } else {
                 item { LatestHealthCard(latest, health.previous, health.passDeltaVsPrev) }
+
+                item {
+                    AiSummaryCard(
+                        screenTitle = "Device health insights",
+                        fields = buildMap {
+                            put("Latest session", "${latest.pass} of ${latest.total} passed")
+                            put("Failed", latest.fail.toString())
+                            put("Skipped/other", latest.skip.toString())
+                            health.passDeltaVsPrev?.let { put("Change vs previous", "$it pass(es)") }
+                            health.storage.lastOrNull()?.let {
+                                put("Free storage now", formatBytes(it.freeBytes))
+                            }
+                            health.attention.forEach {
+                                put(
+                                    "Needs attention: ${it.title}",
+                                    listOfNotNull(
+                                        if (it.fails > 0) "${it.fails}× fail" else null,
+                                        if (it.skips > 0) "${it.skips}× skipped" else null,
+                                    ).joinToString(", "),
+                                )
+                            }
+                        },
+                    )
+                }
 
                 item { SectionHeader("Pass rate per session") }
                 item {

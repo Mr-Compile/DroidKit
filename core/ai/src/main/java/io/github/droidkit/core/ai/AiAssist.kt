@@ -16,6 +16,13 @@ data class AiAssistState(
     val busy: Boolean = false,
     val enabled: Boolean = false,
     val hasKey: Boolean = false,
+    val autoSummarize: Boolean = false,
+    val result: AiResult? = null,
+)
+
+/** State for the inline [AiSummaryCard] — kept separate so a summary never pops the explain dialog. */
+data class AiSummaryState(
+    val busy: Boolean = false,
     val result: AiResult? = null,
 )
 
@@ -37,6 +44,12 @@ class AiAssistViewModel @Inject constructor(
     private val _elevatedOutcome = MutableStateFlow<String?>(null)
     val elevatedOutcome: StateFlow<String?> = _elevatedOutcome.asStateFlow()
 
+    private val _summary = MutableStateFlow(AiSummaryState())
+    val summary: StateFlow<AiSummaryState> = _summary.asStateFlow()
+
+    /** Auto summaries fire once per screen view; manual refresh bypasses. */
+    private var autoFired = false
+
     init {
         viewModelScope.launch {
             store.enabled.collect { enabled ->
@@ -44,6 +57,11 @@ class AiAssistViewModel @Inject constructor(
                     enabled = enabled,
                     hasKey = store.hasKey.first(),
                 )
+            }
+        }
+        viewModelScope.launch {
+            store.autoSummarize.collect { auto ->
+                _state.value = _state.value.copy(autoSummarize = auto)
             }
         }
     }
@@ -56,6 +74,21 @@ class AiAssistViewModel @Inject constructor(
             val result = useCase.assist(assistant, fields)
             _state.value = _state.value.copy(busy = false, result = result)
             result.text?.let { parseProposals(it) }
+        }
+    }
+
+    /**
+     * Summarize the values a screen shows. With [auto] = true this runs at
+     * most once per view-model instance (and only when the user enabled
+     * auto-summarize); manual calls always run.
+     */
+    fun summarize(screenTitle: String, fields: Map<String, String?>, auto: Boolean = false) {
+        if (auto && (autoFired || !_state.value.autoSummarize)) return
+        if (auto) autoFired = true
+        if (_summary.value.busy) return
+        viewModelScope.launch {
+            _summary.value = AiSummaryState(busy = true)
+            _summary.value = AiSummaryState(result = useCase.summarizeValues(screenTitle, fields))
         }
     }
 
