@@ -1082,8 +1082,18 @@ function renderToolList(){
         <div class="t-mini sub">${esc(e.subtitle)}</div></div>
       </div>`).join("")).join("");
   if(entries.length) html += `<div class="sec-head">Tools</div>`;
-  html += scored.length ? scored.map(x=>toolCard(x,{fav:S.favorites.has(x.id)})).join("")
-    : (entries.length ? "" : `<div class="empty">No tools or pages match.${nq?` <button class="textbtn" data-act="clear-search">Clear search</button>`:""}</div>`);
+  // Browse view groups tools under category headers — mirrors ToolsScreen.kt CATEGORY_ORDER.
+  const CATORDER = ["DEVICE","DIAGNOSTICS","CONNECTIVITY","HARDWARE","APPS","DEVELOPER","REPORTS"];
+  if(!S.toolsCategory && !nq && scored.length){
+    html += CATORDER.map(c => {
+      const inCat = scored.filter(x => x.category===c);
+      return inCat.length ? `<div class="sec-head">${c.charAt(0)+c.slice(1).toLowerCase()}</div>` +
+        inCat.map(x=>toolCard(x,{fav:S.favorites.has(x.id)})).join("") : "";
+    }).join("");
+  } else {
+    html += scored.length ? scored.map(x=>toolCard(x,{fav:S.favorites.has(x.id)})).join("")
+      : (entries.length ? "" : `<div class="empty">No tools or pages match.${nq?` <button class="textbtn" data-act="clear-search">Clear search</button>`:""}</div>`);
+  }
   el.innerHTML = html;
 }
 /* ---------- diagnose hub ---------- */

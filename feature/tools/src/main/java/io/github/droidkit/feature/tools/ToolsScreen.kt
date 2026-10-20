@@ -38,6 +38,7 @@ import io.github.droidkit.core.common.RecoveryAction
 import io.github.droidkit.core.common.SearchEntry
 import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.Tool
+import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.privileges.ToolResolution
 import io.github.droidkit.core.privileges.toUiProblem
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -50,6 +51,20 @@ import io.github.droidkit.core.ui.components.ToolIcons
 import io.github.droidkit.core.ui.components.ToolInfoDialog
 import io.github.droidkit.core.ui.components.UiProblemCard
 import io.github.droidkit.core.ui.components.openAppSettings
+
+/** Browse order for the grouped list — same families as the product map/mockup. */
+private val CATEGORY_ORDER = listOf(
+    ToolCategory.DEVICE,
+    ToolCategory.DIAGNOSTICS,
+    ToolCategory.CONNECTIVITY,
+    ToolCategory.HARDWARE,
+    ToolCategory.APPS,
+    ToolCategory.DEVELOPER,
+    ToolCategory.REPORTS,
+)
+
+private fun categoryLabel(c: ToolCategory) =
+    c.name.lowercase().replaceFirstChar { it.uppercase() }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,7 +122,7 @@ fun ToolsScreen(
                         FilterChip(
                             selected = category == c,
                             onClick = { viewModel.setCategory(if (category == c) null else c) },
-                            label = { Text(c.name) },
+                            label = { Text(categoryLabel(c)) },
                         )
                     }
                 }
@@ -139,7 +154,7 @@ fun ToolsScreen(
                     )
                 }
             } else {
-                items(tools, key = { it.id }) { tool ->
+                val toolItem: @Composable (Tool) -> Unit = { tool ->
                     val resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) }
                     ToolCard(
                         tool = tool,
@@ -156,6 +171,18 @@ fun ToolsScreen(
                             }
                         },
                     )
+                }
+                if (category == null && query.isBlank()) {
+                    // Browse view: group by category so every lab family is visible.
+                    CATEGORY_ORDER.forEach { cat ->
+                        val inCategory = tools.filter { it.category == cat }
+                        if (inCategory.isNotEmpty()) {
+                            item(key = "cat_${cat.name}") { SectionHeader(categoryLabel(cat)) }
+                            items(inCategory, key = { it.id }) { toolItem(it) }
+                        }
+                    }
+                } else {
+                    items(tools, key = { it.id }) { toolItem(it) }
                 }
             }
         }
