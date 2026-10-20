@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.core.ui.theme.DroidKitSpacing
 import io.github.droidkit.core.ui.theme.DroidKitStatusColors
@@ -37,6 +38,8 @@ fun StatusBadge(kind: StatusKind, label: String, modifier: Modifier = Modifier) 
             label,
             style = MaterialTheme.typography.labelSmall,
             color = kind.color(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(
                 horizontal = DroidKitSpacing.Sm,
                 vertical = DroidKitSpacing.Xs,

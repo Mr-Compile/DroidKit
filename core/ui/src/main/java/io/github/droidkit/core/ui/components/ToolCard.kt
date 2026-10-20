@@ -31,9 +31,9 @@ import io.github.droidkit.core.privileges.ToolResolution
  * the same priority as the problem dialog (provider > permission > device).
  */
 @Composable
-fun AvailabilityBadge(resolution: ToolResolution) {
+fun AvailabilityBadge(resolution: ToolResolution, modifier: Modifier = Modifier) {
     val (kind, label) = availabilityPresentation(resolution)
-    StatusBadge(kind, label)
+    StatusBadge(kind, label, modifier)
 }
 
 private fun availabilityPresentation(resolution: ToolResolution): Pair<StatusKind, String> =
@@ -115,8 +115,13 @@ fun ToolCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                // The badge lives inside the weighted column so it can never
+                // starve the text: it only makes the card taller, not narrower.
+                AvailabilityBadge(
+                    resolution,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
             }
-            AvailabilityBadge(resolution)
             if (onInfo != null) {
                 IconButton(onClick = onInfo) {
                     Icon(
