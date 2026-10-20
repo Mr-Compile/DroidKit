@@ -187,6 +187,9 @@
     animation: fade .25s; z-index: 40;
   }
   @keyframes fade { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
+  /* ---------- splash ---------- */
+  @keyframes dkhalo { from { opacity: .55; } to { opacity: 1; } }
+  @keyframes dkspin { to { transform: rotate(360deg); } }
   .menu {
     position: absolute; top: 30px; right: 14px; background: var(--card2);
     border-radius: 12px; padding: 6px 0; min-width: 180px; pointer-events: auto;
@@ -254,7 +257,7 @@
 <body>
 <header class="page">
   <h1 style="display:flex;align-items:center;gap:10px">
-    <svg viewBox="0 0 108 108" width="30" height="30"><defs><linearGradient id="dkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3CE88A"/><stop offset="1" stop-color="#14B8CC"/></linearGradient></defs><path d="M54 82 L27 66.5 L27 42 L52.5 26 L56.5 28" fill="none" stroke="url(#dkg)" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/><path d="M74.5 37.6 L81.5 42 L81.5 65.5 L64.6 75.6" fill="none" stroke="url(#dkg)" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/><rect x="46.5" y="35" width="15" height="38" rx="7.5" fill="#86F595"/></svg>
+    <svg viewBox="0 0 108 108" width="30" height="30"><defs><linearGradient id="dkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3CE88A"/><stop offset="1" stop-color="#14B8CC"/></linearGradient><linearGradient id="dkglass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A2C31"/><stop offset="1" stop-color="#0A1214"/></linearGradient></defs><path d="M39 54 L29 37 M69 54 L79 37" fill="none" stroke="url(#dkg)" stroke-width="6" stroke-linecap="round"/><path d="M24 80 A30 30 0 0 1 84 80 Z" fill="url(#dkglass)" stroke="url(#dkg)" stroke-width="1.6" stroke-opacity="0.9"/><ellipse cx="54" cy="58" rx="24" ry="10" fill="#FFFFFF" opacity="0.07"/><circle cx="42" cy="64" r="10" fill="#3CE88A" opacity="0.25"/><circle cx="66" cy="64" r="10" fill="#3CE88A" opacity="0.25"/><circle cx="42" cy="64" r="4.5" fill="#3CE88A"/><circle cx="66" cy="64" r="4.5" fill="#3CE88A"/></svg>
     DroidKit — interactive UI mockup</h1>
   <span class="hint">Static replica of the Compose app — all screens incl. elevated + AI. Click the phone or the flow map — no build, no device.</span>
 </header>
@@ -319,7 +322,7 @@ const PROVIDERS = {
   ROOT:     { status: "unavailable", reason: "No root provider registered" },
 };
 const S = {
-  stack: ["home"], tab: "home",
+  stack: ["splash"], tab: "home",
   perms: {
     "android.permission.INTERNET": true, "android.permission.ACCESS_NETWORK_STATE": true,
     "android.permission.VIBRATE": true, "android.permission.WAKE_LOCK": true,
@@ -698,6 +701,7 @@ function recordRecent(toolId){
 /* ============================== screens ============================== */
 function render(){
   clearTimers();
+  $("#splashroot")?.remove();
   const r = cur();
   $("#routebar").textContent = "route: " + r;
   $("#progline").style.display = "none";
@@ -719,6 +723,7 @@ function render(){
       if(parts[1]==="ai_chat"){ body = scrAiChat(); title="DroidKit Chat"; }
       else { body = scrSettings(); title="Settings"; }
       break;
+    case "splash": return renderSplash();
     case "onboarding": return renderOnboarding();
     /* ---------- device labs ---------- */
     case "deviceinfo":
@@ -1941,6 +1946,36 @@ function scrAiChat(){
       <button class="btn-outline" data-act="ai-send" ${ai.busy?"disabled":""}>${ai.busy?"…":"Send"}</button>
     </div></div>`;
 }
+/* ---------- splash (app launch, before nav graph) ---------- */
+function renderSplash(){
+  appbar(null); $("#bottomnav").innerHTML=""; $("#testbar").innerHTML="";
+  renderFlow(); $("#routebar").textContent="route: splash";
+  $("#body").innerHTML="";
+  /* Mirrors app SplashScreen.kt — Candidate-9 direction:
+     ink #040808, corner washes, watermark head, pulsing halo behind the
+     glass mark, two-tone wordmark, letterspaced tagline, spinning ring,
+     "Initializing…" caption, side word column. Tap or ~2.8s → onboarding. */
+  $("#phone").insertAdjacentHTML("beforeend",`<div id="splashroot" data-act="splash-next" style="position:absolute;inset:0;z-index:25;background:#040808;color:#e8ecf1;cursor:pointer;overflow:hidden">
+    <div style="position:absolute;width:430px;height:430px;left:-230px;top:-250px;background:radial-gradient(circle,rgba(60,232,138,.14),rgba(60,232,138,0) 70%)"></div>
+    <div style="position:absolute;width:460px;height:460px;right:-250px;bottom:-270px;background:radial-gradient(circle,rgba(60,232,138,.14),rgba(60,232,138,0) 70%)"></div>
+    <div style="position:absolute;right:-70px;bottom:-90px;width:300px;opacity:.05">${DK_MARK.replaceAll("SIZE","300")}</div>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div style="position:relative;display:flex;align-items:center;justify-content:center">
+        <div style="position:absolute;width:280px;height:280px;background:radial-gradient(circle,rgba(60,232,138,.35),rgba(60,232,138,0) 70%);animation:dkhalo 2.4s cubic-bezier(.4,0,.2,1) infinite alternate"></div>
+        ${DK_MARK.replaceAll("SIZE","140")}
+      </div>
+      <div style="margin-top:24px;font-size:40px;font-weight:800;letter-spacing:-1px"><span style="color:#F2F6F5">Droid</span><span style="color:#3CE88A">Kit</span></div>
+      <div style="margin-top:14px;font-size:12px;font-weight:600;letter-spacing:4.5px;color:#8FA5A7">DEEPER INSIGHTS. BETTER DEVICES.</div>
+      <svg viewBox="0 0 40 40" width="40" height="40" style="margin-top:52px;animation:dkspin 1s linear infinite"><defs><linearGradient id="dkgspin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3CE88A"/><stop offset="1" stop-color="#14B8CC"/></linearGradient></defs><circle cx="20" cy="20" r="16" fill="none" stroke="#1C2A2C" stroke-width="4"/><path d="M36 20 A16 16 0 1 1 20 4" fill="none" stroke="url(#dkgspin)" stroke-width="4" stroke-linecap="round"/></svg>
+      <div style="margin-top:18px;font-size:14px;color:#8FA5A7">Initializing DroidKit…</div>
+    </div>
+    <div style="position:absolute;left:28px;bottom:40px;display:flex;align-items:center;gap:14px">
+      <div style="width:3px;height:52px;background:linear-gradient(#3CE88A,#14B8CC)"></div>
+      <div style="font-size:10px;font-weight:500;letter-spacing:3px;color:#7E9497;line-height:1.9">YOUR ANDROID<br>TOOLKIT<br>COMPANION</div>
+    </div>
+  </div>`);
+  later(()=>{ if(cur()==="splash") replace("onboarding"); },2800);
+}
 /* ---------- onboarding (first run, outside nav graph) ---------- */
 function renderOnboarding(){
   const pages=[
@@ -2073,7 +2108,7 @@ function afterRender(r){
 /* ============================== flow map ============================== */
 const FLOW = [
   {h:"Top-level tabs", nodes:[["Home","home"],["Tools","tools"],["Diagnose","diagnose"],["Settings","settings"]]},
-  {h:"First run", nodes:[["Onboarding ×4","onboarding"]]},
+  {h:"First run", nodes:[["Splash","splash"],["Onboarding ×4","onboarding"]]},
   {h:"Diagnostics flow", nodes:[
     ["Full Diagnostic (guided runner)","diagnose/guided",1],
     ["Phone Doctor test host ×21","diagnose/test/{testId}",2],
@@ -2205,6 +2240,7 @@ function handleAct(act, el, e){
       later(()=>{ const tt=$("#aiSummaryText"); if(tt){
         tt.textContent="21 checks ran: 18 passed. Touch grid failed (74/96 cells, dead zone top-left) — consistent with a digitizer fault or damaged panel region. Proximity sensor absent (NOT_SUPPORTED). Recommend panel replacement, then re-run Full diagnostic and use Compare sessions to verify the fix.";
         tt.className="t-body"; } },1300); break; }
+    case "splash-next": if(cur()==="splash") replace("onboarding"); break;
     case "ob-skip": S.obPage=0; goTab("home"); break;
     case "ob-next": if(S.obPage<3){ S.obPage++; renderOnboarding(); } else { S.obPage=0; goTab("home"); } break;
     case "ble-scan": { const b=S.ble;
