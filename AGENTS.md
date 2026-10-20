@@ -68,6 +68,8 @@ AUDIT -> PLAN -> IMPLEMENT -> TARGETED VALIDATION -> SELF-REVIEW -> UPDATE CHECK
 A task is not complete until implemented, validated, self-reviewed, and documented.
 Never claim tests passed unless they were actually executed.
 Never mark checklist items complete based only on scaffolding.
+- **Backend done ≠ done.** A checklist item may only be checked once the work is reachable in the UI: the screen is composed, navigation/tap is wired to it, and its result is visible to the user. If the logic exists but nothing surfaces it — unwired dispatch, dead route, placeholder ("not yet wired"), or a tap that silently no-ops — wire it into the UI in the same task or leave the box unchecked.
+- Verify reachability before checking: tap through the flow in the running app or `mockups/index.html`, or prove it with a routing-invariant test (e.g. `PhoneDoctorCatalogTest` asserts no catalog test resolves to `PhoneDoctorRoute.Unsupported`). When adding a catalog/registry entry, ship its destination screen and dispatch branch in the same commit — never land an entry the UI cannot open.
 DoD: `playbook/27`. Audit templates: `playbook/26`.
 
 ## UI mockup
