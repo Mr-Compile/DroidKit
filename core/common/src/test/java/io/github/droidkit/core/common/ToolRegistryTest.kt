@@ -58,4 +58,93 @@ class ToolRegistryTest {
     fun `registry launch routes are all directly navigable`() {
         registry.tools.forEach { assertTrue(it.route.none { c -> c == '{' || c == '}' }) }
     }
+
+    @Test
+    fun `search ranks title hits above keyword and description hits`() {
+        val reg = ToolRegistry(
+            setOf(
+                object : FeatureContribution {
+                    override val tools = listOf(
+                        Tool("desc", "Zeta", "wifi analyzer inside", ToolCategory.DEVICE, "a"),
+                        Tool("kw", "Beta", "x", ToolCategory.DEVICE, "b", keywords = setOf("wifi")),
+                        Tool("title", "Wi-Fi Lab", "x", ToolCategory.DEVICE, "c"),
+                    )
+                },
+            ),
+        )
+        assertEquals(listOf("title", "kw", "desc"), reg.search("wifi").map { it.id })
+    }
+
+    @Test
+    fun `search ranks exact title above prefix and contains`() {
+        val reg = ToolRegistry(
+            setOf(
+                object : FeatureContribution {
+                    override val tools = listOf(
+                        Tool("mid", "My Ping Tool", "x", ToolCategory.DEVICE, "a"),
+                        Tool("exact", "Ping", "x", ToolCategory.DEVICE, "b"),
+                        Tool("prefix", "Ping Extended", "x", ToolCategory.DEVICE, "c"),
+                    )
+                },
+            ),
+        )
+        assertEquals(listOf("exact", "prefix", "mid"), reg.search("ping").map { it.id })
+    }
+
+    @Test
+    fun `registry rejects duplicate tool ids`() {
+        val dupe = object : FeatureContribution {
+            override val tools = listOf(
+                Tool("same", "A", "a", ToolCategory.DEVICE, "a"),
+                Tool("same", "B", "b", ToolCategory.DEVICE, "b"),
+            )
+        }
+        runCatching { ToolRegistry(setOf(dupe)) }
+            .onSuccess { throw AssertionError("duplicate tool ids accepted") }
+            .onFailure { assertTrue(it is IllegalArgumentException) }
+    }
+
+    @Test
+    fun `tool rejects unknown icon keys`() {
+        runCatching { Tool("t", "T", "d", ToolCategory.DEVICE, "r", iconKey = "notAKey") }
+            .onSuccess { throw AssertionError("unknown iconKey accepted") }
+            .onFailure { assertTrue(it is IllegalArgumentException) }
+        // Blank falls back to the category icon — allowed.
+        Tool("t", "T", "d", ToolCategory.DEVICE, "r", iconKey = "")
+        Tool("t", "T", "d", ToolCategory.DEVICE, "r", iconKey = ToolIconKeys.BATTERY)
+    }
+
+    @Test
+    fun `searchEntries ranks and filters contributed entries`() {
+        val reg = ToolRegistry(
+            setOf(
+                object : FeatureContribution {
+                    override val tools = emptyList<Tool>()
+                    override val searchEntries = listOf(
+                        SearchEntry("p1", "Privacy Center", "sub", "settings/privacy",
+                            SearchResultType.SETTING, ToolIconKeys.PRIVACY,
+                            keywords = setOf("data")),
+                        SearchEntry("d1", "Speaker", "Audio test", "diagnose/test/audio.speaker",
+                            SearchResultType.DIAGNOSTIC, ToolIconKeys.SPEAKER),
+                    )
+                },
+            ),
+        )
+        assertEquals(listOf("d1"), reg.searchEntries("speaker").map { it.id })
+        assertEquals(listOf("p1"), reg.searchEntries("privacy").map { it.id })
+        assertTrue(reg.searchEntries("").isEmpty())
+        assertTrue(reg.searchEntries("zzzz").isEmpty())
+    }
+
+    @Test
+    fun `searchEntry rejects placeholder routes and unknown icons`() {
+        runCatching {
+            SearchEntry("e", "t", "s", "r/{arg}")
+        }.onSuccess { throw AssertionError("placeholder route accepted") }
+            .onFailure { assertTrue(it is IllegalArgumentException) }
+        runCatching {
+            SearchEntry("e", "t", "s", "r", iconKey = "notAKey")
+        }.onSuccess { throw AssertionError("unknown iconKey accepted") }
+            .onFailure { assertTrue(it is IllegalArgumentException) }
+    }
 }
