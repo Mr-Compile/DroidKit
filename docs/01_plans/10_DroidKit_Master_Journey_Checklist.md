@@ -560,13 +560,14 @@ Examples:
 
 ---
 
-# Journey 18 - Shizuku Journey
+# Journey 18 - Shizuku Journey — SUPERSEDED (2026-10-21)
 
-Suggested target: a post-v1 minor release such as `v1.5.0`, adjusted according to actual roadmap.
+The Shizuku provider was removed: elevated work now runs through DroidKit's
+own wireless-ADB client and root only (`ElevatedOps` order ROOT → ADB).
+See `docs/02_foundations/PLAN_MIGRATION_LOG.md` (2026-10-21 entry). The
+checkboxes below are kept as history of the removed implementation.
 
-Status: implementation complete and statically verified (`assembleDebug` +
-`testDebugUnitTest` green, plan `01_plans/2026-10-19-j18-shizuku.md`). Release
-items stay open — real-device grant flow and API matrix not yet run.
+Original suggested target: a post-v1 minor release such as `v1.5.0`.
 
 ## Research
 - [x] Re-check current Shizuku documentation
@@ -608,7 +609,15 @@ Guided pairing (2026-10-20): mDNS discovery of pairing/connect services,
 foreground pairing service with notification RemoteInput for the code,
 QR pairing both directions (display for other device + screenshot decode),
 manual host/port fallback — all behind `AdbSessionSetup` in core:privileges.
-Pairing/connect round-trips not yet run on hardware — release items open.
+Protocol audit (2026-10-21): three hardware-breaking bugs found and fixed —
+SPAKE2 password now appends 64-byte TLS exported keying material
+(`adb-label` + NUL, per `pairing_connection.cpp`), connect now follows the
+real CNXN→STLS→TLS order, and the TLS client carries our ADB key as a
+self-signed cert (adbd authenticates paired clients by cert pubkey;
+self-signed DER written in-house, no BouncyCastle). Peer-search state race
+fixed; CNXN banner no longer claims shell_v2 (executor uses legacy `shell:`).
+`privilege:adb` unit tests green incl. new `AdbX509Test` DER coverage.
+Pairing/connect round-trips still not run on hardware — release items open.
 
 ## Research
 - [x] Select ADB protocol/library strategy
@@ -735,6 +744,11 @@ disabled.
   failing vs typical) on result screens; auto-once mode behind the new
   `ai_auto_summarize` setting plus manual "Summarize with AI" + refresh;
   read-only text, no proposals (plan `01_plans/2026-10-20-ai-value-summaries.md`)
+- [x] Humanized responses — `AiTextFormat`/`AiRichText` render every AI
+  surface (summary cards, explain dialog, chat) as styled text: verdict
+  pills, per-line tinted status icons, real bold/italic/bullets; markdown
+  symbols never reach the screen; prompts steer a warmer no-markdown voice
+  (plan `01_plans/2026-10-21-ai-humanized-responses.md`)
 
 ## AI-4 Structured Actions
 - [x] Allow-listed action schema
