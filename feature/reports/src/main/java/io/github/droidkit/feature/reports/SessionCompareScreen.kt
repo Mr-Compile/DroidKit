@@ -34,6 +34,7 @@ import io.github.droidkit.core.database.DiagnosticSessionEntity
 import io.github.droidkit.core.database.DiagnosticSessionDao
 import io.github.droidkit.core.database.DiagnosticResultDao
 import io.github.droidkit.core.database.DeviceSnapshotDao
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -102,7 +103,7 @@ fun SessionCompareScreen(
 
     Scaffold(topBar = { DroidKitTopAppBar("Compare sessions", onBack = onBack) }) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp,
                 top = padding.calculateTopPadding() + 8.dp,

@@ -23,7 +23,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +42,8 @@ import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.adaptive.EmptyWindowInsets
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import java.text.DateFormat
@@ -51,6 +55,7 @@ fun AppDetailScreen(
     packageName: String,
     viewModel: AppsViewModel,
     onBack: () -> Unit,
+    embedded: Boolean = false,
 ) {
     val context = LocalContext.current
     val pm = context.packageManager
@@ -63,7 +68,18 @@ fun AppDetailScreen(
         loaded = true
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("App detail", onBack = onBack) }) { padding ->
+    Scaffold(
+        contentWindowInsets =
+            if (embedded) EmptyWindowInsets else ScaffoldDefaults.contentWindowInsets,
+        topBar = {
+            DroidKitTopAppBar(
+                "App detail",
+                onBack = onBack,
+                windowInsets =
+                    if (embedded) EmptyWindowInsets else TopAppBarDefaults.windowInsets,
+            )
+        },
+    ) { padding ->
         when {
             !loaded -> Text(
                 "Loading…",
@@ -81,7 +97,7 @@ fun AppDetailScreen(
                         .getOrNull()
                 }
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().contentWidthCap(),
                     contentPadding = PaddingValues(
                         start = 16.dp, end = 16.dp,
                         top = padding.calculateTopPadding() + 8.dp,

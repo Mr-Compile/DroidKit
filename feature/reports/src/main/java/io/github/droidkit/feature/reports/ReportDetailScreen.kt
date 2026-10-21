@@ -19,8 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +42,8 @@ import io.github.droidkit.core.database.DeviceSnapshotEntity
 import io.github.droidkit.core.database.DiagnosticResultEntity
 import io.github.droidkit.core.database.DiagnosticSessionEntity
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.adaptive.EmptyWindowInsets
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import java.io.File
@@ -68,6 +72,7 @@ fun ReportDetailScreen(
     onDeleted: () -> Unit,
     onBack: () -> Unit,
     viewModel: ReportsViewModel,
+    embedded: Boolean = false,
 ) {
     val context = LocalContext.current
     val clipboard = LocalClipboard.current
@@ -90,7 +95,16 @@ fun ReportDetailScreen(
         d?.let { ReportBuilder.build(it.session, it.snapshot, it.results) }
     }
     Scaffold(
-        topBar = { DroidKitTopAppBar("Report detail", onBack = onBack) },
+        contentWindowInsets =
+            if (embedded) EmptyWindowInsets else ScaffoldDefaults.contentWindowInsets,
+        topBar = {
+            DroidKitTopAppBar(
+                "Report detail",
+                onBack = onBack,
+                windowInsets =
+                    if (embedded) EmptyWindowInsets else TopAppBarDefaults.windowInsets,
+            )
+        },
     ) { padding ->
         if (d == null) {
             Text(
@@ -100,7 +114,7 @@ fun ReportDetailScreen(
             return@Scaffold
         }
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp,
                 top = padding.calculateTopPadding() + 8.dp,

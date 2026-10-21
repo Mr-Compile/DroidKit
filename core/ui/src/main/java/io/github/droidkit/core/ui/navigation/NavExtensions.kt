@@ -9,7 +9,7 @@ import androidx.navigation.NavHostController
  * pushing e.g. "home" leaves a second Home instance on the stack and reads
  * as a dead navigation.
  */
-val TOP_LEVEL_ROUTES: Set<String> = setOf("home", "tools", "diagnose", "settings")
+val TOP_LEVEL_ROUTES: Set<String> = TOP_LEVEL_DESTINATIONS.map { it.route }.toSet()
 
 /** Bottom-bar semantics: one instance per tab, state preserved. */
 fun NavHostController.navigateTopLevel(route: String) {

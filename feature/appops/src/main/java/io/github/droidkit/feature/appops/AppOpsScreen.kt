@@ -33,6 +33,7 @@ import androidx.activity.compose.BackHandler
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.privileges.AppOpMode
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -65,7 +66,7 @@ fun AppOpsScreen(
             )
         },
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Column(modifier = Modifier.fillMaxSize().padding(padding).contentWidthCap()) {
             when {
                 provider == null -> NoProviderCard(onOpenAdb)
                 selected != null -> OpsDetail(

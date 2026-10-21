@@ -22,8 +22,14 @@
   .layout { flex: 1; display: flex; min-height: 0; }
   .phone-col {
     flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 18px; gap: 10px; min-width: 430px;
+    justify-content: flex-start; padding: 18px; gap: 10px; min-width: 430px;
   }
+  .sizebar { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .sizebar button {
+    background: #151a20; color: #c6cdd9; border: 1px solid #262b34;
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+  .sizebar button.sel { border-color: #a8c7fa; color: #d6e4ff; background: #1b2436; }
   .route-bar {
     font: 12px/1.4 Consolas, monospace; color: #7fd4c1;
     background: #151a20; border: 1px solid #262b34; border-radius: 8px;
@@ -31,12 +37,46 @@
   }
   /* ---------- phone frame ---------- */
   .phone {
-    width: 392px; height: 800px; border-radius: 36px;
+    width: 392px; height: min(800px, calc(100vh - 185px)); min-height: 470px;
+    border-radius: 36px;
     border: 10px solid #1a1c22; outline: 1px solid #33363f;
     background: #000; position: relative; overflow: hidden;
     display: flex; flex-direction: column;
     box-shadow: 0 24px 60px rgba(0,0,0,.55);
   }
+  /* window size classes (mirrors the app's navChromeFor rule) */
+  .phone[data-size="medium"]   { width: min(620px, 94vw); }
+  .phone[data-size="expanded"] { width: min(860px, 94vw); }
+  .phonemain { flex: 1; display: flex; min-height: 0; }
+  .contentcol { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .navrail {
+    display: none; flex: none; width: 76px; flex-direction: column;
+    align-items: center; gap: 4px; padding: 10px 6px;
+    background: var(--surface); border-right: 1px solid rgba(128,128,128,.10);
+  }
+  .rnav {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    width: 100%; padding: 7px 2px; border-radius: 12px; cursor: pointer;
+    color: var(--sub); font-size: 10.5px;
+  }
+  .rnav:hover { background: rgba(128,128,128,.10); }
+  .rnav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+  .rnav .pill { padding: 3px 12px; border-radius: 14px; }
+  .rnav.sel { color: var(--primary); }
+  .rnav.sel .pill { background: var(--card2); }
+  .phone[data-size="medium"] .navrail,
+  .phone[data-size="expanded"] .navrail { display: flex; }
+  .phone[data-size="medium"] .bottomnav,
+  .phone[data-size="expanded"] .bottomnav { display: none; }
+  /* two-pane list-detail at expanded (apps / usb / reports) */
+  .panes { display: flex; height: 100%; min-height: 0; }
+  .pane-list { flex: 0 0 42%; min-width: 0; overflow-y: auto; border-right: 1px solid rgba(128,128,128,.12); }
+  .pane-detail { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .pane-empty { flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--sub); font-size: 13px; text-align: center; padding: 20px; }
+  .panehdr { flex: none; min-height: 46px; display: flex; align-items: center; gap: 4px; padding: 0 12px; font-size: 16px; }
+  /* readable content cap at expanded (mirrors Modifier.contentWidthCap) */
+  .phone[data-size="expanded"] #body .pad { max-width: 640px; width: 100%; margin: 0 auto; }
   .phone[data-theme="dark"] {
     --surface: #111318; --card: #1d2129; --card2: #262b34;
     --text: #e3e7ee; --sub: #a3aab8; --outline: #4a5160;
@@ -310,17 +350,27 @@
 <div class="layout">
   <div class="phone-col">
     <div class="route-bar" id="routebar">route: home</div>
-    <div class="phone" id="phone" data-theme="dark">
+    <div class="sizebar" id="sizebar">
+      <button data-size="compact" class="sel">Phone · 392</button>
+      <button data-size="medium">Small tablet · 620</button>
+      <button data-size="expanded">Expanded · 860</button>
+    </div>
+    <div class="phone" id="phone" data-theme="dark" data-size="compact">
       <div class="statusbar"><span id="clock">9:41</span>
         <span class="sicons">
           <svg width="15" height="12" viewBox="0 0 16 12"><path d="M8 10.6 0 3.4 1.4 2 8 7.9 14.6 2 16 3.4z" fill="#ccc"/></svg>
           <svg width="20" height="11" viewBox="0 0 22 11"><rect x="0" y="0" width="18" height="11" rx="2" fill="none" stroke="#ccc"/><rect x="2" y="2" width="12" height="7" fill="#ccc"/><rect x="19" y="3.5" width="3" height="4" rx="1" fill="#ccc"/></svg>
         </span>
       </div>
-      <div id="appbar"></div>
-      <div class="progress-line" id="progline" style="display:none"><div id="progfill"></div></div>
-      <div id="body"></div>
-      <div id="testbar"></div>
+      <div class="phonemain">
+        <nav class="navrail" id="navrail"></nav>
+        <div class="contentcol">
+          <div id="appbar"></div>
+          <div class="progress-line" id="progline" style="display:none"><div id="progfill"></div></div>
+          <div id="body"></div>
+          <div id="testbar"></div>
+        </div>
+      </div>
       <nav class="bottomnav" id="bottomnav"></nav>
       <div class="gesturebar">
         <span class="g" id="gback" title="Back">◁</span>
@@ -958,10 +1008,39 @@ function sysPermDialog(perm, cb){
 }
 /* ============================== router ============================== */
 const TOP_ROUTES=new Set(["home","tools","diagnose","settings"]);
-function nav(route){ if(TOP_ROUTES.has(route)) return goTab(route); S.stack.push(route); clearTimers(); closeOverlay(); render(); }
+/* routes that open a two-pane list-detail at expanded width */
+const PANE_LIST = new Set(["apps","usb","reports"]);
+function isExpanded(){ return $("#phone").dataset.size === "expanded"; }
+function nav(route){
+  if(TOP_ROUTES.has(route)) return goTab(route);
+  if(isExpanded() && PANE_LIST.has(cur()) && route.startsWith(cur()+"/")){
+    S.paneSel = route; render(); return;
+  }
+  S.paneSel = null;
+  S.stack.push(route); clearTimers(); closeOverlay(); render();
+}
 function replace(route){ S.stack[S.stack.length-1]=route; clearTimers(); closeOverlay(); render(); }
-function goBack(){ if(S.stack.length>1){ S.stack.pop(); clearTimers(); closeOverlay(); render(); } }
-function goTab(tab){ S.tab=tab; S.stack=[tab]; clearTimers(); closeOverlay(); render(); }
+function goBack(){
+  if(S.paneSel){ S.paneSel=null; render(); return; }
+  if(S.stack.length>1){ S.stack.pop(); clearTimers(); closeOverlay(); render(); }
+}
+function goTab(tab){ S.tab=tab; S.stack=[tab]; S.paneSel=null; clearTimers(); closeOverlay(); render(); }
+function setSize(sz){
+  $("#phone").dataset.size = sz;
+  document.querySelectorAll("#sizebar button").forEach(b =>
+    b.classList.toggle("sel", b.dataset.size === sz));
+  if(sz !== "expanded") S.paneSel = null;
+  render();
+}
+/* detail pane content for an expanded list route */
+function paneDetailFor(rt){
+  const parts = rt.split("/"); let html = null, t = "Detail";
+  if(parts[0]==="apps" && parts[1]==="detail"){ html = scrAppDetail(parts.slice(2).join("/")); t = "App detail"; }
+  if(parts[0]==="usb" && parts[1]==="device"){ html = scrUsbDetail(decodeURIComponent(parts.slice(2).join("/"))); t = "USB device"; }
+  if(parts[0]==="reports" && parts[1]==="detail"){ html = scrReportDetail(parts.slice(2).join("/")); t = "Report detail"; }
+  if(!html) return `<div class="pane-empty">Select an item to inspect it here.</div>`;
+  return `<div class="panehdr"><span class="iconbtn" data-act="pane-back" title="Back to list"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg></span><span class="t-small">${esc(t)}</span></div>${html}`;
+}
 function recordRecent(toolId){
   S.recentTools = [toolId, ...S.recentTools.filter(x=>x!==toolId)].slice(0,5);
   S.toolUse[toolId] = (S.toolUse[toolId]||0)+1;
@@ -1075,21 +1154,28 @@ function render(){
     default: body = `<div class="pad empty">Unknown route: ${esc(r)}</div>`;
   }
   if(parts.length>1) back=true;
+  if(isExpanded() && PANE_LIST.has(r) && parts.length===1){
+    const detail = S.paneSel ? paneDetailFor(S.paneSel)
+      : `<div class="pane-empty">Select an item to inspect it here.</div>`;
+    body = `<div class="panes"><div class="pane-list">${body}</div><div class="pane-detail">${detail}</div></div>`;
+  }
   appbar(title, actions, back);
   $("#body").innerHTML = body;
   afterRender(r);
 }
-function renderBNav(){
-  const TOP = ["home","tools","diagnose","settings"];
-  if(!TOP.includes(cur())){ $("#bottomnav").innerHTML=""; return; }
-  const items = [
+const NAV_ITEMS = [
     ["home","Home",`<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>`],
     ["tools","Tools",`<svg viewBox="0 0 24 24"><path d="M21.7 18.3 13.4 10a5.5 5.5 0 0 0-7-7L9.9 6.5 6.5 9.9 3 6.4a5.5 5.5 0 0 0 7 7l8.3 8.3a1.5 1.5 0 0 0 2.1 0l1.3-1.3a1.5 1.5 0 0 0 0-2.1z"/></svg>`],
     ["diagnose","Diagnose",`<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5h2v2h-2zm0 4h2v6h-2z"/></svg>`],
     ["settings","Settings",`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.9 2.9l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.9-2.9l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.9-2.9l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.9 2.9l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/></svg>`],
-  ];
-  $("#bottomnav").innerHTML = items.map(([r,l,ic]) =>
+];
+function renderBNav(){
+  const TOP = ["home","tools","diagnose","settings"];
+  if(!TOP.includes(cur())){ $("#bottomnav").innerHTML=""; $("#navrail").innerHTML=""; return; }
+  $("#bottomnav").innerHTML = NAV_ITEMS.map(([r,l,ic]) =>
     `<div class="bnav ${cur()===r?"sel":""}" data-tab="${r}"><span class="pill">${ic}</span><span>${l}</span></div>`).join("");
+  $("#navrail").innerHTML = NAV_ITEMS.map(([r,l,ic]) =>
+    `<div class="rnav ${cur()===r?"sel":""}" data-tab="${r}"><span class="pill">${ic}</span><span>${l}</span></div>`).join("");
 }
 /* ---------- home ---------- */
 function scrHome(){
@@ -1326,7 +1412,7 @@ function testBody(test, mode){
     case test.id==="camera.flash":
       return std(test, `<button class="btn full" data-act="torch" id="torchbtn">Turn torch ON</button>
         <div class="t-mini" id="torchstate" style="margin-top:8px"></div>`);
-    case test.capKey: {
+    case test.capKey!==undefined: {
       const r = capReading(test.capKey);
       const verdict = mode==="guided"
         ? (r.supported?"Result recorded: PASS":"Result recorded: NOT SUPPORTED")
@@ -2940,6 +3026,7 @@ function handleAct(act, el, e){
   switch(act){
     case "dlg-close": closeOverlay(); break;
     case "go-back": goBack(); break;
+    case "pane-back": S.paneSel = null; render(); break;
     case "clear-search": S.toolsQuery=""; render(); break;
     case "reset-settings": dialog({title:"Reset settings?",
       text:"Resets the theme, technician name, favorite tools, recent tools and usage counters to defaults. Your AI key and provider setup are not affected, and the intro will not play again.",
@@ -3275,7 +3362,10 @@ document.addEventListener("click", e=>{
   const am=e.target.closest("[data-aimodel]");
   if(am){ S.ai.model=am.dataset.aimodel; }
 });
-/* gesture bar */
+/* gesture bar + size switcher */
+$("#sizebar").addEventListener("click", e => {
+  const b = e.target.closest("[data-size]"); if(b) setSize(b.dataset.size);
+});
 $("#gback").addEventListener("click",goBack);
 $("#ghome").addEventListener("click",()=>goTab("home"));
 $("#grecent").addEventListener("click",()=>toast("Recents (mock)"));

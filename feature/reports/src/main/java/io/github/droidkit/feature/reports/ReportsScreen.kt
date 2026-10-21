@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.adaptive.DroidKitListDetail
+import io.github.droidkit.core.ui.adaptive.rememberDroidKitWindowInfo
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import java.text.DateFormat
@@ -45,6 +47,7 @@ fun ReportsScreen(
     val filter by viewModel.statusFilter.collectAsStateWithLifecycle()
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
+    val windowInfo = rememberDroidKitWindowInfo()
 
     Scaffold(
         topBar = {
@@ -69,63 +72,39 @@ fun ReportsScreen(
             )
         },
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                StatusFilter.entries.forEach { f ->
-                    FilterChip(
-                        selected = filter == f,
-                        onClick = { viewModel.statusFilter.value = f },
-                        label = { Text(f.name.replace('_', ' ').lowercase().replaceFirstChar { c -> c.uppercase() }) },
+        if (windowInfo.isExpandedWidth) {
+            // Two-pane at expanded: the detail route stays navigable for deep
+            // links, but row selection opens the report inside the pane.
+            DroidKitListDetail<String>(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                listPane = { onSelect ->
+                    ReportsListContent(
+                        filter = filter,
+                        rows = rows,
+                        onFilter = { viewModel.statusFilter.value = it },
+                        onCompare = onCompare,
+                        onSelect = onSelect,
                     )
-                }
-                FilterChip(
-                    selected = false,
-                    onClick = onCompare,
-                    label = { Text("Compare") },
-                )
-            }
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (rows.isEmpty()) {
-                    item {
-                        EmptyState(
-                            if (filter == StatusFilter.ALL) "No saved reports. Run a diagnostic first."
-                            else "No ${filter.name.lowercase().replace('_', ' ')} reports.",
-                        )
-                    }
-                }
-                items(rows, key = { it.session.id }) { row ->
-                    Card(
-                        onClick = { onOpenDetail(row.session.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                DateFormat.getDateTimeInstance().format(Date(row.session.startedAtEpochMs)),
-                                style = MaterialTheme.typography.titleSmall,
-                            )
-                            Text(
-                                "${row.session.overallStatus} — app v${row.session.appVersion}",
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                            val counts = row.results.groupingBy { it.state }.eachCount()
-                            Text(
-                                if (counts.isEmpty()) "No test results recorded"
-                                else counts.entries.joinToString { "${it.key}: ${it.value}" },
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                    }
-                }
-            }
+                },
+                detailPane = { sessionId, back ->
+                    ReportDetailScreen(
+                        sessionId = sessionId,
+                        onDeleted = back,
+                        onBack = back,
+                        viewModel = viewModel,
+                        embedded = true,
+                    )
+                },
+            )
+        } else {
+            ReportsListContent(
+                filter = filter,
+                rows = rows,
+                onFilter = { viewModel.statusFilter.value = it },
+                onCompare = onCompare,
+                onSelect = onOpenDetail,
+                modifier = Modifier.padding(padding),
+            )
         }
     }
 
@@ -146,5 +125,74 @@ fun ReportsScreen(
                 TextButton(onClick = { confirmDeleteAll = false }) { Text("Cancel") }
             },
         )
+    }
+}
+
+@Composable
+private fun ReportsListContent(
+    filter: StatusFilter,
+    rows: List<ReportRow>,
+    onFilter: (StatusFilter) -> Unit,
+    onCompare: () -> Unit,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            StatusFilter.entries.forEach { f ->
+                FilterChip(
+                    selected = filter == f,
+                    onClick = { onFilter(f) },
+                    label = { Text(f.name.replace('_', ' ').lowercase().replaceFirstChar { c -> c.uppercase() }) },
+                )
+            }
+            FilterChip(
+                selected = false,
+                onClick = onCompare,
+                label = { Text("Compare") },
+            )
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (rows.isEmpty()) {
+                item {
+                    EmptyState(
+                        if (filter == StatusFilter.ALL) "No saved reports. Run a diagnostic first."
+                        else "No ${filter.name.lowercase().replace('_', ' ')} reports.",
+                    )
+                }
+            }
+            items(rows, key = { it.session.id }) { row ->
+                Card(
+                    onClick = { onSelect(row.session.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            DateFormat.getDateTimeInstance().format(Date(row.session.startedAtEpochMs)),
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        Text(
+                            "${row.session.overallStatus} — app v${row.session.appVersion}",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        val counts = row.results.groupingBy { it.state }.eachCount()
+                        Text(
+                            if (counts.isEmpty()) "No test results recorded"
+                            else counts.entries.joinToString { "${it.key}: ${it.value}" },
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

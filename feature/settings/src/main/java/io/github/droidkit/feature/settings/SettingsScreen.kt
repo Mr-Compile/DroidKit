@@ -35,6 +35,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.datastore.ThemeMode
 import io.github.droidkit.core.privileges.ProviderKind
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.theme.DroidKitMark
@@ -58,7 +59,7 @@ fun SettingsScreen(
 
     Scaffold(topBar = { DroidKitTopAppBar("Settings") }) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp,
                 top = padding.calculateTopPadding() + 8.dp,

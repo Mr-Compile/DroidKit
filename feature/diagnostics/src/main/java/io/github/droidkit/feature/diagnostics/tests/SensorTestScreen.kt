@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,7 +53,7 @@ fun SensorTestScreen(
                 onResult(TestResultState.NOT_SUPPORTED, "No ${test.title} sensor reported by SensorManager")
             }
         }
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
             Text(test.title, style = MaterialTheme.typography.titleMedium)
             Text(
                 "This device reports no ${test.title.lowercase()} hardware." +
@@ -86,7 +87,7 @@ fun SensorTestScreen(
         onDispose { sensorManager?.unregisterListener(listener) }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(test.title, style = MaterialTheme.typography.titleMedium)
             Text(

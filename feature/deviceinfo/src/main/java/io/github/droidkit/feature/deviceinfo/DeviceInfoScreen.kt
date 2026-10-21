@@ -37,6 +37,7 @@ import io.github.droidkit.core.system.formatHz
 import io.github.droidkit.core.system.formatUptime
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.navigation.openRoute
 
@@ -80,7 +81,7 @@ fun DeviceInfoScreen(
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp,
                 top = padding.calculateTopPadding() + 8.dp,
@@ -278,7 +279,8 @@ private fun buildSections(
         Section("Access providers",
             providerStatuses.entries.map { (k, v) -> k to v.toString() }.ifEmpty {
                 listOf("Providers" to null)
-            }),
+            },
+            labRoute = "permissions", labLabel = "Permission Center"),
     )
 }
 

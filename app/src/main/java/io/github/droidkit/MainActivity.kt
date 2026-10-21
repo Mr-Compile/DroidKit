@@ -1,22 +1,15 @@
 package io.github.droidkit
 
 import android.os.Bundle
+import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,15 +17,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.datastore.ThemeMode
 import io.github.droidkit.core.privileges.CapabilityManager
-import io.github.droidkit.core.ui.navigation.TOP_LEVEL_ROUTES
+import io.github.droidkit.core.ui.navigation.DroidKitNavigationSuite
 import io.github.droidkit.core.ui.navigation.navigateTopLevel
 import io.github.droidkit.core.ui.theme.DroidKitTheme
 import io.github.droidkit.navigation.DroidKitNavHost
@@ -40,6 +32,19 @@ import javax.inject.Inject
 import kotlinx.coroutines.delay
 
 private const val SPLASH_MIN_MS = 1_500L
+private const val TAG = "DroidKit"
+
+/** Debug builds only: dumps the top insets once so device runs can confirm the
+ * app bar gap equals the status bar (i.e. no letterboxing/double inset). */
+@Composable
+private fun DebugInsetProbe() {
+    val density = LocalDensity.current
+    val statusTop = WindowInsets.statusBars.getTop(density)
+    val cutoutTop = WindowInsets.displayCutout.getTop(density)
+    LaunchedEffect(statusTop, cutoutTop) {
+        Log.d(TAG, "insets: statusBarTop=${statusTop}px cutoutTop=${cutoutTop}px")
+    }
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -49,8 +54,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Some OEMs letterbox below a display cutout even when the theme asks
+        // for shortEdges — set it on the window too so the app bar isn't
+        // pushed down under a black band on punch-hole devices.
+        window.attributes.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         enableEdgeToEdge()
         setContent {
+            if (BuildConfig.DEBUG) DebugInsetProbe()
             val themeMode by settings.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
             val darkTheme = when (themeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
@@ -64,19 +75,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-private data class TopLevelDestination(
-    val route: String,
-    val label: String,
-    val icon: ImageVector,
-)
-
-private val topLevelDestinations = listOf(
-    TopLevelDestination("home", "Home", Icons.Filled.Home),
-    TopLevelDestination("tools", "Tools", Icons.Filled.Build),
-    TopLevelDestination("diagnose", "Diagnose", Icons.Filled.Info),
-    TopLevelDestination("settings", "Settings", Icons.Filled.Settings),
-)
 
 @Composable
 private fun DroidKitScaffold(
@@ -101,33 +99,20 @@ private fun DroidKitScaffold(
         return
     }
 
-    Scaffold(
-        bottomBar = {
-            // Bottom nav lives only on top-level destinations (UI v6 plan 16);
-            // secondary/detail surfaces use the Up affordance instead.
-            if (currentRoute in TOP_LEVEL_ROUTES) {
-                NavigationBar {
-                    topLevelDestinations.forEach { dest ->
-                        NavigationBarItem(
-                            selected = currentRoute == dest.route,
-                            onClick = { nav.navigateTopLevel(dest.route) },
-                            icon = { Icon(dest.icon, contentDescription = dest.label) },
-                            label = { Text(dest.label) },
-                        )
-                    }
-                }
-            }
-        },
-    ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
-            onboardingDone?.let { done ->
-                DroidKitNavHost(
-                    nav = nav,
-                    capabilityManager = capabilityManager,
-                    settings = settings,
-                    startDestination = if (done) "home" else "onboarding",
-                )
-            }
+    // Adaptive chrome (plan 2026-10-20): NavigationBar at compact sizes, rail
+    // at medium/expanded; chrome only on top-level destinations — secondary
+    // surfaces keep the Up affordance.
+    DroidKitNavigationSuite(
+        currentRoute = currentRoute,
+        onNavigate = nav::navigateTopLevel,
+    ) {
+        onboardingDone?.let { done ->
+            DroidKitNavHost(
+                nav = nav,
+                capabilityManager = capabilityManager,
+                settings = settings,
+                startDestination = if (done) "home" else "onboarding",
+            )
         }
     }
 }

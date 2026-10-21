@@ -1,6 +1,7 @@
 package io.github.droidkit.core.ui.components
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -8,6 +9,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 
 /**
@@ -21,9 +23,15 @@ import androidx.compose.runtime.Composable
 fun DroidKitTopAppBar(
     title: String,
     onBack: (() -> Unit)? = null,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    DroidKitTopAppBar(title = { Text(title) }, onBack = onBack, actions = actions)
+    DroidKitTopAppBar(
+        title = { Text(title) },
+        onBack = onBack,
+        windowInsets = windowInsets,
+        actions = actions,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +39,7 @@ fun DroidKitTopAppBar(
 fun DroidKitTopAppBar(
     title: @Composable () -> Unit,
     onBack: (() -> Unit)? = null,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
@@ -46,5 +55,6 @@ fun DroidKitTopAppBar(
             }
         },
         actions = actions,
+        windowInsets = windowInsets,
     )
 }

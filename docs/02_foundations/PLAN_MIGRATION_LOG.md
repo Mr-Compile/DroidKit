@@ -68,6 +68,19 @@ Migration completed? [x]
 Notes: splash tagline switched to the candidate's own "Deeper insights. Better devices."; old primary tagline retained as alternate for onboarding/store copy.
 
 ## Entry
+Date: 2026-10-20
+Feature: Responsive/adaptive UI shell
+Old document/decision: uiux_v5 execution plan Task 7 — adaptive navigation (bottom bar / rail) + Home bento redesign + Tools search as one shell task
+Improved v2 decision: `01_plans/2026-10-20-responsive-adaptive-ui.md` — adaptive shell absorbed into a dedicated responsive pass; bento + Tools search stay with v5
+Repository reality: fixed `NavigationBar` in `MainActivity`; no window-size classes anywhere; display-cutout letterboxing was the suspected cause of "app bar sits too low" on newer punch-hole phones
+Conflict classification: scope split / partial supersession — adaptive nav shell, cutout hardening, and expanded list-detail land here; Home bento + Tools search remain open under V5-3/V5-4
+Decision: responsive plan wins for shell, insets, and list-detail scope; v5 spec stays canonical for bento and per-screen migrations
+Owner approval required?: yes — given in session (absorb shell, skip bento; list-detail only where spec'd; landscape works correctly, not redesigned)
+Files/docs updated: `app/.../MainActivity.kt`, `app/.../values/themes.xml`, `core/ui/adaptive/*`, `core/ui/navigation/*`, `core/ui/components/DroidKitTopAppBar.kt`, `feature/{apps,usb,reports}/…` (two-pane), dense-screen `contentWidthCap` adoption, diagnostics test-screen top insets, `OnboardingScreen`, `mockups/index.html`, `01_plans/2026-10-20-responsive-adaptive-ui.md`, master journey checklist V5-3
+Migration completed? [x]
+Notes: `NavigationSuiteScaffold` picks NavigationBar vs NavigationRail from the window; `DroidKitListDetail` wraps `ListDetailPaneScaffold` for Apps/USB/Reports at ≥840dp; `contentWidthCap` (840dp) caps dense content; `shortEdges` cutout mode set in theme + window.
+
+## Entry
 Date: 2026-10-21
 Feature: Saved Wi-Fi passwords (root) + Device Inspector depth + battery-health measured values
 Old document/decision: Frozen V1 scope (playbook/03 + feature_plans_v2/30) — root capabilities deferred to J20/V2; Network Lab V1 has no credential access; Device Inspector lists basic Build fields

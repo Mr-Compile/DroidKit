@@ -31,6 +31,7 @@ import io.github.droidkit.core.database.SessionHealth
 import io.github.droidkit.core.database.TestAttention
 import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -49,7 +50,7 @@ fun InsightsScreen(
 
     Scaffold(topBar = { DroidKitTopAppBar("Insights", onBack = onBack) }) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(
                 start = 16.dp, end = 16.dp,
                 top = padding.calculateTopPadding() + 8.dp,

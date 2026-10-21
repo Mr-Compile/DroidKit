@@ -778,7 +778,7 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 - [ ] Progressive sanitized technical details on error surfaces
 
 ## V5-3 Shell
-- [ ] Adaptive navigation (compact bottom bar / medium+expanded rail) — plan Task 7
+- [x] Adaptive navigation (compact bottom bar / medium+expanded rail) — plan Task 7 (shell absorbed by `2026-10-20-responsive-adaptive-ui.md`; bento stays open below)
 - [ ] Home bento hierarchy per `screens/10_HOME_TOOLS.md`
 - [ ] Tools search/filter with availability badges
 

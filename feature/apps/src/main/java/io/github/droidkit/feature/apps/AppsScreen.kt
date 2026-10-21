@@ -24,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.adaptive.DroidKitListDetail
+import io.github.droidkit.core.ui.adaptive.rememberDroidKitWindowInfo
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 
@@ -38,71 +40,112 @@ fun AppsScreen(
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val filter by viewModel.filter.collectAsStateWithLifecycle()
+    val windowInfo = rememberDroidKitWindowInfo()
 
     Scaffold(topBar = { DroidKitTopAppBar("App Inspector", onBack = onBack) }) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { viewModel.query.value = it },
-                label = { Text("Search apps") },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                AppFilter.entries.forEach { f ->
-                    FilterChip(
-                        selected = filter == f,
-                        onClick = { viewModel.filter.value = f },
-                        label = {
-                            Text(
-                                f.name.lowercase().replaceFirstChar { it.uppercase() },
-                            )
-                        },
+        if (windowInfo.isExpandedWidth) {
+            // Two-pane at expanded: the detail route stays navigable for deep
+            // links, but list selection opens the shared-VM detail in pane.
+            DroidKitListDetail<String>(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                listPane = { onSelect ->
+                    AppsListContent(viewModel, apps, loading, query, filter, onSelect)
+                },
+                detailPane = { pkg, back ->
+                    AppDetailScreen(
+                        packageName = pkg,
+                        viewModel = viewModel,
+                        onBack = back,
+                        embedded = true,
                     )
-                }
-            }
-            Text(
-                "Android 11+ limits package visibility — ${apps.size} app(s) visible",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                },
             )
-            when {
-                loading -> LoadingState(
-                    label = "Loading apps…",
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+        } else {
+            AppsListContent(
+                viewModel,
+                apps,
+                loading,
+                query,
+                filter,
+                onOpenDetail,
+                modifier = Modifier.padding(padding),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AppsListContent(
+    viewModel: AppsViewModel,
+    apps: List<InstalledApp>,
+    loading: Boolean,
+    query: String,
+    filter: AppFilter,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { viewModel.query.value = it },
+            label = { Text("Search apps") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            AppFilter.entries.forEach { f ->
+                FilterChip(
+                    selected = filter == f,
+                    onClick = { viewModel.filter.value = f },
+                    label = {
+                        Text(
+                            f.name.lowercase().replaceFirstChar { it.uppercase() },
+                        )
+                    },
                 )
-                apps.isEmpty() -> EmptyState("No apps match the current filter.")
-                else -> LazyColumn(
-                    contentPadding = PaddingValues(
-                        start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(apps, key = { it.packageName }) { app ->
-                        Card(
-                            onClick = { onOpenDetail(app.packageName) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Row(modifier = Modifier.padding(16.dp)) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(app.label, style = MaterialTheme.typography.bodyLarge)
-                                    Text(
-                                        app.packageName,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
+            }
+        }
+        Text(
+            "Android 11+ limits package visibility — ${apps.size} app(s) visible",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        when {
+            loading -> LoadingState(
+                label = "Loading apps…",
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            apps.isEmpty() -> EmptyState("No apps match the current filter.")
+            else -> LazyColumn(
+                contentPadding = PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(apps, key = { it.packageName }) { app ->
+                    Card(
+                        onClick = { onSelect(app.packageName) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(app.label, style = MaterialTheme.typography.bodyLarge)
                                 Text(
-                                    app.versionName ?: "—",
+                                    app.packageName,
                                     style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
+                            Text(
+                                app.versionName ?: "—",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
                     }
                 }

@@ -14,8 +14,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -31,6 +33,8 @@ import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.adaptive.EmptyWindowInsets
+import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlinx.coroutines.launch
@@ -41,6 +45,7 @@ fun UsbDetailScreen(
     deviceName: String,
     viewModel: UsbViewModel,
     onBack: () -> Unit,
+    embedded: Boolean = false,
 ) {
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val permissionVersion by viewModel.permissionVersion.collectAsStateWithLifecycle()
@@ -51,7 +56,16 @@ fun UsbDetailScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { DroidKitTopAppBar(device?.productName ?: "USB device", onBack = onBack) },
+        contentWindowInsets =
+            if (embedded) EmptyWindowInsets else ScaffoldDefaults.contentWindowInsets,
+        topBar = {
+            DroidKitTopAppBar(
+                device?.productName ?: "USB device",
+                onBack = onBack,
+                windowInsets =
+                    if (embedded) EmptyWindowInsets else TopAppBarDefaults.windowInsets,
+            )
+        },
     ) { padding ->
         if (device == null) {
             EmptyState("Device disconnected.")
@@ -76,7 +90,7 @@ fun UsbDetailScreen(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize().padding(padding).contentWidthCap(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
