@@ -108,6 +108,9 @@ class AiTextFormatTest {
         assertEquals(StatusCue.WARNING, cueOf("- Temperature not normal"))
         assertEquals(StatusCue.NEGATIVE, cueOf("- Sensor not working"))
         assertEquals(StatusCue.NEGATIVE, cueOf("- Not normal and still failing"))
+        assertEquals(StatusCue.WARNING, cueOf("- Proximity unusual: absent (not a failure)"))
+        assertEquals(StatusCue.POSITIVE, cueOf("- Never a problem in testing"))
+        assertEquals(StatusCue.WARNING, cueOf("- Not a good sign for the cell"))
     }
 
     @Test

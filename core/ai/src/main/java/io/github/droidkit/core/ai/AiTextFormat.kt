@@ -244,11 +244,13 @@ object AiTextFormat {
 
     private val NEGATED_BAD = Regex(
         "(?i)\\b(no|not|nothing|without|never|hardly|barely|no signs of)\\s+" +
+            "(?:(?:a|an|the|any|signs of)\\s+)?" +
             "(abnormal\\w*|unusual|fail(ed|ing|s|ure)?|failures?|issues?|problems?|errors?" +
             "|critical|wrong|high|low|hot|bad)\\b",
     )
     private val NEGATED_GOOD = Regex(
         "(?i)\\b(no|not|nothing|isn't|isnt|without|never|hardly|barely)\\s+" +
+            "(?:(?:a|an|the|any)\\s+)?" +
             "(normal|healthy|good|fine|ok(ay)?|passed?|in range|within (the )?normal)\\b",
     )
 
