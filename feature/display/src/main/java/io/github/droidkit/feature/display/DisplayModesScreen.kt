@@ -21,7 +21,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
@@ -84,16 +87,36 @@ fun DisplayModesScreen(onBack: () -> Unit) {
                     }
                 } else {
                     val current = display.mode
-                    val modes = display.supportedModes.map {
-                        ModeInfo(it.modeId, it.physicalWidth, it.physicalHeight, it.refreshRate, it.modeId == current.modeId)
-                    }
+                    val config = LocalConfiguration.current
+                    val view = LocalView.current
+                    val metrics = view.resources.displayMetrics
+                    val phys = DisplayInfo.physicalSizeMm(
+                        current.physicalWidth, current.physicalHeight,
+                        metrics.xdpi, metrics.ydpi,
+                    )
                     SectionCard(title = "Current mode") {
                         InfoRow("Mode id", current.modeId.toString(), copyable = false)
                         InfoRow("Resolution", "${current.physicalWidth} x ${current.physicalHeight}", copyable = false)
                         InfoRow("Refresh rate", "%.2f Hz".format(current.refreshRate), copyable = false)
-                        InfoRow("Rotation", display.rotation.toString(), copyable = false)
+                        InfoRow("Rotation", DisplayInfo.rotationName(display.rotation), copyable = false)
+                        InfoRow("Display state", DisplayInfo.stateName(display.state), copyable = false)
                         InfoRow("HDR capable", display.isHdr.toString(), copyable = false)
+                        InfoRow("HDR types", DisplayInfo.hdrTypeLabel(display.hdrCapabilities?.supportedHdrTypes ?: IntArray(0)), copyable = false)
                         InfoRow("Wide color", display.isWideColorGamut.toString(), copyable = false)
+                    }
+                    SectionCard(title = "Density & size") {
+                        InfoRow("Density", DisplayInfo.densityLabel(config.densityDpi), copyable = false)
+                        InfoRow("Scale factor", "x${LocalDensity.current.density}", copyable = false)
+                        InfoRow("Font scale", "x${config.fontScale}", copyable = false)
+                        InfoRow("Physical size (est.)", DisplayInfo.physicalSizeLabel(phys), copyable = false)
+                        InfoRow("Diagonal (est.)", DisplayInfo.diagonalInches(phys) ?: "Unavailable", copyable = false)
+                        Text(
+                            "Size is estimated from Android's reported dpi — " +
+                                "treat as approximate on panels that report odd values.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
                     }
                 }
             }
@@ -124,7 +147,9 @@ fun DisplayModesScreen(onBack: () -> Unit) {
                         fields = mapOf(
                             "Resolution" to "${current.physicalWidth} x ${current.physicalHeight}",
                             "Refresh rate" to "%.2f Hz".format(current.refreshRate),
+                            "Density" to DisplayInfo.densityLabel(LocalConfiguration.current.densityDpi),
                             "HDR capable" to display.isHdr.toString(),
+                            "HDR types" to DisplayInfo.hdrTypeLabel(display.hdrCapabilities?.supportedHdrTypes ?: IntArray(0)),
                             "Wide color" to display.isWideColorGamut.toString(),
                             "Supported modes" to display.supportedModes.joinToString("; ") {
                                 "${it.physicalWidth}x${it.physicalHeight} @ %.0f Hz".format(it.refreshRate)

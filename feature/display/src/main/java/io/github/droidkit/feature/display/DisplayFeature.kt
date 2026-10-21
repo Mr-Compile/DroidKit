@@ -50,6 +50,15 @@ object DisplayFeature : FeatureContribution {
             keywords = setOf("judder", "motion", "animation", "pattern"),
             iconKey = ToolIconKeys.MOTION,
         ),
+        Tool(
+            id = "display.patterns",
+            title = "Test Patterns",
+            description = "Static patterns for banding, uniformity, contrast and geometry",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/patterns",
+            keywords = setOf("pattern", "banding", "uniformity", "checker", "bars"),
+            iconKey = ToolIconKeys.PALETTE,
+        ),
     )
 }
 
@@ -90,5 +99,8 @@ fun NavGraphBuilder.displayGraph(nav: NavHostController) {
     }
     composable("${DisplayFeature.ROUTE}/motion") {
         MotionPatternScreen(onBack = { nav.navigateUp() })
+    }
+    composable("${DisplayFeature.ROUTE}/patterns") {
+        PatternsScreen(onBack = { nav.navigateUp() })
     }
 }

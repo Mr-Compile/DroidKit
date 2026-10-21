@@ -578,6 +578,7 @@ const TOOLS = [
   t("display.touch","Touch Test","Count simultaneous touch points",CAT.DIAGNOSTICS,"display"),
   t("display.modes","Display Modes","Current and supported display modes, refresh rates, HDR",CAT.DIAGNOSTICS,"display/modes"),
   t("display.motion","Motion Pattern","Moving test pattern to observe judder and refresh behavior",CAT.DIAGNOSTICS,"display/motion"),
+  t("display.patterns","Test Patterns","Static patterns for banding, uniformity, contrast and geometry",CAT.DIAGNOSTICS,"display/patterns"),
   t("audio.speaker","Speaker Test","Play test tones through each output",CAT.DIAGNOSTICS,"audio"),
   t("audio.microphone","Microphone Test","Record and meter microphone input",CAT.DIAGNOSTICS,"audio",{perms:[P.REC]}),
   t("audio.vibration","Vibration Test","Run haptic patterns and confirm motor response",CAT.DIAGNOSTICS,"audio",{perms:[P.VIB]}),
@@ -713,7 +714,7 @@ const TOOL_ICON = {
   "diagnostics.full":"monitor_heart","diagnostics.quick":"fact_check","sensors.live":"timeline",
   "sensors.check":"fact_check",
   "display.deadpixel":"fiber_manual_record","display.touch":"touch_app","display.modes":"display_settings",
-  "display.motion":"animation","audio.speaker":"volume_up","audio.microphone":"mic","audio.vibration":"vibration",
+  "display.motion":"animation","display.patterns":"palette","audio.speaker":"volume_up","audio.microphone":"mic","audio.vibration":"vibration",
   "audio.routing":"alt_route","camera.capture":"photo_camera","camera.flash":"flash_on","camera.details":"camera_alt",
   "apps.installed":"apps","apps.components":"account_tree","apps.permissions":"policy",
   "permissions.center":"security","permissions.inspector":"policy","appops.view":"app_settings_alt","appops.set":"tune",
@@ -759,6 +760,7 @@ const TOOL_KW = {
   "deviceinfo.storage":["disk","space","memory","volumes","free"],"diagnostics.full":["phone doctor","checkup","health check","all tests"],
   "diagnostics.quick":["single test","check","test"],"display.deadpixel":["pixel","screen","stuck","colors"],
   "display.modes":["refresh","resolution","hdr","hz"],"display.motion":["judder","motion","animation","pattern"],
+  "display.patterns":["pattern","banding","uniformity","checker","bars"],
   "display.touch":["touch","multitouch","fingers","grid"],"network.diagnostics":["internet","layers","checks","troubleshoot"],
   "network.discovery":["mdns","nsd","browse","services","local"],"network.dns":["resolve","hostname","lookup","resolver"],
   "network.inspector":["connection","transport","wifi","cellular","ip"],"network.interfaces":["mtu","interface","address","flags","lan"],
@@ -1161,6 +1163,7 @@ function nav(route){
     S.paneSel = route; render(); return;
   }
   S.paneSel = null;
+  S.dispPatternFull = false;
   S.stack.push(route); clearTimers(); closeOverlay(); render();
   if(route==="nfc"){ S.nfc.scanning=true;
     if(!S.nfc.tag) later(()=>{ if(S.nfc.scanning&&!S.nfc.tag&&cur()==="nfc"){ S.nfc.tag={...NFC_TAG}; render(); } },1600); }
@@ -1238,6 +1241,7 @@ function render(){
     case "display":
       if(parts[1]==="modes"){ body = scrDisplayModes(); title="Display Modes"; }
       else if(parts[1]==="motion"){ body = scrMotion(); title="Motion pattern"; }
+      else if(parts[1]==="patterns"){ body = scrPatterns(); title="Test patterns"; }
       else { body = labIndex("Display & Touch",
         "Standalone display and touch checks from Phone Doctor. Results here are not saved — run Full Diagnostic to persist them.",
         [["display.color","Display colors","Cycle solid colors and check coverage, banding and tint."],
@@ -2846,7 +2850,11 @@ function scrDisplayModes(){
   const modes=[["1344 x 2992","120.00 Hz"],["1344 x 2992","60.00 Hz"],["1080 x 2400","120.00 Hz"],["1080 x 2400","60.00 Hz"]];
   return `<div class="pad col">
     ${sectionCard("Current mode", infoRow("Mode id","2",false)+infoRow("Resolution","1344 x 2992",false)+
-      infoRow("Refresh rate","120.00 Hz",false)+infoRow("Rotation","0",false)+infoRow("HDR capable","true",false)+infoRow("Wide color","true",false))}
+      infoRow("Refresh rate","120.00 Hz",false)+infoRow("Rotation","0°",false)+infoRow("Display state","On",false)+
+      infoRow("HDR capable","true",false)+infoRow("HDR types","HDR10 · HLG · Dolby Vision",false)+infoRow("Wide color","true",false))}
+    ${sectionCard("Density & size", infoRow("Density","560 dpi (xxxhdpi)",false)+infoRow("Scale factor","x3.5",false)+
+      infoRow("Font scale","x3.5",false)+infoRow("Physical size (est.)","152.4 mm x 68.6 mm",false)+infoRow("Diagonal (est.)","6.6″",false)+
+      `<div class="t-mini sub" style="margin-top:8px">Size is estimated from Android's reported dpi — treat as approximate on panels that report odd values.</div>`)}
     ${sectionCard(`Supported modes (${modes.length})`, modes.map(([r,h],i)=>infoRow(r,h+(i===0?" · current":""),false)).join("")+
       `<div class="t-mini sub" style="margin-top:8px">Mode switching is restricted to the system — this is a read-only inventory.</div>`)}
   </div>`;
@@ -2878,6 +2886,31 @@ function scrMotion(){
     </div>
     <div class="t-mini sub" id="mpprog">Progress: 0.00</div>
   </div>`;
+}
+/* ---------- test patterns ---------- */
+function scrPatterns(){
+  const pat=S.dispPattern||"GRADIENT";
+  if(S.dispPatternFull){
+    return `<div style="position:fixed;inset:0;z-index:99">${patternBox(pat,"width:100%;height:100%")}
+      <button class="btn" style="position:absolute;top:16px;left:16px" data-act="disp-pat-exit">Exit full screen</button></div>`;
+  }
+  const pats=[["GRADIENT","Gradient"],["GRAY_STEPS","Gray steps"],["CHECKER","Checker"],["BARS","Color bars"],["CROSSHATCH","Grid"],["WHITE","White"],["BLACK","Black"]];
+  return `<div class="pad col" style="min-height:100%">
+    <div class="t-mini sub">Static patterns for inspecting banding, uniformity, contrast and geometry. Open full screen to remove all UI. This is a visual aid — it does not measure the panel.</div>
+    <div class="chiprow">${pats.slice(0,4).map(([v,l])=>`<button class="fchip ${pat===v?"sel":""}" data-pat="${v}">${l}</button>`).join("")}</div>
+    <div class="chiprow">${pats.slice(4).map(([v,l])=>`<button class="fchip ${pat===v?"sel":""}" data-pat="${v}">${l}</button>`).join("")}</div>
+    <div style="flex:1;min-height:280px;border-radius:12px;overflow:hidden">${patternBox(pat,"width:100%;height:100%")}</div>
+    <button class="btn primary" data-act="disp-pat-full">Full screen</button>
+  </div>`;
+}
+function patternBox(p,style){
+  const inner={GRADIENT:"background:linear-gradient(0deg,#000,#fff)",
+    GRAY_STEPS:`background:linear-gradient(90deg,${Array.from({length:16},(_,i)=>{const v=Math.round(i/15*255);return `rgb(${v},${v},${v}) ${i*6.25}% ${(i+1)*6.25}%`}).join(",")})`,
+    CHECKER:"background:#000;background-image:linear-gradient(45deg,#fff 25%,transparent 25%),linear-gradient(-45deg,#fff 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#fff 75%),linear-gradient(-45deg,transparent 75%,#fff 75%);background-size:64px 64px;background-position:0 0,0 32px,32px -32px,-32px 0",
+    BARS:"background:linear-gradient(90deg,#bfbfbf 0 14.29%,#bfbf00 0 28.57%,#00bfbf 0 42.86%,#00bf00 0 57.14%,#bf00bf 0 71.43%,#bf0000 0 85.71%,#0000bf 0 100%)",
+    CROSSHATCH:"background:#000;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.7) 0 2px,transparent 2px 60px),repeating-linear-gradient(90deg,rgba(255,255,255,.7) 0 2px,transparent 2px 60px)",
+    WHITE:"background:#fff",BLACK:"background:#000"};
+  return `<div style="${inner[p]};${style}"></div>`;
 }
 /* ---------- audio routing ---------- */
 function scrAudioRouting(){
@@ -3500,6 +3533,7 @@ document.addEventListener("click", e => {
   const cm = e.target.closest("[data-cmp]"); if(cm){ const [w,id]=cm.dataset.cmp.split(":"); S.cmp[w]=id; S.cmp.done=false; render(); return; }
   const mpp = e.target.closest("[data-mppat]"); if(mpp){ S.motionPattern=mpp.dataset.mppat; render(); return; }
   const mps = e.target.closest("[data-mpspeed]"); if(mps){ S.motionSpeed=+mps.dataset.mpspeed; render(); return; }
+  const dp = e.target.closest("[data-pat]"); if(dp){ S.dispPattern=dp.dataset.pat; render(); return; }
   const np = e.target.closest("[data-nfcpreset]"); if(np){
     const k=S.nfcKind||"TEXT", F=(S.nfc.nfcF[k]=S.nfc.nfcF[k]||{});
     F[NFC_FIELDS[k][0][0]]=np.dataset.nfcpreset; render(); return; }
@@ -3514,6 +3548,8 @@ document.addEventListener("click", e => {
 function handleAct(act, el, e){
   if(act.startsWith("ext:")){ toast("Would open "+act.slice(4)+" (mock)"); return; }
   switch(act){
+    case "disp-pat-full": S.dispPatternFull=true; render(); break;
+    case "disp-pat-exit": S.dispPatternFull=false; render(); break;
     case "dlg-close": closeOverlay(); break;
     case "go-back": goBack(); break;
     case "pane-back": S.paneSel = null; render(); break;
