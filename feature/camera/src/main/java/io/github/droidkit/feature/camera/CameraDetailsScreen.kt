@@ -1,9 +1,11 @@
 package io.github.droidkit.feature.camera
 
 import android.content.Context
+import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
-import android.hardware.camera2.CameraMetadata
+import android.os.Build
+import android.view.SurfaceHolder
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,9 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -23,21 +30,9 @@ import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
-private fun facingName(facing: Int?): String = when (facing) {
-    CameraCharacteristics.LENS_FACING_FRONT -> "Front"
-    CameraCharacteristics.LENS_FACING_BACK -> "Back"
-    CameraCharacteristics.LENS_FACING_EXTERNAL -> "External"
-    else -> "Unknown"
-}
+private fun facingName(facing: Int?) = CameraInfo.facingName(facing)
 
-private fun hardwareLevelName(level: Int?): String = when (level) {
-    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY -> "Legacy"
-    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED -> "Limited"
-    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL -> "Full"
-    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3 -> "Level 3"
-    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL -> "External"
-    else -> "Unknown"
-}
+private fun hardwareLevelName(level: Int?) = CameraInfo.hardwareLevelName(level)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,6 +95,11 @@ fun CameraDetailsScreen(onBack: () -> Unit) {
                                         ?.let { "${it.width}x${it.height}" },
                                 )
                                 put(
+                                    "Camera $id ISO range",
+                                    c.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)
+                                        ?.let { "${it.lower}–${it.upper}" },
+                                )
+                                put(
                                     "Camera $id flash",
                                     c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)?.toString(),
                                 )
@@ -121,10 +121,15 @@ private fun CameraCard(id: String, c: CameraCharacteristics) {
     val apertures = c.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES)
     val sensor = c.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
     val caps = c.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
+    var showSizes by remember { mutableStateOf(false) }
+    var showModes by remember { mutableStateOf(false) }
 
     SectionCard(title = "Camera $id — ${facingName(facing)}") {
         InfoRow("Hardware level", hardwareLevelName(level), copyable = false)
-        InfoRow("Sensor", sensor?.let { "${it.width} x ${it.height}" })
+        InfoRow(
+            "Sensor",
+            sensor?.let { "${it.width}×${it.height} (${CameraInfo.megapixels(it)})" },
+        )
         InfoRow("Flash", flash?.toString(), copyable = false)
         InfoRow(
             "Focal lengths",
@@ -134,27 +139,117 @@ private fun CameraCard(id: String, c: CameraCharacteristics) {
             "Apertures",
             apertures?.joinToString { "f/%.1f".format(it) },
         )
-        val capNames = caps?.toList()?.mapNotNull(::capabilityName)
+        c.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)?.let {
+            InfoRow("Sensor physical size", "%.2f × %.2f mm".format(it.width, it.height))
+        }
+        c.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)?.let {
+            InfoRow("ISO range", "${it.lower}–${it.upper}", copyable = false)
+        }
+        c.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)?.let {
+            InfoRow(
+                "Exposure range",
+                "${it.lower}–${it.upper} ns",
+                copyable = false,
+            )
+        }
+        c.get(CameraCharacteristics.SENSOR_ORIENTATION)?.let {
+            InfoRow("Sensor orientation", "$it°", copyable = false)
+        }
+        c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)
+            ?.takeIf { it.isNotEmpty() }?.let { ranges ->
+                InfoRow(
+                    "FPS ranges",
+                    ranges.joinToString { CameraInfo.fpsRangeLabel(it) },
+                    copyable = false,
+                )
+            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            c.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE)?.let {
+                InfoRow("Zoom ratio", "${it.lower}×–${it.upper}×", copyable = false)
+            }
+        }
+        val capNames = caps?.toList()?.mapNotNull(CameraInfo::capabilityName)
         InfoRow(
             "Capabilities",
             capNames?.takeIf { it.isNotEmpty() }?.joinToString(),
         )
         val logical = c.physicalCameraIds.takeIf { it.isNotEmpty() }?.joinToString()
         InfoRow("Physical cameras", logical)
-    }
-}
 
-private fun capabilityName(cap: Int): String? = when (cap) {
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_BACKWARD_COMPATIBLE -> "Backward compatible"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR -> "Manual sensor"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_POST_PROCESSING -> "Manual post-processing"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW -> "RAW"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_BURST_CAPTURE -> "Burst"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_READ_SENSOR_SETTINGS -> "Read sensor settings"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT -> "Depth"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_CONSTRAINED_HIGH_SPEED_VIDEO -> "High-speed video"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_MOTION_TRACKING -> "Motion tracking"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_LOGICAL_MULTI_CAMERA -> "Logical multi-camera"
-    CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_ULTRA_HIGH_RESOLUTION_SENSOR -> "Ultra-high-res"
-    else -> null
+        // StreamConfigurationMap — output sizes per format, high-speed sizes.
+        val map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+        if (map != null) {
+            OutlinedButton(
+                onClick = { showSizes = !showSizes },
+                modifier = Modifier.padding(top = 8.dp),
+            ) { Text(if (showSizes) "Hide output sizes" else "Output sizes") }
+            if (showSizes) {
+                listOf(
+                    ImageFormat.JPEG,
+                    ImageFormat.YUV_420_888,
+                    ImageFormat.RAW_SENSOR,
+                    ImageFormat.PRIVATE,
+                ).forEach { fmt ->
+                    val sizes = runCatching {
+                        map.getOutputSizes(fmt)?.toList()
+                    }.getOrNull()
+                        ?: runCatching { map.getOutputSizes(SurfaceHolder::class.java)?.toList() }
+                            .getOrNull()
+                    CameraInfo.sizesSummary(sizes?.toTypedArray())?.let { summary ->
+                        Text(
+                            "${CameraInfo.imageFormatName(fmt)}: $summary",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                }
+                val hsSizes = runCatching { map.highSpeedVideoSizes?.toList() }.getOrNull()
+                if (!hsSizes.isNullOrEmpty()) {
+                    Text(
+                        "High-speed video: " + hsSizes.sortedByDescending {
+                            it.width.toLong() * it.height
+                        }.take(4).joinToString { s ->
+                            val fps = runCatching {
+                                map.getHighSpeedVideoFpsRangesFor(s)?.toList()
+                            }.getOrNull()
+                            CameraInfo.sizeLabel(s) +
+                                (fps?.joinToString(prefix = " @ ", separator = ", ") {
+                                    CameraInfo.fpsRangeLabel(it)
+                                } ?: "")
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
+                }
+            }
+        }
+
+        // Available mode lists — AE/AWB/AF, stabilization, scenes, effects.
+        OutlinedButton(
+            onClick = { showModes = !showModes },
+            modifier = Modifier.padding(top = 8.dp),
+        ) { Text(if (showModes) "Hide modes" else "Modes & tuning") }
+        if (showModes) {
+            @Composable
+            fun modes(label: String, ints: IntArray?, name: (Int) -> String?) {
+                val names = ints?.toList()?.mapNotNull(name).orEmpty()
+                if (names.isNotEmpty()) {
+                    InfoRow(
+                        label,
+                        names.joinToString(),
+                        copyable = false,
+                    )
+                }
+            }
+            modes("AE modes", c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES), CameraInfo::aeModeName)
+            modes("AWB modes", c.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES), CameraInfo::awbModeName)
+            modes("AF modes", c.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES), CameraInfo::afModeName)
+            modes("Video stabilization", c.get(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES), CameraInfo::videoStabilizationName)
+            modes("Optical stabilization", c.get(CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION), CameraInfo::oisName)
+            modes("Scene modes", c.get(CameraCharacteristics.CONTROL_AVAILABLE_SCENE_MODES), CameraInfo::sceneModeName)
+            modes("Effects", c.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS), CameraInfo::effectName)
+        }
+    }
 }

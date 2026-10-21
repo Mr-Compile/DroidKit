@@ -720,6 +720,7 @@ const S = {
   snapshots: [], snapSel: { before:null, after:null },
   sensorRec: { recording:false, samples:0 },
   sensorCheck: { running:false, done:false, counts:{} },
+  camExp: {},               // cameraId -> {sizes,modes} expanded state
   preset: "FULL",
   technician: "",
   elevLog: [],
@@ -769,7 +770,7 @@ const TOOLS = [
   t("audio.routing","Audio Routing","Audio devices, active mode, routing and capabilities",CAT.DIAGNOSTICS,"audio/routing"),
   t("camera.capture","Camera Test","Preview each camera and capture a test frame",CAT.DIAGNOSTICS,"camera",{perms:[P.CAM],feats:["android.hardware.camera.any"]}),
   t("camera.flash","Flash Test","Toggle torch on each camera unit",CAT.DIAGNOSTICS,"camera",{feats:["android.hardware.camera.flash"]}),
-  t("camera.details","Camera Capabilities","Camera2 inventory: sensors, lenses, levels, capabilities",CAT.DIAGNOSTICS,"camera/details",{feats:["android.hardware.camera.any"]}),
+  t("camera.details","Camera Capabilities","Camera2 inventory: sensors, lenses, output sizes, modes, FPS ranges",CAT.DIAGNOSTICS,"camera/details",{feats:["android.hardware.camera.any"]}),
   t("apps.installed","App Inspector","Visible installed apps with package metadata",CAT.APPS,"apps"),
   t("apps.components","Component Explorer","Activities, services, receivers and providers per app",CAT.APPS,"apps"),
   t("apps.permissions","Permission Inspector","Requested permissions grouped by grant state",CAT.APPS,"apps"),
@@ -937,7 +938,7 @@ const TOOL_KW = {
   "battery.lab":["charge","charging","health","temperature","voltage","power","capacity"],
   "bluetooth.gatt":["gatt","services","characteristics","connect","notify","write"],"bluetooth.scan":["ble","scan","nearby","low energy","ibeacon","advertisement"],
   "bluetooth.status":["bt","adapter","bonded","paired"],"camera.capture":["photo","preview","capture","selfie"],
-  "camera.details":["camera2","lens","sensor","capabilities"],"camera.flash":["torch","led","light"],
+  "camera.details":["camera2","lens","sensor","capabilities","resolution","modes"],"camera.flash":["torch","led","light"],
   "developer.deeplink":["uri","url","link","resolve"],
   "developer.display":["resolution","density","dpi","refresh","hdr"],"developer.intents":["intent","launch","developer options","activity"],
   "developer.logs":["logcat","logs","read"],"deviceinfo.overview":["phone info","build","hardware","specs","model","about phone","device name","imei","sim","status","serial"],
@@ -3131,16 +3132,49 @@ function scrAudioRouting(){
 /* ---------- camera capabilities ---------- */
 function scrCameraDetails(){
   const cams=[
-    {id:"0",facing:"Back",level:"Level 3",sensor:"8160 x 6120",flash:"true",
+    {id:"0",facing:"Back",level:"Level 3",sensor:"8160×6120 (50.0 MP)",flash:"true",
      focal:"6.9 mm · 2.2 mm · 15.4 mm",apert:"f/1.7 · f/2.2 · f/3.5",
-     caps:"Backward compatible, Manual sensor, Manual post-processing, RAW, Burst, Read sensor settings, Logical multi-camera, Ultra-high-res",phys:"2, 3, 4"},
-    {id:"1",facing:"Front",level:"Full",sensor:"4080 x 3072",flash:"false",
-     focal:"2.7 mm",apert:"f/2.2",caps:"Backward compatible",phys:null},
+     physize:"8.50 × 6.38 mm",iso:"50–3200",exp:"31–243950000 ns",orient:"90°",
+     fps:"15–15 fps, 15–30 fps, 24–60 fps",zoom:"0.6×–10.0×",
+     caps:"Backward compatible, Manual sensor, Manual post-processing, RAW, Burst, Read sensor settings, Logical multi-camera, Ultra-high-res",phys:"2, 3, 4",
+     sizes:`<div class="t-mini sub" style="margin-top:4px">JPEG: 8160×6120, 8160×4592, 6000×4500  (+9 more)</div>
+       <div class="t-mini sub" style="margin-top:4px">YUV_420_888: 8160×6120, 8160×4592, 6000×4500  (+9 more)</div>
+       <div class="t-mini sub" style="margin-top:4px">RAW_SENSOR: 8160×6120</div>
+       <div class="t-mini sub" style="margin-top:4px">PRIVATE (Surface): 8160×6120, 8160×4592  (+11 more)</div>
+       <div class="t-mini sub" style="margin-top:6px">High-speed video: 1920×1080 @ 120–240 fps, 1280×720 @ 240–480 fps</div>`,
+     modes:`
+       ${infoRow("AE modes","On, Auto flash, Always flash, Auto flash redeye",false)}
+       ${infoRow("AWB modes","Auto, Incandescent, Fluorescent, Daylight, Cloudy daylight, Shade",false)}
+       ${infoRow("AF modes","Auto, Macro, Continuous video, Continuous picture",false)}
+       ${infoRow("Video stabilization","On, Preview stabilization",false)}
+       ${infoRow("Optical stabilization","On",false)}
+       ${infoRow("Scene modes","Face priority, Action, Portrait, Night, HDR",false)}
+       ${infoRow("Effects","Mono, Negative, Sepia, Aqua",false)}`},
+    {id:"1",facing:"Front",level:"Full",sensor:"4080×3072 (12.5 MP)",flash:"false",
+     focal:"2.7 mm",apert:"f/2.2",physize:"4.20 × 3.15 mm",iso:"100–1600",
+     exp:"63–1000000000 ns",orient:"270°",fps:"15–30 fps",zoom:null,
+     caps:"Backward compatible",phys:null,
+     sizes:`<div class="t-mini sub" style="margin-top:4px">JPEG: 4080×3072, 4080×2296, 3264×2448  (+5 more)</div>
+       <div class="t-mini sub" style="margin-top:4px">YUV_420_888: 4080×3072, 4080×2296  (+5 more)</div>`,
+     modes:`
+       ${infoRow("AE modes","On, Auto flash",false)}
+       ${infoRow("AWB modes","Auto, Daylight",false)}
+       ${infoRow("AF modes","Continuous picture",false)}
+       ${infoRow("Effects","Mono, Sepia",false)}`},
   ];
-  return `<div class="pad col">${cams.map(c=>sectionCard(`Camera ${c.id} — ${c.facing}`,
-    infoRow("Hardware level",c.level,false)+infoRow("Sensor",c.sensor,false)+infoRow("Flash",c.flash,false)+
-    infoRow("Focal lengths",c.focal,false)+infoRow("Apertures",c.apert,false)+
-    infoRow("Capabilities",c.caps,false)+infoRow("Physical cameras",c.phys))).join("")}</div>`;
+  return `<div class="pad col">${cams.map(c=>{
+    const k="cam"+c.id, st=S.camExp[k]||{sizes:false,modes:false};
+    return sectionCard(`Camera ${c.id} — ${c.facing}`,
+      infoRow("Hardware level",c.level,false)+infoRow("Sensor",c.sensor,false)+infoRow("Flash",c.flash,false)+
+      infoRow("Focal lengths",c.focal,false)+infoRow("Apertures",c.apert,false)+
+      infoRow("Sensor physical size",c.physize,false)+infoRow("ISO range",c.iso,false)+
+      infoRow("Exposure range",c.exp,false)+infoRow("Sensor orientation",c.orient,false)+
+      infoRow("FPS ranges",c.fps,false)+(c.zoom?infoRow("Zoom ratio",c.zoom,false):"")+
+      infoRow("Capabilities",c.caps,false)+infoRow("Physical cameras",c.phys)+
+      `<button class="btn-outline" style="margin-top:8px" data-act="cam-sizes" data-cam="${c.id}">${st.sizes?"Hide output sizes":"Output sizes"}</button>
+       ${st.sizes?c.sizes:""}
+       <button class="btn-outline" style="margin-top:8px" data-act="cam-modes" data-cam="${c.id}">${st.modes?"Hide modes":"Modes & tuning"}</button>
+       ${st.modes?c.modes:""}`); }).join("")}</div>`;
 }
 /* ---------- gatt explorer ---------- */
 function scrGatt(addr){
@@ -3868,6 +3902,8 @@ On Android &lt; 11 this section may be absent.</pre></div>
         const prox=SENSORS.find(s=>s.type===8); if(prox) c.counts[prox.type]=0;
         render(); },4200); break; }
     case "sensor-stats-reset": toast("Session stats reset"); break;
+    case "cam-sizes": { const k="cam"+el.dataset.cam, s=S.camExp[k]||(S.camExp[k]={sizes:false,modes:false}); s.sizes=!s.sizes; render(); break; }
+    case "cam-modes": { const k="cam"+el.dataset.cam, s=S.camExp[k]||(S.camExp[k]={sizes:false,modes:false}); s.modes=!s.modes; render(); break; }
     case "sensor-rec": { const r=S.sensorRec;
       if(r.recording){ r.recording=false; render(); }
       else { r.recording=true; r.samples=0; render();

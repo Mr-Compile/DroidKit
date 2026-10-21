@@ -38,11 +38,11 @@ object CameraFeature : FeatureContribution {
         Tool(
             id = "camera.details",
             title = "Camera Capabilities",
-            description = "Camera2 inventory: sensors, lenses, levels, capabilities",
+            description = "Camera2 inventory: sensors, lenses, output sizes, modes, FPS ranges",
             category = ToolCategory.DIAGNOSTICS,
             route = "$ROUTE/details",
             requiredFeatures = setOf("android.hardware.camera.any"),
-            keywords = setOf("camera2", "lens", "sensor", "capabilities"),
+            keywords = setOf("camera2", "lens", "sensor", "capabilities", "resolution", "modes"),
             iconKey = ToolIconKeys.CAMERA_DETAIL,
         ),
     )
