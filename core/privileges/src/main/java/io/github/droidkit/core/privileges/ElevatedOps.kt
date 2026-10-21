@@ -315,6 +315,37 @@ sealed interface ElevatedAction {
     }
 
     /**
+     * Read the first [maxBytes] of a file (`head -c`) — text preview only.
+     * Bounded to 64 KiB; callers surface binary content honestly.
+     */
+    data class ReadFileHead(val path: String, val maxBytes: Int = 8192) : ElevatedAction {
+        init {
+            requireStoragePath(path)
+            require(maxBytes in 1..65_536) { "maxBytes out of range" }
+        }
+        override fun command() = "head -c $maxBytes ${quote(path)}"
+    }
+
+    /**
+     * Name search under [path] (`find -iname`, depth-bounded). Results are
+     * stat-formatted like [ListStorageDir] so the same parser applies.
+     * [pattern] is glob-shaped and validated — no shell metacharacters.
+     */
+    data class SearchStorage(val path: String, val pattern: String) : ElevatedAction {
+        init {
+            requireStoragePath(path)
+            require(SEARCH_RE.matches(pattern)) { "invalid search pattern" }
+        }
+        override fun command() =
+            "find ${quote(path)} -maxdepth 5 -iname ${quote("*$pattern*")} -print 2>/dev/null" +
+                " | head -200 | while read f; do stat -Lc '%F|%s|%Y|%n' \"\$f\" 2>/dev/null; done"
+
+        companion object {
+            private val SEARCH_RE = Regex("^[A-Za-z0-9._*? ~()-]{1,48}$")
+        }
+    }
+
+    /**
      * Copy a file or directory from shared storage into the user-visible
      * copy-out destination `/sdcard/Download/DroidKit/` (`cp -r`; existing
      * files are overwritten). [path] is validated by [requireStoragePath];

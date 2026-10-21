@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.0.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.0.1)" variant="all" version="9.0.1">
+
+    <issue
+        id="SdCardPath"
+        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
+        errorLine1="                        canGoUp = path != &quot;/sdcard&quot; &amp;&amp; path != &quot;/storage/emulated/0&quot;,"
+        errorLine2="                                           ~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/files/FilesScreen.kt"
+            line="150"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="SdCardPath"
+        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
+        errorLine1="        TextButton(onClick = { onJump(&quot;/sdcard/Android/data&quot;) }) { Text(&quot;data&quot;) }"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/files/FilesScreen.kt"
+            line="374"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="SdCardPath"
+        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
+        errorLine1="        TextButton(onClick = { onJump(&quot;/sdcard/Android/obb&quot;) }) { Text(&quot;obb&quot;) }"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/files/FilesScreen.kt"
+            line="375"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="SdCardPath"
+        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
+        errorLine1="        if (p == &quot;/sdcard&quot; || p == &quot;/storage/emulated/0&quot;) {"
+        errorLine2="                  ~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/files/FilesViewModel.kt"
+            line="140"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="SdCardPath"
+        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
+        errorLine1="        open(p.substringBeforeLast(&apos;/&apos;).ifEmpty { &quot;/sdcard&quot; })"
+        errorLine2="                                                   ~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/files/FilesViewModel.kt"
+            line="144"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="SdCardPath"
+        message="Do not hardcode &quot;/sdcard/&quot;; use `Environment.getExternalStorageDirectory().getPath()` instead"
+        errorLine1="        const val START_PATH = &quot;/sdcard/Android/data&quot;"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/github/droidkit/feature/files/FilesViewModel.kt"
+            line="347"
+            column="33"/>
+    </issue>
+
+</issues>

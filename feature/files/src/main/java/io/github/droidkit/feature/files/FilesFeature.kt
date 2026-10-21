@@ -19,13 +19,13 @@ object FilesFeature : FeatureContribution {
         Tool(
             id = "files.storage",
             title = "Restricted storage browser",
-            description = "Browse Android/data and copy content out to Downloads",
+            description = "Browse Android/data, preview text, batch-copy, SAF fallback",
             category = ToolCategory.APPS,
             route = ROUTE,
             safetyLevel = SafetyLevel.ADVANCED,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
-            keywords = setOf("android data", "obb", "files", "storage", "access denied"),
+            keywords = setOf("android data", "obb", "files", "storage", "access denied", "search", "preview", "saf"),
             iconKey = ToolIconKeys.STORAGE,
         ),
     )

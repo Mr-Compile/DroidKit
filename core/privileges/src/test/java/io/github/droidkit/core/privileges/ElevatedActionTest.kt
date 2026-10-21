@@ -68,6 +68,31 @@ class ElevatedActionTest {
     }
 
     @Test
+    fun `read file head is bounded and quoted`() {
+        assertEquals(
+            "head -c 4096 '/sdcard/Android/data/com.a/log.txt'",
+            ElevatedAction.ReadFileHead("/sdcard/Android/data/com.a/log.txt", 4096).command(),
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `read file head rejects private path`() {
+        ElevatedAction.ReadFileHead("/data/data/com.a/secret.db").command()
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `search rejects shell metachars`() {
+        ElevatedAction.SearchStorage("/sdcard", "a'; rm -rf /").command()
+    }
+
+    @Test
+    fun `search renders validated pattern`() {
+        val cmd = ElevatedAction.SearchStorage("/sdcard/Android/data", "*.log").command()
+        assertTrue(cmd.contains("find '/sdcard/Android/data' -maxdepth 5"))
+        assertTrue(cmd.contains("-iname '*[*.log]*'") || cmd.contains("*.log"))
+    }
+
+    @Test
     fun `runtime permission commands grant and revoke`() {
         assertEquals(
             "pm grant com.example.app android.permission.CAMERA",
