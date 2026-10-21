@@ -55,6 +55,17 @@ private val presets = listOf(
     IntentPreset("Usage access", Settings.ACTION_USAGE_ACCESS_SETTINGS),
     IntentPreset("Accessibility", Settings.ACTION_ACCESSIBILITY_SETTINGS),
     IntentPreset("Storage", Settings.ACTION_INTERNAL_STORAGE_SETTINGS),
+    IntentPreset("Notification listener", Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS),
+    IntentPreset("Security", Settings.ACTION_SECURITY_SETTINGS),
+    IntentPreset("Privacy", Settings.ACTION_PRIVACY_SETTINGS),
+    IntentPreset("VPN", Settings.ACTION_VPN_SETTINGS),
+    IntentPreset("Manage apps", Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS),
+    IntentPreset("Default apps", Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+    IntentPreset("Do Not Disturb", Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS),
+    IntentPreset("Input methods", Settings.ACTION_INPUT_METHOD_SETTINGS),
+    IntentPreset("Print services", "android.settings.ACTION_PRINT_SETTINGS"),
+    IntentPreset("Cast / media output", Settings.ACTION_CAST_SETTINGS),
+    IntentPreset("WebView implementation", Settings.ACTION_WEBVIEW_SETTINGS),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +77,9 @@ fun DeveloperLabScreen(
     val context = LocalContext.current
     val activeProvider by viewModel.activeProvider.collectAsStateWithLifecycle()
     val logState by viewModel.logState.collectAsStateWithLifecycle()
+    val propsState by viewModel.propsState.collectAsStateWithLifecycle()
+    val memory by viewModel.memory.collectAsStateWithLifecycle()
+    val propQuery by viewModel.propQuery.collectAsStateWithLifecycle()
     var launchError by remember { mutableStateOf<String?>(null) }
     var customAction by remember { mutableStateOf("") }
     var customData by remember { mutableStateOf("") }
@@ -117,6 +131,9 @@ fun DeveloperLabScreen(
 
             item { SectionHeader("Display metrics") }
             item { DisplayMetricsCard() }
+
+            item { SectionHeader("Memory") }
+            item { MemoryCard(memory = memory, onRefresh = viewModel::refreshMemory) }
 
             item { SectionHeader("Intent launcher") }
             items(presets, key = { it.action }) { preset ->
@@ -228,6 +245,82 @@ fun DeveloperLabScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Resolve & launch")
+                        }
+                    }
+                }
+            }
+
+            item { SectionHeader("System properties") }
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            "Read the full getprop table through the elevated provider, " +
+                                "then filter it here. Known keys get a plain-language note.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        OutlinedTextField(
+                            value = propQuery,
+                            onValueChange = { viewModel.propQuery.value = it },
+                            label = { Text("Filter keys or values") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Button(
+                            onClick = viewModel::readProps,
+                            enabled = activeProvider != null &&
+                                propsState !is DeveloperViewModel.PropsState.Loading,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Read getprop") }
+                        when (val s = propsState) {
+                            DeveloperViewModel.PropsState.Idle -> {}
+                            DeveloperViewModel.PropsState.Loading ->
+                                Text("Reading…", style = MaterialTheme.typography.bodyMedium)
+                            DeveloperViewModel.PropsState.NoProvider -> Text(
+                                "No elevated provider available — open the ADB Lab or grant root first.",
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            is DeveloperViewModel.PropsState.Failed -> Text(
+                                "Failed (${s.provider.name.lowercase()}): ${s.message}",
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            is DeveloperViewModel.PropsState.Loaded -> {
+                                val q = propQuery.trim().lowercase()
+                                val shown = s.props.filter {
+                                    q.isEmpty() || it.first.lowercase().contains(q) ||
+                                        it.second.lowercase().contains(q)
+                                }
+                                Text(
+                                    "${shown.size} of ${s.props.size} properties",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                shown.take(200).forEach { (k, v) ->
+                                    Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                                        Text(
+                                            "$k = $v",
+                                            style = MaterialTheme.typography.bodySmall,
+                                        )
+                                        DevTools.propNote(k)?.let {
+                                            Text(
+                                                it,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                }
+                                if (shown.size > 200) {
+                                    Text(
+                                        "… +${shown.size - 200} more (refine the filter)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -385,6 +478,43 @@ private fun DisplayMetricsCard() {
                         ?: "None reported"),
                 ),
             )
+        }
+    }
+}
+
+@Composable
+private fun MemoryCard(memory: DeveloperViewModel.MemorySnapshot?, onRefresh: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            if (memory == null) {
+                Text("Reading…", style = MaterialTheme.typography.bodyMedium)
+            } else {
+                val usedPct = if (memory.totalMem > 0) {
+                    ((memory.totalMem - memory.availMem) * 100 / memory.totalMem)
+                } else 0
+                InfoRow("System RAM", "${DevTools.mb(memory.totalMem)} total")
+                InfoRow(
+                    "Available",
+                    "${DevTools.mb(memory.availMem)} ($usedPct% used)",
+                )
+                InfoRow("Low-memory threshold", DevTools.mb(memory.lowMemThreshold))
+                InfoRow(
+                    "Low-memory state",
+                    if (memory.lowMemory) "Yes — device is under memory pressure" else "No",
+                )
+                InfoRow("App heap limit", DevTools.mb(memory.heapMax))
+                InfoRow("App heap in use", DevTools.mb(memory.heapUsed))
+                Text(
+                    "From ActivityManager + Runtime — standard APIs, no elevated access.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            androidx.compose.material3.TextButton(
+                onClick = onRefresh,
+                modifier = Modifier.padding(top = 4.dp),
+            ) { Text("Refresh") }
         }
     }
 }

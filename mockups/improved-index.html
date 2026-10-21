@@ -732,6 +732,7 @@ const S = {
   files: { path:"/sdcard/Android/data", copying:null, sel:new Set(), q:"", saf:false, safPath:["DCIM"] },
   appopsQuery: "", appopsSel: null, appopsOps: {},
   pkgQuery: "", pkgRestore: "", pkgSel: new Set(),
+  devProps: null, devPropsQ: "",
   nsd: null, ports: null,
   cmp: { before:null, after:null, done:false },
   obPage: 0, upd: "idle",
@@ -1189,6 +1190,37 @@ const INTENT_PRESETS = [
   ["Usage access","android.settings.USAGE_ACCESS_SETTINGS"],
   ["Accessibility","android.settings.ACCESSIBILITY_SETTINGS"],
   ["Storage","android.settings.INTERNAL_STORAGE_SETTINGS"],
+  ["Notification listener","android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"],
+  ["Security","android.settings.SECURITY_SETTINGS"],
+  ["Privacy","android.settings.PRIVACY_SETTINGS"],
+  ["VPN","android.settings.VPN_SETTINGS"],
+  ["Manage apps","android.settings.MANAGE_APPLICATIONS_SETTINGS"],
+  ["Default apps","android.settings.MANAGE_DEFAULT_APPS_SETTINGS"],
+  ["Do Not Disturb","android.settings.ZEN_MODE_PRIORITY_SETTINGS"],
+  ["Input methods","android.settings.INPUT_METHOD_SETTINGS"],
+  ["Print services","android.settings.ACTION_PRINT_SETTINGS"],
+  ["Cast / media output","android.settings.CAST_SETTINGS"],
+  ["WebView implementation","android.settings.WEBVIEW_SETTINGS"],
+];
+const PROPS_MOCK=[
+  ["ro.build.fingerprint","google/panther/panther:15/AP3A:12345:user/release-keys","Build identity — used by CTS/Play Integrity"],
+  ["ro.product.model","Pixel 7","Marketing / device codename"],
+  ["ro.build.version.sdk","36","API level this build reports"],
+  ["ro.build.version.security_patch","2025-10-05","Security patch level"],
+  ["ro.crypto.state","encrypted","Device encryption state (encrypted/unencrypted)"],
+  ["ro.debuggable","0","1 = userdebug/eng build, adb root may be possible"],
+  ["ro.secure","1","0 = insecure build (adbd runs as root)"],
+  ["ro.boot.verifiedbootstate","green","Verified-boot state (green/orange/yellow/red)"],
+  ["ro.boot.vbmeta.device_state","locked","Bootloader lock state"],
+  ["ro.treble.enabled","true","Project Treble support"],
+  ["ro.ab_update","true","A/B seamless-update support"],
+  ["ro.sf.lcd_density","480","Panel's default density"],
+  ["persist.sys.timezone","Europe/Berlin","System timezone"],
+  ["init.svc.adbd","running","adbd daemon state (running/stopped)"],
+  ["sys.usb.state","mtp,adb","Current USB gadget mode"],
+  ["gsm.network.type","LTE","Cellular radio access technology"],
+  ["vendor.display.enable_optimal_refresh_rate","1",null],
+  ["dalvik.vm.heapmaxfree","32m",null],
 ];
 const DECLARED_PERMS = [
   "android.permission.INTERNET","android.permission.ACCESS_NETWORK_STATE",
@@ -3061,6 +3093,14 @@ function scrDeveloper(){
       ${infoRow("Physical dpi (x/y)","498 / 502",false)}${infoRow("Refresh rate","120.0 Hz",false)}
       ${infoRow("Supported modes","1344×2992@60, 1344×2992@120",false)}${infoRow("HDR","HDR10, HLG, HDR10+",false)}
     </div>
+    <div class="sec-head">Memory</div>
+    <div class="card">
+      ${infoRow("System RAM","11,609 MB total")}${infoRow("Available","4,208 MB (64% used)",false)}
+      ${infoRow("Low-memory threshold","2,187 MB",false)}${infoRow("Low-memory state","No",false)}
+      ${infoRow("App heap limit","256 MB",false)}${infoRow("App heap in use","38 MB",false)}
+      <div class="t-mini sub" style="margin-top:8px">From ActivityManager + Runtime — standard APIs, no elevated access.</div>
+      <button class="textbtn" data-act="mem-refresh" style="align-self:flex-start">Refresh</button>
+    </div>
     <div class="sec-head">Intent launcher</div>
     ${INTENT_PRESETS.map(([l,a])=>`<div class="card clickable" data-act="intent" data-intent="${a}" data-label="${l}">
       <div class="t-small">${l}</div><div class="t-mini sub">${a}</div></div>`).join("")}
@@ -3078,6 +3118,13 @@ function scrDeveloper(){
       <div class="t-mini sub" id="dl-info"></div>
       <button class="btn full" data-act="deeplink" id="dl-go" disabled>Resolve &amp; launch</button>
     </div></div>
+    <div class="sec-head">System properties</div>
+    <div class="card"><div class="col">
+      <div class="t-mini sub">Read the full getprop table through the elevated provider, then filter it here. Known keys get a plain-language note.</div>
+      <input class="field" id="propsQ" placeholder="Filter keys or values" value="${esc(S.devPropsQ||"")}">
+      <button class="btn-outline full" data-act="devprops" ${elevatedReady()?"":"disabled"}>Read getprop</button>
+      ${S.devProps?`<div class="t-mini sub" id="propsCount">${propCount()}</div><div id="propsList">${propsListHtml()}</div>`:`<div class="t-mini sub" id="propsHint">${elevatedReady()?"":"No elevated provider available — open the ADB Lab or grant root first."}</div>`}
+    </div></div>
     <div class="sec-head">Log viewer</div>
     <div class="card"><div class="col">
       <div class="t-mini sub">${elevatedReady()?`<span class="vdot ok"></span>Active provider: ${elevatedProvider().toLowerCase()}`:`<span class="vdot set"></span>No elevated provider connected — connect wireless ADB or grant root first.`}</div>
@@ -3087,6 +3134,17 @@ function scrDeveloper(){
       <div id="devlogout" class="t-mini mono"></div>
     </div></div>
   </div>`;
+}
+function propCount(){
+  const q=(S.devPropsQ||"").trim().toLowerCase();
+  const shown=q?PROPS_MOCK.filter(([k,v])=>k.toLowerCase().includes(q)||v.toLowerCase().includes(q)):PROPS_MOCK;
+  return `${shown.length} of ${PROPS_MOCK.length} properties`;
+}
+function propsListHtml(){
+  const q=(S.devPropsQ||"").trim().toLowerCase();
+  return (q?PROPS_MOCK.filter(([k,v])=>k.toLowerCase().includes(q)||v.toLowerCase().includes(q)):PROPS_MOCK)
+    .map(([k,v,note])=>`<div style="margin:4px 0"><div class="t-mini mono">${esc(k)} = ${esc(v)}</div>
+      ${note?`<div class="t-mini sub">${esc(note)}</div>`:""}</div>`).join("");
 }
 /* ---------- reports ---------- */
 function scrReports(){
@@ -4162,6 +4220,8 @@ On Android &lt; 11 this section may be absent.</pre></div>
       APPS.filter(a=>!q||a.label.toLowerCase().includes(q)||a.pkg.includes(q)).slice(0,30)
         .forEach(a=>S.pkgSel.add(a.pkg)); render(); break; }
     case "pkg-selclear": S.pkgSel.clear(); render(); break;
+    case "mem-refresh": toast("Memory snapshot refreshed"); break;
+    case "devprops": pushElevLog("getprop"); S.devProps=true; render(); break;
     case "adb-tls": S.adb.useTls=!S.adb.useTls; break;
     case "adb-start": { const a=S.adb; a.pairState="searching"; render();
       toast("Discovery started — a pairing notification is waiting for the code");
@@ -4427,6 +4487,8 @@ document.addEventListener("input", e=>{
   if(e.target.id==="appopsQuery"){ S.appopsQuery=e.target.value; const l=$("#appopsList"); if(l)l.innerHTML=appopsListHtml(); }
   if(e.target.id==="pkgQuery"){ S.pkgQuery=e.target.value; const l=$("#pkgList"); if(l)l.innerHTML=pkgListHtml(); }
   if(e.target.id==="filesQuery"){ S.files.q=e.target.value; const l=$("#filesList"); if(l)l.innerHTML=filesListHtml(); }
+  if(e.target.id==="propsQ"){ S.devPropsQ=e.target.value; const l=$("#propsList"); if(l)l.innerHTML=propsListHtml();
+    const c=$("#propsCount"); if(c)c.textContent=propCount(); }
   if(e.target.id==="pkgRestore"){ S.pkgRestore=e.target.value;
     const b=$("#body [data-act='pkg-restore']"); if(b)b.disabled=!e.target.value.trim(); }
   if(e.target.id==="dl-uri"){ const b=$("#dl-go"); if(b)b.disabled=!e.target.value.trim(); }
