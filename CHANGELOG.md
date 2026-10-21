@@ -78,6 +78,18 @@
 - Onboarding: one-time 4-page intro (Welcome → honest-results → optional
   capabilities → local-first privacy) gated by a DataStore flag, per the
   J03 screen spec
+- NFC Lab expansion (J13 scope extension, owner-approved): auto-scan with
+  pause/resume and scan pulse; read-only technology detail dump
+  (`NfcTechProbe` — NfcA ATQA/SAK, NfcB/NfcF/NfcV protocol fields, IsoDep
+  historical/hi-layer bytes, MifareClassic geometry, MifareUltralight
+  unprotected page dump); richer NDEF decode (Smart Poster, vCard,
+  Wi-Fi WSC credential, external/AAR, MIME) with per-record raw hex
+  toggle and Open/Copy record actions; multi-record NDEF Writer covering
+  Text, Link (+social presets), Phone, SMS, Email, Contact, Wi-Fi, Geo,
+  App, MIME and Raw hex with capacity preview; armed Duplicate
+  (NDEF-content copy — tag UID and protected regions never copied) and
+  Format ops; copyable/shareable plain-text tag report. `makeReadOnly`
+  remains excluded; Tag Doctor gains a Copyable check
 
 ### Fixed
 - Audio/camera/display tool entries previously opened stale placeholder

@@ -437,14 +437,16 @@ Release gate:
 ## NFC
 - [x] NFC hardware detection — `hasSystemFeature(FEATURE_NFC)` + adapter presence
 - [x] NFC enabled-state flow — off-state card with link to system NFC settings
-- [x] Tag scan — `enableReaderMode` with lifecycle-scoped start/stop
+- [x] Tag scan — `enableReaderMode` auto-starts on resume with pause/resume, scan-pulse + armed states
 - [x] Technology detection — `tag.techList` rendered per tag
 - [x] NDEF parsing — records with TNF name, type/payload hex
-- [x] URI/text record display — RTD_TEXT (UTF-8/16) and RTD_URI prefix-table decode
-- [x] Supported NDEF writing — text/URI records, capacity+writable checks, armed write
-- [x] Supported erase/format behavior — erase writes empty-TNF message; NdefFormatable fallback
-- [x] Confirmation before mutating a tag — write and erase behind explicit confirm dialogs
-- [x] Export/copy record details — per-record copy via `InfoRow` copy action
+- [x] Record decode — RTD_TEXT (UTF-8/16), RTD_URI prefix table, Smart Poster, vCard, Wi-Fi WSC credential, external/AAR package, MIME summary; per-record raw hex toggle
+- [x] Technology detail dump — read-only `NfcTechProbe`: NfcA ATQA/SAK, NfcB/NfcF/NfcV protocol fields, IsoDep historical/hi-layer bytes, MifareClassic geometry (sectors key-protected, never read), MifareUltralight page dump
+- [x] Multi-record NDEF writing — `NdefRecordSpec` composer: Text, Link (social presets), Phone, SMS, Email, Contact vCard, Wi-Fi WSC, Geo, App AAR, MIME, Raw hex; record count + byte size preview vs last tag capacity
+- [x] Supported erase/format behavior — erase writes empty-TNF message; Format as distinct armed op on `NdefFormatable` tags
+- [x] Duplicate — armed write replays the scanned tag's raw NDEF message to the next tag; UID/locked regions/secure credentials never copied
+- [x] Confirmation before mutating a tag — write, erase, format and duplicate behind explicit confirm dialogs
+- [x] Export/copy record details — per-record copy + plain-text tag report (copy/share); Wi-Fi keys and raw payloads excluded from report and AI context
 
 ## Network
 - [x] Connection information — active transports, capabilities, link properties

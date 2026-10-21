@@ -47,6 +47,9 @@ class NfcViewModel @Inject constructor(
     sealed interface ArmedAction {
         data class Write(val message: NdefMessage, val previewBytes: Int) : ArmedAction
         data object Erase : ArmedAction
+
+        /** Format a non-NDEF tag to NDEF with empty content. */
+        data object Format : ArmedAction
     }
 
     sealed interface ActionResult {
@@ -69,6 +72,13 @@ class NfcViewModel @Inject constructor(
     private val _tag = MutableStateFlow<NfcTagInfo?>(null)
     val tag: StateFlow<NfcTagInfo?> = _tag.asStateFlow()
 
+    private val _techSections = MutableStateFlow<List<TechSection>>(emptyList())
+    val techSections: StateFlow<List<TechSection>> = _techSections.asStateFlow()
+
+    /** Monotonic counter bumped per scanned tag — drives haptics/UI events. */
+    private val _scanSeq = MutableStateFlow(0)
+    val scanSeq: StateFlow<Int> = _scanSeq.asStateFlow()
+
     private val _armed = MutableStateFlow<ArmedAction?>(null)
     val armed: StateFlow<ArmedAction?> = _armed.asStateFlow()
 
@@ -85,11 +95,19 @@ class NfcViewModel @Inject constructor(
                 _armed.value = null
                 eraseTag(tag)
             }
+            ArmedAction.Format -> {
+                _armed.value = null
+                formatTag(tag)
+            }
             null -> {
                 val parsed = runCatching { NfcTagParser.parse(tag) }
                     .onFailure { DLog.w(TAG, "tag parse failed", it) }
                     .getOrNull()
                 _tag.value = parsed
+                _techSections.value = runCatching { NfcTechProbe.probe(tag) }
+                    .onFailure { DLog.w(TAG, "tech probe failed", it) }
+                    .getOrDefault(emptyList())
+                _scanSeq.value += 1
                 parsed?.let { recordScan(it) }
             }
         }
@@ -120,6 +138,23 @@ class NfcViewModel @Inject constructor(
     fun armErase() {
         _actionResult.value = null
         _armed.value = ArmedAction.Erase
+    }
+
+    fun armFormat() {
+        _actionResult.value = null
+        _armed.value = ArmedAction.Format
+    }
+
+    /**
+     * Arms a write carrying the scanned tag's own NDEF payload. Copies record
+     * content only — tag UID, locked regions and secure-element data are never
+     * copied.
+     */
+    fun armDuplicate(): Boolean {
+        val message = _tag.value?.rawMessage ?: return false
+        _actionResult.value = null
+        _armed.value = ArmedAction.Write(message, message.toByteArray().size)
+        return true
     }
 
     fun disarm() {
@@ -218,6 +253,24 @@ class NfcViewModel @Inject constructor(
         )
     }
 
+    private fun formatTag(tag: Tag) {
+        val result = runCatching {
+            val formatable = NdefFormatable.get(tag)
+                ?: throw IllegalStateException("Tag is not NDEF-formatable")
+            formatable.connect()
+            try {
+                formatable.format(NfcTagParser.emptyMessage())
+                "Tag formatted to NDEF"
+            } finally {
+                runCatching { formatable.close() }
+            }
+        }
+        _actionResult.value = result.fold(
+            onSuccess = { ActionResult.Success(it) },
+            onFailure = { ActionResult.Failed(it.message ?: it.javaClass.simpleName) },
+        )
+    }
+
     /** Tag Doctor — per-check verdicts; never claims tags are clonable. */
     fun doctorChecks(info: NfcTagInfo): List<DoctorCheck> = buildList {
         add(DoctorCheck("Readable", Verdict.PASS, "Tag responded to a scan"))
@@ -257,6 +310,17 @@ class NfcViewModel @Inject constructor(
                 if (info.parseError == null) "${info.records.size} record(s) parsed" else "Parse error: ${info.parseError}",
             ),
         )
+        add(
+            DoctorCheck(
+                "Copyable",
+                if (info.rawMessage != null) Verdict.PASS else Verdict.UNSUPPORTED,
+                if (info.rawMessage != null) {
+                    "NDEF content can be duplicated to another tag"
+                } else {
+                    "No NDEF message to copy"
+                },
+            ),
+        )
         if (info.techList.any { it == "MifareClassic" }) {
             add(
                 DoctorCheck(
@@ -290,4 +354,38 @@ class NfcViewModel @Inject constructor(
                 NfcAdapter.FLAG_READER_NFC_F or NfcAdapter.FLAG_READER_NFC_V or
                 NfcAdapter.FLAG_READER_NFC_BARCODE
     }
+}
+
+/** Plain-text tag report for copy/share — no secrets, no key material. */
+internal fun buildTagReport(
+    info: NfcTagInfo,
+    checks: List<NfcViewModel.DoctorCheck>,
+    sections: List<TechSection>,
+): String = buildString {
+    append("DroidKit NFC tag report\n")
+    append("Tag ID: ").append(info.idHex ?: "—").append('\n')
+    append("Technologies: ").append(info.techList.joinToString()).append('\n')
+    append("NDEF capable: ").append(info.ndefCapable).append('\n')
+    append("Writable: ").append(info.ndefWritable?.toString() ?: "unknown").append('\n')
+    info.ndefMaxSize?.let { append("Capacity: ").append(it).append(" bytes\n") }
+    info.ndefType?.let { append("NDEF type: ").append(it).append('\n') }
+    if (sections.isNotEmpty()) {
+        append("Technology details:\n")
+        sections.forEach { s ->
+            append("  ").append(s.tech).append('\n')
+            s.fields.forEach { (k, v) -> append("    ").append(k).append(": ").append(v).append('\n') }
+        }
+    }
+    if (info.records.isNotEmpty()) {
+        append("NDEF records:\n")
+        info.records.forEachIndexed { i, r ->
+            append("  #").append(i + 1).append(" ").append(r.tnfName)
+                .append(" ").append(r.typeHex)
+            r.decoded?.let { append(" — ").append(it) }
+            append('\n')
+        }
+    }
+    append("Tag Doctor: ")
+    checks.forEach { append(it.name).append('=').append(it.verdict.name).append("  ") }
+    append('\n')
 }

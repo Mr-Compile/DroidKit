@@ -158,6 +158,9 @@
   .t-mini { font-size: 12px; }
   .sub { color: var(--sub); }
   .err { color: var(--err); }
+  @keyframes nfcpulse { from { transform: scale(1); opacity: .55; } to { transform: scale(1.5); opacity: 0; } }
+  .nfc-ring { position: absolute; inset: 12px; border: 2px solid var(--primary); border-radius: 50%; animation: nfcpulse 1.4s ease-out infinite; }
+  .nfc-wrap { position: relative; width: 88px; height: 88px; display: flex; align-items: center; justify-content: center; margin: 4px auto; }
   .pri { color: var(--brand); }
   .sec-head {
     display: flex; align-items: center; gap: 9px;
@@ -670,7 +673,7 @@ const S = {
   materialYou: true,
   usbPerm: {},            // deviceName -> granted
   usbPermPending: {},
-  nfc: { scanning: false, armed: null, tag: null, result: null, history: [
+  nfc: { scanning: true, armed: null, tag: null, result: null, specs: [], nfcF: {}, nfcRaw: {}, history: [
     { time:"16:02:11", tail:"…61:80", tech:"Ndef, NfcA, MifareUltralight", summary:"URI record — https://droidkit.dev" },
     { time:"15:47:33", tail:"…0F:2C", tech:"NfcA, MifareClassic", summary:"No NDEF message" },
   ]},
@@ -746,8 +749,8 @@ const TOOLS = [
   t("bluetooth.status","Bluetooth Status","Adapter state, classic/LE capability, bonded devices",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTC],feats:["android.hardware.bluetooth"],minSdk:31}),
   t("bluetooth.scan","BLE Scan","Scan for nearby BLE devices (post-V1)",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTS],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
   t("bluetooth.gatt","GATT Explorer","Connect to a discovered device and inspect services (read-only)",CAT.CONNECTIVITY,"bluetooth",{safety:MINOR,perms:[P.BTC],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
-  t("nfc.read","NFC Tag Read","Tag technologies, NDEF records and Tag Doctor",CAT.HARDWARE,"nfc",{perms:[P.NFC],feats:["android.hardware.nfc"]}),
-  t("nfc.write","NFC Write / Erase","Write text/URI NDEF records or erase writable tags",CAT.HARDWARE,"nfc/write",{safety:MINOR,perms:[P.NFC],feats:["android.hardware.nfc"]}),
+  t("nfc.read","NFC Tag Read","Tech dump, decoded NDEF records, Tag Doctor, tag report",CAT.HARDWARE,"nfc",{perms:[P.NFC],feats:["android.hardware.nfc"]}),
+  t("nfc.write","NFC Write / Erase","Multi-record NDEF composer — 11 record types, erase and duplicate",CAT.HARDWARE,"nfc/write",{safety:MINOR,perms:[P.NFC],feats:["android.hardware.nfc"]}),
   t("usb.host","USB Host Check","Detect USB host capability and connected devices",CAT.HARDWARE,"usb",{feats:["android.hardware.usb.host"]}),
   t("usb.descriptors","USB Descriptors","VID/PID, interfaces and endpoints for attached devices",CAT.HARDWARE,"usb",{feats:["android.hardware.usb.host"]}),
   t("developer.intents","Intent Launcher","Jump to Developer options, system settings screens and custom intents",CAT.DEVELOPER,"developer",{safety:MINOR}),
@@ -899,7 +902,7 @@ const TOOL_KW = {
   "network.discovery":["mdns","nsd","browse","services","local"],"network.dns":["resolve","hostname","lookup","resolver"],
   "network.inspector":["connection","transport","wifi","cellular","ip"],"network.interfaces":["mtu","interface","address","flags","lan"],
   "network.ping":["latency","icmp","reachability","echo"],"network.ports":["tcp","port","connect","open"],
-  "nfc.read":["nfc","tag","ndef","scan","reader","contactless"],"nfc.write":["write","erase","ndef","tag","format"],
+  "nfc.read":["nfc","tag","ndef","scan","reader","contactless","mifare","isodep"],"nfc.write":["write","erase","ndef","tag","format","duplicate","wifi","vcard","composer"],
   "packages.clear":["wipe","data","reset","clear"],"packages.disable":["bloatware","enable","disable","freeze"],
   "packages.uninstall":["remove","uninstall","delete"],"permissions.center":["runtime","granted","denied","declared"],
   "permissions.inspector":["perms","apps","granted","declared"],"reports.compare":["diff","before after","sessions","repair"],
@@ -1056,14 +1059,62 @@ const USB_DEVS = [
 ];
 const NFC_TAG = { idHex:"04:A3:22:9A:4B:61:80", techs:"Ndef, NfcA, MifareUltralight", ndefCapable:true,
   writable:"true", capacity:"144 bytes", type:"NFC Forum Type 2", formatable:false,
-  records:[{tnf:"TNF_WELL_KNOWN",type:"55 (U)",kind:"uri",decoded:"https://droidkit.dev"}],
+  records:[
+    {tnf:"Well-known",type:"55 (U)",kind:"uri",decoded:"https://droidkit.dev",
+     raw:"04 64 72 6F 69 64 6B 69 74 2E 64 65 76"},
+    {tnf:"MIME media",type:"text/x-vcard",kind:"vcard",decoded:"Jane Tech · +1 555 0100 · jane@droidkit.dev",
+     raw:"42 45 47 49 4E 3A 56 43 41 52 44 0D 0A 56 45 52 53 49 4F 4E 3A 33 2E 30 …"},
+  ],
+  techSections:[
+    {name:"NfcA",fields:[["ATQA","44 00"],["SAK","0x00"],["Max transceive","253 bytes"],["Timeout","618 ms"]],pages:[]},
+    {name:"MifareUltralight",fields:[["Type","Ultralight"],["Pages read","16"]],truncated:false,
+     pages:["p0: 04 A3 22 9A","p1: 4B 61 80 48","p2: 00 00 E1 10","p3: 12 00 01 03",
+            "p4: A0 0C 34 03","p5: 10 D4 01 05","p6: 68 74 74 70","p7: 73 3A 2F 2F",
+            "p8: 64 72 6F 69","p9: 64 6B 69 74","p10: 2E 64 65 76","p11: FE 00 00 00",
+            "p12: 00 00 00 00","p13: 00 00 00 00","p14: 00 00 00 00","p15: 00 00 00 00"]},
+  ],
   checks:[
-    {name:"Tag readable",detail:"Tag ID and technology list received",v:"PASS"},
-    {name:"NDEF formatted",detail:"Contains a valid NDEF message",v:"PASS"},
-    {name:"Writable",detail:"Tag accepts writes — content can be overwritten",v:"WARNING"},
-    {name:"NDEF capacity",detail:"144 bytes — enough for text or a URI",v:"PASS"},
-    {name:"Secure element",detail:"Bank, transit and access-control applets cannot be read",v:"UNSUPPORTED"},
+    {name:"Readable",detail:"Tag responded to a scan",v:"PASS"},
+    {name:"NDEF capable",detail:"NDEF technology present",v:"PASS"},
+    {name:"Writable",detail:"Tag accepts NDEF writes",v:"PASS"},
+    {name:"Capacity",detail:"144 bytes",v:"PASS"},
+    {name:"Records",detail:"2 record(s) parsed",v:"PASS"},
+    {name:"Copyable",detail:"NDEF content can be duplicated to another tag",v:"PASS"},
   ]};
+const NFC_KINDS=[["TEXT","Text"],["LINK","Link"],["PHONE","Phone"],["SMS","SMS"],["EMAIL","Email"],
+  ["CONTACT","Contact"],["WIFI","Wi-Fi"],["GEO","Location"],["APP","App"],["MIME","MIME"],["RAW","Raw"]];
+const NFC_FIELDS={
+  TEXT:[["text","Text content"]],
+  LINK:[["uri","https://example.com"]],
+  PHONE:[["phone","+1 555 0100"]],
+  SMS:[["num","+1 555 0100"],["body","Message (optional)"]],
+  EMAIL:[["to","name@example.com"],["subj","Subject (optional)"],["body","Body (optional)"]],
+  CONTACT:[["name","Full name"],["phone","Phone"],["email","Email"],["org","Organization (optional)"]],
+  WIFI:[["ssid","Network name (SSID)"],["key","Password"]],
+  GEO:[["lat","Latitude"],["lng","Longitude"]],
+  APP:[["pkg","com.example.app"]],
+  MIME:[["mt","text/plain"],["pl","Payload (UTF-8 text)"]],
+  RAW:[["ty","Type hex (e.g. 55 for 'U')"],["pl","Payload hex (e.g. 00 FF A3)"]],
+};
+const NFC_PRESETS={LINK:[["Web","https://"],["X","https://x.com/"],["Instagram","https://instagram.com/"],
+  ["LinkedIn","https://linkedin.com/in/"],["YouTube","https://youtube.com/@"],["Facebook","https://facebook.com/"]],
+  TEXT:[["Asset tag","ASSET-"],["Inspection","INSPECTED-BY: "],["Serial","SN: "]]};
+function nfcSpecSummary(k,f){
+  switch(k){
+    case"TEXT":return"Text: "+(f.text||"").slice(0,40);
+    case"LINK":return"Link: "+(f.uri||"");
+    case"PHONE":return"Call "+(f.phone||"");
+    case"SMS":return"SMS to "+(f.num||"");
+    case"EMAIL":return"Email to "+(f.to||"");
+    case"CONTACT":return"Contact: "+(f.name||"");
+    case"WIFI":return"Wi-Fi \""+(f.ssid||"")+"\" ("+(f.sec||"WPA2")+")";
+    case"GEO":return"Geo "+(f.lat||"")+","+(f.lng||"");
+    case"APP":return"App: "+(f.pkg||"");
+    case"MIME":return(f.mt||"?")+" ("+((f.pl||"").length)+" chars)";
+    case"RAW":return"Raw TNF "+(f.tnf||"1");
+  } return k;
+}
+function nfcMsgSize(specs){ return 8 + specs.reduce((a,s)=>a+s.summary.length+8,0); }
 const INTENT_PRESETS = [
   ["Developer options","android.settings.APPLICATION_DEVELOPMENT_SETTINGS"],
   ["Device info","android.settings.DEVICE_INFO_SETTINGS"],
@@ -1257,6 +1308,8 @@ function nav(route){
   }
   S.paneSel = null;
   S.stack.push(route); clearTimers(); closeOverlay(); render();
+  if(route==="nfc"){ S.nfc.scanning=true;
+    if(!S.nfc.tag) later(()=>{ if(S.nfc.scanning&&!S.nfc.tag&&cur()==="nfc"){ S.nfc.tag={...NFC_TAG}; render(); } },1600); }
 }
 function replace(route){ S.stack[S.stack.length-1]=route; clearTimers(); closeOverlay(); render(); }
 function goBack(){
@@ -2600,34 +2653,59 @@ function scrUsbDetail(name){
   </div>`;
 }
 /* ---------- nfc ---------- */
+function nfcPulse(listening){
+  return `<div class="nfc-wrap">${listening?`<div class="nfc-ring"></div>`:""}
+    <svg width="40" height="40" viewBox="0 0 24 24" style="color:${listening?"var(--primary)":"var(--sub)"}"><path d="${ICONS.nfc}" fill="currentColor"/></svg>
+  </div>`;
+}
 function scrNfc(){
-  const n=S.nfc;
+  const n=S.nfc, listening=n.scanning||!!n.armed;
   return `<div class="pad col">
     ${sectionCard("Capability",
-      infoRow("NFC hardware","true",false)+infoRow("Adapter present","true",false)+
-      `<div class="t-body">Ready — hold a tag to the back of the device.</div>`)}
+      infoRow("NFC hardware","true",false)+infoRow("Adapter present","true",false))}
     ${sectionCard("Scan", `
-      <div class="row">
-        <button class="btn-outline" data-act="nfc-scan">${n.scanning||n.armed?"Stop":"Start scan"}</button>
-        <button class="btn-outline" data-nav="nfc/write">Write / erase</button>
-        ${n.tag?`<button class="btn-outline" data-act="nfc-erase">Erase</button>`:""}
-      </div>
-      <div class="t-mini sub" style="margin-top:8px">${n.armed?"Armed — present the target tag now":n.scanning?"Scanning…":"Not scanning"}</div>`)}
+      ${nfcPulse(listening)}
+      <div class="t-body" style="text-align:center">${n.armed?"Armed — present the target tag now":listening?"Listening — hold a tag to the back of the device":"Scanning paused"}</div>
+      <div class="row" style="justify-content:center;margin-top:8px">
+        <button class="btn-outline" data-act="nfc-scan">${listening?"Pause":"Resume"}</button>
+        <button class="btn-outline" data-nav="nfc/write">Write</button>
+      </div>`)}
     ${n.tag?`
       ${sectionCard("Tag",
         infoRow("Tag ID",NFC_TAG.idHex)+infoRow("Technologies",NFC_TAG.techs,false)+
         infoRow("NDEF capable","true",false)+infoRow("Writable",NFC_TAG.writable,false)+
         infoRow("Capacity",NFC_TAG.capacity,false)+infoRow("NDEF type",NFC_TAG.type,false)+
         infoRow("Formatable","false",false))}
-      ${sectionCard("NDEF records (1)", NFC_TAG.records.map((r,i)=>`
+      ${sectionCard("Technology details", NFC_TAG.techSections.map(s=>`
+        <div class="t-small" style="margin-top:6px">${s.name}${s.truncated?" (partial)":""}</div>
+        ${s.fields.map(f=>infoRow(f[0],f[1])).join("")}
+        ${s.pages.length?`<div class="t-mini sub" style="font-family:monospace;white-space:pre;margin-top:4px">${s.pages.join("\n")}</div>`:""}
+      `).join(""))}
+      ${sectionCard(`NDEF records (${NFC_TAG.records.length})`, NFC_TAG.records.map((r,i)=>`
         <div style="padding:6px 0"><div class="t-body">#${i+1} · ${r.tnf} · type ${r.type}</div>
-        ${infoRow(r.kind,r.decoded)}</div>`).join(""))}
-      ${sectionCard("Tag Doctor — WARNING", NFC_TAG.checks.map(c=>`
+        ${infoRow(r.kind,r.decoded)}
+        <div class="row" style="gap:4px">${r.kind==="uri"?`<button class="textbtn" data-act="nfc-open" data-u="${esc(r.decoded)}">Open</button>`:""}
+        <button class="textbtn" data-act="nfc-copyrec" data-i="${i}">Copy</button>
+        <button class="textbtn" data-act="nfc-raw" data-i="${i}">${n.nfcRaw[i]?"Hide raw":"Raw"}</button></div>
+        ${n.nfcRaw[i]?`<div class="t-mini sub" style="font-family:monospace">${r.raw||"—"}</div>`:""}
+        </div>`).join(""))}
+      ${sectionCard("Tag actions", `
+        <div class="row">
+          <button class="btn-outline" data-act="nfc-duplicate">Duplicate</button>
+          ${NFC_TAG.formatable?`<button class="btn-outline" data-act="nfc-format">Format</button>`:""}
+          <button class="btn-outline" data-act="nfc-erase">Erase</button>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn-outline" data-act="nfc-copy-report">Copy report</button>
+          <button class="btn-outline" data-act="nfc-share">Share</button>
+        </div>
+        <div class="t-mini sub" style="margin-top:8px">Duplicate copies NDEF content only — tag UID, locked regions and secure credentials are never copied.</div>`)}
+      ${sectionCard("Tag Doctor — PASS", NFC_TAG.checks.map(c=>`
         <div class="row" style="padding:4px 0"><div class="grow"><div class="t-body">${c.name}</div>
         <div class="t-mini sub">${c.detail}</div></div>
         <span class="res ${c.v==="PASS"?"pass":c.v==="WARNING"?"warn":"fail"}">${c.v}</span></div>`).join("")+
         `<div class="t-mini sub" style="margin-top:8px">Bank, transit, access-control and secure-element credentials cannot be cloned or read.</div>`)}
-    `:`<div class="empty">No tag scanned yet.</div>`}
+    `:`<div class="empty">No tag scanned yet — listening for tags.</div>`}
     ${n.history.length?sectionCard("Recent scans",
       n.history.slice(0,10).map(h=>`<div style="padding:4px 0"><div class="t-body">${h.time}${h.tail?" · "+h.tail:""}</div>
         <div class="t-mini sub">${esc(h.tech)}${h.summary?" — "+esc(h.summary):""}</div></div>`).join("")+
@@ -2636,24 +2714,31 @@ function scrNfc(){
   </div>`;
 }
 function scrNfcWrite(){
-  const n=S.nfc;
+  const n=S.nfc, k=S.nfcKind||"TEXT", F=S.nfc.nfcF[k]||{};
+  const defs=NFC_FIELDS[k]||[];
+  const firstOk=(F[defs[0]?.[0]]||"").trim().length>0;
+  const size=nfcMsgSize(n.specs.map(s=>({summary:s.summary})));
   return `<div class="pad col">
-    ${sectionCard("Record", `
-      <div class="chiprow">
-        <button class="fchip ${S.nfcKind!=="uri"?"sel":""}" data-nfckind="text">Text</button>
-        <button class="fchip ${S.nfcKind==="uri"?"sel":""}" data-nfckind="uri">URI</button>
-      </div>
-      <input class="field" id="nfcinput" placeholder="${S.nfcKind==="uri"?"URI (e.g. https://example.com)":"Text content"}" value="${esc(S.nfcInput||"")}" style="margin-top:8px">
-      <div class="t-small" style="margin-top:10px">Presets</div>
-      <div class="chiprow" style="margin-top:4px">${(S.nfcKind==="uri"
-        ?[["Web","https://"],["Call","tel:"],["Email","mailto:"],["SMS","sms:"],["Map","geo:"]]
-        :[["Asset tag","ASSET-"],["Inspection","INSPECTED-BY: "],["Serial","SN: "]]
-      ).map(([l,v])=>`<button class="fchip" data-nfcpreset="${esc(v)}">${l}</button>`).join("")}</div>`)}
+    ${sectionCard("Add record", `
+      <div class="chiprow">${NFC_KINDS.map(([id,l])=>
+        `<button class="fchip ${k===id?"sel":""}" data-nfckind="${id}">${l}</button>`).join("")}</div>
+      ${defs.map(([id,ph])=>`<input class="field" data-nfcfield="${id}" data-kind="${k}" placeholder="${ph}" value="${esc(F[id]||"")}" style="margin-top:8px" ${k==="WIFI"&&id==="key"?'type="password"':""}>`).join("")}
+      ${k==="WIFI"?`<div class="chiprow" style="margin-top:8px">${["Open","WEP","WPA","WPA2"].map(s=>
+        `<button class="fchip ${(F.sec||"WPA2")===s?"sel":""}" data-nfcsec="${s}">${s}</button>`).join("")}</div>
+        <div class="t-mini sub" style="margin-top:8px;color:var(--warn,#e6b86e)">Tags are readable by anyone who scans them — avoid writing credentials you would not share.</div>`:""}
+      ${NFC_PRESETS[k]?`<div class="t-small" style="margin-top:10px">Presets</div>
+      <div class="chiprow" style="margin-top:4px">${NFC_PRESETS[k].map(([l,v])=>`<button class="fchip" data-nfcpreset="${esc(v)}">${l}</button>`).join("")}</div>`:""}
+      <button class="btn-outline" style="margin-top:10px" data-act="nfc-add" ${firstOk?"":"disabled"}>Add to message</button>`)}
+    ${sectionCard(`Message (${n.specs.length} record${n.specs.length===1?"":"s"})`,
+      n.specs.length?n.specs.map((s,i)=>`
+        <div class="row" style="padding:2px 0"><div class="t-body grow">#${i+1} · ${esc(s.summary)}</div>
+        <button class="iconbtn" data-act="nfc-delrec" data-i="${i}" title="Remove">✕</button></div>`).join("")
+      :`<div class="t-body sub">No records yet — pick a type above and add one. The write replaces all NDEF content on the presented tag.</div>`)}
     ${sectionCard("Preview",
-      infoRow("Record type",S.nfcKind==="uri"?"RTD_URI":"RTD_TEXT",false)+
-      infoRow("Message size",((S.nfcInput||"").length+7)+" bytes",false)+
-      `<div class="t-mini sub">The write replaces all NDEF content on the presented tag.</div>
-      <button class="btn-outline" style="margin-top:8px" data-act="nfc-write" ${(S.nfcInput||"").trim()&&!n.armed?"":"disabled"}>Write to tag</button>`)}
+      infoRow("Records",String(n.specs.length),false)+
+      infoRow("Message size",size+" bytes",false)+
+      infoRow("Last tag capacity","144 bytes — "+(size<=144?"fits":"does not fit"),false)+
+      `<button class="btn-outline" style="margin-top:8px" data-act="nfc-write" ${n.specs.length&&!n.armed?"":"disabled"}>Write to tag</button>`)}
     ${n.armed?sectionCard("Armed",`<div class="t-body">Present the target tag to the back of the device now.</div>
       <button class="btn-outline" style="margin-top:8px" data-act="nfc-disarm">Cancel</button>`):""}
     ${n.result?sectionCard("Result",`<div class="t-body ${n.result.startsWith("Failed")?"err":""}">${n.result}</div>`):""}
@@ -3385,7 +3470,7 @@ const FLOW = [
     ["Camera & Flash","camera"],["Camera Capabilities","camera/details",1],
     ["Network Lab","network"],["Bluetooth Lab","bluetooth"],["GATT explorer","bluetooth/gatt/{address}",1],
     ["USB Lab","usb"],["USB device detail","usb/device/{deviceName}",1],
-    ["NFC Lab","nfc"],["NFC Write","nfc/write",1],
+    ["NFC Lab","nfc"],["NFC Writer","nfc/write",1],
   ]},
   {h:"Apps & system", nodes:[
     ["App Inspector","apps"],["App detail","apps/detail/{packageName}",1],
@@ -3466,7 +3551,12 @@ document.addEventListener("click", e => {
   const cm = e.target.closest("[data-cmp]"); if(cm){ const [w,id]=cm.dataset.cmp.split(":"); S.cmp[w]=id; S.cmp.done=false; render(); return; }
   const mpp = e.target.closest("[data-mppat]"); if(mpp){ S.motionPattern=mpp.dataset.mppat; render(); return; }
   const mps = e.target.closest("[data-mpspeed]"); if(mps){ S.motionSpeed=+mps.dataset.mpspeed; render(); return; }
-  const np = e.target.closest("[data-nfcpreset]"); if(np){ S.nfcInput=np.dataset.nfcpreset; render(); return; }
+  const np = e.target.closest("[data-nfcpreset]"); if(np){
+    const k=S.nfcKind||"TEXT", F=(S.nfc.nfcF[k]=S.nfc.nfcF[k]||{});
+    F[NFC_FIELDS[k][0][0]]=np.dataset.nfcpreset; render(); return; }
+  const nsec = e.target.closest("[data-nfcsec]"); if(nsec){
+    const k=S.nfcKind||"WIFI", F=(S.nfc.nfcF[k]=S.nfc.nfcF[k]||{});
+    F.sec=nsec.dataset.nfcsec; render(); return; }
   const prop = e.target.closest("[data-prop]"); if(prop){ runProposal(prop.dataset.prop); return; }
   const aip = e.target.closest("[data-aip]"); if(aip){ sendAi(aip.dataset.aip); return; }
   const ac = e.target.closest("[data-act]");
@@ -3713,12 +3803,23 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "nfc-scan": { const n=S.nfc;
       if(n.scanning||n.armed){ n.scanning=false;n.armed=null; }
       else { n.scanning=true; n.result=null;
-        later(()=>{ if(S.nfc.scanning){ S.nfc.tag={...NFC_TAG}; S.nfc.scanning=false; if(cur()==="nfc")render(); } },1600); }
+        if(!n.tag) later(()=>{ if(S.nfc.scanning&&!S.nfc.tag&&cur()==="nfc"){ S.nfc.tag={...NFC_TAG}; render(); } },1600); }
       render(); break; }
     case "nfc-erase": dialog({title:"Erase tag?",text:"This writes an empty NDEF message to the next presented tag, removing its current content. Present the tag after confirming.",confirm:"Erase next tag",cancel:"Cancel",onConfirm:"nfc-arm-erase"}); break;
+    case "nfc-format": dialog({title:"Format tag?",text:"This formats the next presented tag for NDEF, erasing any existing content. Only tags reporting NdefFormatable can be formatted.",confirm:"Format next tag",cancel:"Cancel",onConfirm:"nfc-arm-format"}); break;
+    case "nfc-duplicate": dialog({title:"Duplicate tag content?",text:"This writes a copy of the scanned tag's NDEF records to the next tag you present. Only record content is copied — the new tag keeps its own UID.",confirm:"Copy to next tag",cancel:"Cancel",onConfirm:"nfc-arm-dup"}); break;
     case "nfc-disarm": S.nfc.armed=null; render(); break;
-    case "nfc-write": { const size=(S.nfcInput||"").length+7;
-      dialog({title:"Write to tag?",text:`This writes a ${size}-byte NDEF message to the next presented tag, replacing its current content. The tag must be writable and have enough capacity.`,confirm:"Arm write",cancel:"Cancel",onConfirm:"nfc-arm-write"}); break; }
+    case "nfc-copy-report": navigator.clipboard?.writeText("DroidKit NFC tag report").catch(()=>{}); toast("Tag report copied"); break;
+    case "nfc-share": toast("Sharesheet would open (mock)"); break;
+    case "nfc-open": toast(`Would open ${el.dataset.u} (mock)`); break;
+    case "nfc-copyrec": navigator.clipboard?.writeText(NFC_TAG.records[+el.dataset.i].decoded||"").catch(()=>{}); toast("Record copied"); break;
+    case "nfc-raw": { const i=+el.dataset.i; S.nfc.nfcRaw[i]=!S.nfc.nfcRaw[i]; render(); break; }
+    case "nfc-add": { const k=S.nfcKind||"TEXT", F=S.nfc.nfcF[k]||{};
+      S.nfc.specs.push({kind:k,summary:nfcSpecSummary(k,F)});
+      S.nfc.nfcF[k]={}; render(); break; }
+    case "nfc-delrec": S.nfc.specs.splice(+el.dataset.i,1); render(); break;
+    case "nfc-write": { const size=nfcMsgSize(S.nfc.specs.map(s=>({summary:s.summary})));
+      dialog({title:"Write to tag?",text:`This writes a ${size}-byte NDEF message (${S.nfc.specs.length} records) to the next presented tag, replacing its current content. The tag must be writable and have enough capacity.`,confirm:"Arm write",cancel:"Cancel",onConfirm:"nfc-arm-write"}); break; }
     case "usb-perm": S.usbPermPending[el.dataset.dev]=true; render();
       later(()=>{ S.usbPermPending={}; S.usbPerm[el.dataset.dev]=true; if(cur().startsWith("usb/"))render(); },1200); break;
     case "copy-usb": navigator.clipboard?.writeText("USB2.0 Flash Disk 090C:1000 Mass Storage").catch(()=>{}); toast("USB summary copied"); break;
@@ -3775,6 +3876,10 @@ function dlgOk(cb){
       S.sessions=S.sessions.filter(x=>x.id!==id); goBack(); break; }
     case cb==="nfc-arm-erase": S.nfc.armed="erase"; S.nfc.tag=null;
       later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="Tag erased — empty NDEF message written.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
+    case cb==="nfc-arm-format": S.nfc.armed="format"; S.nfc.tag=null;
+      later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="Tag formatted as NDEF.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
+    case cb==="nfc-arm-dup": S.nfc.armed="write"; S.nfc.tag=null;
+      later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="Copied NDEF content to new tag — records written, tag UID unchanged.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
     case cb==="nfc-arm-write": S.nfc.armed="write";
       later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="NDEF message written successfully.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
     case cb==="adb-reboot": toast("Rebooting (mock)"); break;
@@ -3819,8 +3924,11 @@ document.addEventListener("keydown", e=>{
 document.addEventListener("input", e=>{
   if(e.target.id==="toolSearch"){ S.toolsQuery=e.target.value; renderToolList(); }
   if(e.target.id==="appSearch"){ S.appsQuery=e.target.value; renderAppList(); }
-  if(e.target.id==="nfcinput"){ S.nfcInput=e.target.value;
-    const b=$("#body [data-act='nfc-write']"); if(b) b.disabled=!e.target.value.trim(); }
+  if(e.target.dataset&&e.target.dataset.nfcfield){
+    const k=e.target.dataset.kind, F=(S.nfc.nfcF[k]=S.nfc.nfcF[k]||{});
+    F[e.target.dataset.nfcfield]=e.target.value;
+    const b=$("#body [data-act='nfc-add']");
+    if(b) b.disabled=!((F[NFC_FIELDS[k][0][0]]||"").trim()); }
   if(e.target.id==="ci-action"||e.target.id==="ci-data"||e.target.id==="ci-pkg"){
     const a=$("#ci-action").value.trim(),d=$("#ci-data").value.trim(),p=$("#ci-pkg").value.trim();
     $("#ci-preview").textContent=`Intent(action=${a||"…"}${d?", data="+d:""}${p?", package="+p:""})`;

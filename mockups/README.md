@@ -63,8 +63,10 @@ Simulates a Pixel 8 Pro, Android 15, mid-setup:
 2. **Tools** — search, category chips, favorite stars, Ready/Blocked badges;
    blocked tools on the ADB/AppOps/Packages stubs explain why.
 3. **Apps → any app** — App Inspector detail with launch/settings buttons.
-4. **NFC Lab → Start scan** — tag appears with Tag Doctor verdicts; try
-   Write / erase for the armed-write confirmation flow.
+4. **NFC Lab** — auto-scan finds the tag ~1.5 s after opening; technology
+   detail dump, decoded NDEF records with raw-hex toggle, Tag Doctor
+   verdicts, and Duplicate/Erase ops. Try **Write** for the multi-record
+   composer (11 record types) and the armed-write confirmation flow.
 5. **Settings** — theme control switches the phone between dark/light.
 6. **Home → Insights card** (or Tools → Reports category → Device Insights) —
    the on-device analytics screen: verdict donut + pass-rate trend across

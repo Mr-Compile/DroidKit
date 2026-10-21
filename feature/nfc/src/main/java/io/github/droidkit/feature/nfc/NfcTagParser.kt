@@ -25,6 +25,8 @@ data class NfcTagInfo(
     val formatable: Boolean,
     val records: List<NdefRecordInfo>,
     val parseError: String?,
+    /** Raw message retained in memory for the duplicate-tag flow; never persisted. */
+    val rawMessage: NdefMessage? = null,
 )
 
 /** Tag/NDEF parsing and record construction — pure decoders are unit-testable. */
@@ -81,18 +83,142 @@ object NfcTagParser {
             .getOrNull()
     }
 
+    /** Loose hex ("04 A3" / "04a3") → bytes; null on malformed input. */
+    fun hexToBytes(input: String): ByteArray? {
+        val clean = input.filter { !it.isWhitespace() }
+        if (clean.isEmpty()) return ByteArray(0)
+        if (clean.length % 2 != 0 || clean.any { it !in '0'..'9' && it !in 'a'..'f' && it !in 'A'..'F' }) {
+            return null
+        }
+        return ByteArray(clean.length / 2) { i ->
+            ((Character.digit(clean[i * 2], 16) shl 4) or Character.digit(clean[i * 2 + 1], 16)).toByte()
+        }
+    }
+
+    /** Record type field as printable ASCII (MIME/external types), or null. */
+    fun typeAsAscii(record: NdefRecord): String? =
+        record.type?.takeIf { it.isNotEmpty() }
+            ?.let { t -> String(t, Charsets.US_ASCII).takeIf { s -> s.all { it in ' '..'~' } } }
+
+    /** WSC TLV walker → (ssid, authLabel, hasKey); null on malformed payload. */
+    fun decodeWsc(payload: ByteArray): Triple<String, String, Boolean>? {
+        fun tlvAt(b: ByteArray, pos: Int): Triple<Int, Int, Int>? {
+            if (pos + 4 > b.size) return null
+            val id = ((b[pos].toInt() and 0xFF) shl 8) or (b[pos + 1].toInt() and 0xFF)
+            val len = ((b[pos + 2].toInt() and 0xFF) shl 8) or (b[pos + 3].toInt() and 0xFF)
+            if (pos + 4 + len > b.size) return null
+            return Triple(id, pos + 4, pos + 4 + len)
+        }
+        val outer = tlvAt(payload, 0) ?: return null
+        if (outer.first != 0x100E) return null
+        var ssid: String? = null
+        var authLabel: String? = null
+        var hasKey = false
+        var pos = outer.second
+        while (pos < outer.third) {
+            val (id, vStart, vEnd) = tlvAt(payload, pos) ?: return null
+            when (id) {
+                0x1045 -> ssid = String(payload, vStart, vEnd - vStart, Charsets.UTF_8)
+                0x1003 -> if (vEnd - vStart >= 2) {
+                    authLabel = when (
+                        ((payload[vStart].toInt() and 0xFF) shl 8) or
+                            (payload[vStart + 1].toInt() and 0xFF)
+                    ) {
+                        0x0001 -> "Open"; 0x0002 -> "WPA"; 0x0004 -> "WEP/Shared"
+                        0x0020 -> "WPA2"; else -> "Other"
+                    }
+                }
+                0x1027 -> hasKey = true
+            }
+            pos = vEnd
+        }
+        return Triple(ssid ?: "(hidden)", authLabel ?: "unknown", hasKey)
+    }
+
+    /** vCard → "name · phone · email" summary. */
+    fun decodeVcard(payload: ByteArray): String? {
+        val text = runCatching { String(payload, Charsets.UTF_8) }.getOrNull() ?: return null
+        if (!text.contains("BEGIN:VCARD", ignoreCase = true)) return null
+        fun field(vararg names: String): String? = text.lineSequence()
+            .map { it.substringBefore(';').substringBefore(':').uppercase() to it.substringAfter(':', "") }
+            .firstOrNull { (k, _) -> k in names.map(String::uppercase) }?.second?.trim()
+            ?.takeIf { it.isNotEmpty() }
+        return listOfNotNull(field("FN", "N"), field("TEL"), field("EMAIL"))
+            .joinToString(" · ").takeIf { it.isNotEmpty() }
+    }
+
+    /** Smart Poster: payload is a nested NDEF message (title + URI). */
+    fun decodeSmartPoster(payload: ByteArray): String? {
+        val nested = runCatching { NdefMessage(payload) }.getOrNull() ?: return null
+        var title: String? = null
+        var uri: String? = null
+        for (r in nested.records) {
+            val p = r.payload ?: continue
+            when {
+                r.tnf == NdefRecord.TNF_WELL_KNOWN &&
+                    r.type?.contentEquals(NdefRecord.RTD_TEXT) == true ->
+                    title = decodeTextRecord(p)
+                r.tnf == NdefRecord.TNF_WELL_KNOWN &&
+                    r.type?.contentEquals(NdefRecord.RTD_URI) == true ->
+                    uri = decodeUriRecord(p)
+            }
+        }
+        return listOfNotNull(title, uri).joinToString(" — ").takeIf { it.isNotEmpty() }
+    }
+
     fun decodeRecord(record: NdefRecord): NdefRecordInfo {
         var decoded: String? = null
         var kind: String? = null
-        if (record.tnf == NdefRecord.TNF_WELL_KNOWN) {
-            val payload = record.payload
-            when {
-                record.type?.contentEquals(NdefRecord.RTD_TEXT) == true && payload != null -> {
-                    decoded = decodeTextRecord(payload); kind = "text"
+        val payload = record.payload
+        when (record.tnf) {
+            NdefRecord.TNF_WELL_KNOWN -> if (payload != null) {
+                when {
+                    record.type?.contentEquals(NdefRecord.RTD_TEXT) == true -> {
+                        decoded = decodeTextRecord(payload); kind = "text"
+                    }
+                    record.type?.contentEquals(NdefRecord.RTD_URI) == true -> {
+                        decoded = decodeUriRecord(payload); kind = "uri"
+                    }
+                    record.type?.contentEquals(NdefRecord.RTD_SMART_POSTER) == true -> {
+                        decoded = decodeSmartPoster(payload) ?: "Smart Poster (nested records)"
+                        kind = "smart-poster"
+                    }
                 }
-                record.type?.contentEquals(NdefRecord.RTD_URI) == true && payload != null -> {
-                    decoded = decodeUriRecord(payload); kind = "uri"
+            }
+            NdefRecord.TNF_MIME_MEDIA -> {
+                val mime = typeAsAscii(record)
+                if (payload != null) {
+                    when (mime?.lowercase()) {
+                        "text/x-vcard", "text/vcard" -> {
+                            decoded = decodeVcard(payload) ?: "vCard"; kind = "vcard"
+                        }
+                        "application/vnd.wfa.wsc" -> {
+                            decoded = decodeWsc(payload)?.let { (ssid, auth, hasKey) ->
+                                "Wi-Fi \"$ssid\" ($auth)" + if (hasKey) " — key stored" else ""
+                            } ?: "Wi-Fi credential"
+                            kind = "wifi"
+                        }
+                        else -> {
+                            decoded = mime?.let { "MIME $it (${payload.size} bytes)" }
+                            kind = "mime"
+                        }
+                    }
                 }
+            }
+            NdefRecord.TNF_EXTERNAL_TYPE -> {
+                val ext = typeAsAscii(record)
+                decoded = if (ext?.lowercase() == "android.com:pkg") {
+                    "App: ${payload?.let { String(it, Charsets.US_ASCII) } ?: "?"}"
+                } else {
+                    ext?.let { "External $it" }
+                }
+                kind = "external"
+            }
+            NdefRecord.TNF_ABSOLUTE_URI -> {
+                decoded = typeAsAscii(record); kind = "uri"
+            }
+            NdefRecord.TNF_EMPTY -> {
+                decoded = "(empty record)"; kind = "empty"
             }
         }
         return NdefRecordInfo(
@@ -111,6 +237,7 @@ object NfcTagParser {
         var maxSize: Int? = null
         var ndefType: String? = null
         var makeReadOnly: Boolean? = null
+        var message: NdefMessage? = null
 
         val ndef = Ndef.get(tag)
         if (ndef != null) {
@@ -118,7 +245,7 @@ object NfcTagParser {
             maxSize = runCatching { ndef.maxSize }.getOrNull()
             ndefType = runCatching { ndef.type }.getOrNull()
             makeReadOnly = runCatching { ndef.canMakeReadOnly() }.getOrNull()
-            val message = runCatching {
+            message = runCatching {
                 ndef.cachedNdefMessage ?: run {
                     ndef.connect()
                     try { ndef.ndefMessage } finally { runCatching { ndef.close() } }
@@ -138,6 +265,7 @@ object NfcTagParser {
             formatable = NdefFormatable.get(tag) != null,
             records = records,
             parseError = error,
+            rawMessage = message,
         )
     }
 
