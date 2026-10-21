@@ -1,5 +1,6 @@
 package io.github.droidkit.feature.diagnostics
 
+import io.github.droidkit.core.ui.theme.DroidKitTestColors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -47,5 +48,16 @@ class PhoneDoctorCatalogTest {
             assertTrue(entry.iconKey.isNotEmpty())
         }
         assertEquals(PhoneDoctorTests.ALL.size, entries.size)
+    }
+
+    @Test fun `every catalog test resolves an icon key and a category accent`() {
+        PhoneDoctorTests.ALL.forEach { test ->
+            assertNotNull("no icon for ${test.id}", DiagnosticsFeature.testIconKey(test.id))
+            assertNotNull(
+                "no tile accent for category ${test.category}",
+                DroidKitTestColors.accent(test.category, darkTheme = true),
+            )
+            assertNotNull(DroidKitTestColors.accent(test.category, darkTheme = false))
+        }
     }
 }

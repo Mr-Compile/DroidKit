@@ -103,6 +103,9 @@
     /* ToolCategory accents — mirror DroidKitCategoryColors (dark) in Tokens.kt */
     --c-device: #3CE88A; --c-diagnostics: #14B8CC; --c-connectivity: #64B5F6;
     --c-hardware: #F6C453; --c-apps: #B08CFF; --c-developer: #FF8A66; --c-reports: #F38BA8;
+    /* PhoneDoctorTest.category accents — mirror DroidKitTestColors (dark) */
+    --t-display: #3CE88A; --t-touch: #7CDBF2; --t-haptics: #FF8A66; --t-sensors: #14B8CC;
+    --t-audio: #B08CFF; --t-camera: #F38BA8; --t-connectivity: #64B5F6; --t-power: #F6C453;
   }
   .phone[data-theme="light"] {
     --ink: #EFF5F3; --panel: #FFFFFF; --panel2: #E9F1EE; --raise: #DFEAE6;
@@ -119,6 +122,9 @@
     /* ToolCategory accents — mirror DroidKitCategoryColors (light) in Tokens.kt */
     --c-device: #0E9E6B; --c-diagnostics: #0B7C8C; --c-connectivity: #2D6BCF;
     --c-hardware: #9A6A00; --c-apps: #7A4FD0; --c-developer: #C2481F; --c-reports: #B23A6B;
+    /* PhoneDoctorTest.category accents — mirror DroidKitTestColors (light) */
+    --t-display: #0E9E6B; --t-touch: #0E8FA3; --t-haptics: #C2481F; --t-sensors: #0B7C8C;
+    --t-audio: #7A4FD0; --t-camera: #B23A6B; --t-connectivity: #2D6BCF; --t-power: #9A6A00;
   }
   .statusbar {
     height: 26px; flex: none; display: flex; align-items: center;
@@ -150,6 +156,23 @@
   .tic.tic-apps { color: var(--c-apps); }
   .tic.tic-developer { color: var(--c-developer); }
   .tic.tic-reports { color: var(--c-reports); }
+  /* Diagnostic test-category accents on .qic mini-tiles and .tic tiles */
+  .tic.tic-display, .qic.tic-display { color: var(--t-display); }
+  .tic.tic-touch, .qic.tic-touch { color: var(--t-touch); }
+  .tic.tic-haptics, .qic.tic-haptics { color: var(--t-haptics); }
+  .tic.tic-sensors, .qic.tic-sensors { color: var(--t-sensors); }
+  .tic.tic-audio, .qic.tic-audio { color: var(--t-audio); }
+  .tic.tic-camera, .qic.tic-camera { color: var(--t-camera); }
+  .tic.tic-connectivity, .qic.tic-connectivity { color: var(--t-connectivity); }
+  .tic.tic-power, .qic.tic-power { color: var(--t-power); }
+  .qic.tic-display { background: color-mix(in srgb, var(--t-display) 10%, transparent); border-color: color-mix(in srgb, var(--t-display) 28%, transparent); }
+  .qic.tic-touch { background: color-mix(in srgb, var(--t-touch) 10%, transparent); border-color: color-mix(in srgb, var(--t-touch) 28%, transparent); }
+  .qic.tic-haptics { background: color-mix(in srgb, var(--t-haptics) 10%, transparent); border-color: color-mix(in srgb, var(--t-haptics) 28%, transparent); }
+  .qic.tic-sensors { background: color-mix(in srgb, var(--t-sensors) 10%, transparent); border-color: color-mix(in srgb, var(--t-sensors) 28%, transparent); }
+  .qic.tic-audio { background: color-mix(in srgb, var(--t-audio) 10%, transparent); border-color: color-mix(in srgb, var(--t-audio) 28%, transparent); }
+  .qic.tic-camera { background: color-mix(in srgb, var(--t-camera) 10%, transparent); border-color: color-mix(in srgb, var(--t-camera) 28%, transparent); }
+  .qic.tic-connectivity { background: color-mix(in srgb, var(--t-connectivity) 10%, transparent); border-color: color-mix(in srgb, var(--t-connectivity) 28%, transparent); }
+  .qic.tic-power { background: color-mix(in srgb, var(--t-power) 10%, transparent); border-color: color-mix(in srgb, var(--t-power) 28%, transparent); }
   #appbar .textbtn { margin-left: 4px; }
   .progress-line { height: 3px; background: var(--raise); flex: none; }
   .progress-line > div { height: 100%; background: var(--grad); transition: width .3s; box-shadow: 0 0 8px var(--glow); }
@@ -1602,7 +1625,7 @@ function scrDiagnose(){
       `<div class="qcat">${c}</div>` +
       `<div class="card" style="padding-top:4px;padding-bottom:4px">${ts.map(x=>`
         <div class="trow clickable" data-nav="diagnose/test/${x.id}">
-          <span class="qic"><svg viewBox="0 0 24 24"><path d="${ICONS[TEST_ICON[x.id]]||ICONS.info}"/></svg></span>
+          <span class="qic tic-${x.cat.toLowerCase()}"><svg viewBox="0 0 24 24"><path d="${ICONS[TEST_ICON[x.id]]||ICONS.info}"/></svg></span>
           <span class="grow" style="font-size:13.5px;font-weight:550">${x.title}</span>
           <span class="sub">›</span></div>`).join("")}</div>`
     ).join("")}
@@ -1683,7 +1706,7 @@ function scrReview(){
         const st = e.results[tid];
         const rc = st==="PASS"?"pass":st==="FAIL"?"fail":st==="PERMISSION_REQUIRED"?"warn":"skip";
         const note = e.notes[tid] ? `<div class="t-mini sub" style="margin-top:2px">${esc(e.notes[tid])}</div>` : "";
-        return `<div class="card"><div class="row"><span class="grow t-med">${TEST(tid)?.title||tid}</span>
+        return `<div class="card"><div class="row">${TEST(tid)?tic(TEST_ICON[tid], TEST(tid).cat):""}<span class="grow t-med"${TEST(tid)?' style="margin-left:10px"':""}>${TEST(tid)?.title||tid}</span>
           <span class="res ${rc}">${st.replace(/_/g," ")}</span></div>${note}</div>`;
       }).join("")).join("")}
     <input class="field" id="reviewNotes" placeholder="Technician notes" style="margin-top:8px">

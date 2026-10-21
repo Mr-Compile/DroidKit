@@ -28,12 +28,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
+import io.github.droidkit.core.ui.components.ToolIcon
+import io.github.droidkit.core.ui.components.ToolIcons
+import io.github.droidkit.core.ui.theme.testAccent
 import java.text.DateFormat
 import java.util.Date
 
@@ -99,8 +103,19 @@ fun DiagnosticsScreen(
                         onClick = { onOpenTool(DiagnosticsFeature.testRoute(test.id)) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Row(modifier = Modifier.padding(16.dp)) {
-                            Text(test.title, style = MaterialTheme.typography.bodyLarge)
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            ToolIcon(
+                                ToolIcons.of(DiagnosticsFeature.testIconKey(test.id)),
+                                accent = testAccent(test.category),
+                            )
+                            Text(
+                                test.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 12.dp),
+                            )
                         }
                     }
                 }

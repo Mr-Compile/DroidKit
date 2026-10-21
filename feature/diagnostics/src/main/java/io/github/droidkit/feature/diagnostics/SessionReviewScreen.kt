@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiAssistant
@@ -32,6 +33,9 @@ import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.ResultBadge
 import io.github.droidkit.core.ui.components.SectionHeader
+import io.github.droidkit.core.ui.components.ToolIcon
+import io.github.droidkit.core.ui.components.ToolIcons
+import io.github.droidkit.core.ui.theme.testAccent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,11 +122,20 @@ fun SessionReviewScreen(
                 item { SectionHeader(category) }
                 items(results, key = { it.key }) { (testId, state) ->
                     Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                val test = PhoneDoctorTests.findById(testId)
+                                if (test != null) {
+                                    ToolIcon(
+                                        ToolIcons.of(DiagnosticsFeature.testIconKey(test.id)),
+                                        accent = testAccent(test.category),
+                                    )
+                                }
                                 Text(
-                                    PhoneDoctorTests.findById(testId)?.title ?: testId,
-                                    modifier = Modifier.weight(1f),
+                                    test?.title ?: testId,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = if (test != null) 12.dp else 0.dp),
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                                 ResultBadge(state)
