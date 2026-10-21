@@ -2,6 +2,8 @@ package io.github.droidkit.feature.appops
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -203,6 +205,7 @@ private fun PackageList(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun OpsDetail(
     packageName: String,
     ops: List<AppOpEntry>?,
@@ -222,44 +225,89 @@ private fun OpsDetail(
         busy && ops == null -> LoadingState(label = "Loading ops…")
         ops == null -> EmptyState("No AppOps data for $packageName.")
         ops.isEmpty() -> EmptyState("$packageName has no recorded AppOps entries.")
-        else -> LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item {
-                AiSummaryCard(
-                    screenTitle = "AppOps for $packageName",
-                    fields = buildMap {
-                        put("Package", packageName)
-                        ops.forEach { put(it.op, it.mode) }
-                    },
-                )
-            }
-            items(ops, key = { it.op }) { entry ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+        else -> {
+            var modeFilter by remember { mutableStateOf<String?>(null) }
+            val stats = AppOpsInfo.modeStats(ops)
+            val shown = ops.filter { modeFilter == null || it.mode == modeFilter }
+            LazyColumn(
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                entry.op,
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(1f),
+                                "Mode summary",
+                                style = MaterialTheme.typography.labelLarge,
                             )
                             Text(
-                                entry.mode,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
+                                stats.joinToString("  ·  ") {
+                                    "${it.second} ${AppOpsInfo.modeLabel(it.first).lowercase()}"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp),
                             )
                         }
-                        Row(
-                            modifier = Modifier.padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            AppOpMode.entries.forEach { mode ->
-                                FilterChip(
-                                    selected = entry.mode == mode.wire,
-                                    onClick = { if (entry.mode != mode.wire) onPick(entry.op, mode) },
-                                    label = { Text(mode.wire) },
+                    }
+                }
+                item {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = modeFilter == null,
+                            onClick = { modeFilter = null },
+                            label = { Text("All (${ops.size})") },
+                        )
+                        stats.forEach { (mode, count) ->
+                            FilterChip(
+                                selected = modeFilter == mode,
+                                onClick = { modeFilter = if (modeFilter == mode) null else mode },
+                                label = { Text("${AppOpsInfo.modeLabel(mode)} ($count)") },
+                            )
+                        }
+                    }
+                }
+                item {
+                    AiSummaryCard(
+                        screenTitle = "AppOps for $packageName",
+                        fields = buildMap {
+                            put("Package", packageName)
+                            ops.forEach { put(it.op, it.mode) }
+                        },
+                    )
+                }
+                items(shown, key = { it.op }) { entry ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    entry.op,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.weight(1f),
                                 )
+                                Text(
+                                    AppOpsInfo.modeLabel(entry.mode),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            Text(
+                                AppOpsInfo.describe(entry.op),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 2.dp),
+                            )
+                            Row(
+                                modifier = Modifier.padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                AppOpMode.entries.forEach { mode ->
+                                    FilterChip(
+                                        selected = entry.mode == mode.wire,
+                                        onClick = { if (entry.mode != mode.wire) onPick(entry.op, mode) },
+                                        label = { Text(mode.wire) },
+                                    )
+                                }
                             }
                         }
                     }

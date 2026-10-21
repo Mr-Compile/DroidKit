@@ -3573,6 +3573,11 @@ function renderOnboarding(){
 }
 /* ---------- appops ---------- */
 const APPOPS_OPS=["RUN_IN_BACKGROUND","CAMERA","RECORD_AUDIO","READ_CLIPBOARD","POST_NOTIFICATION","SYSTEM_ALERT_WINDOW","WRITE_SETTINGS","USAGE_STATS"];
+const APPOP_DESC={RUN_IN_BACKGROUND:"Run background work",CAMERA:"Access the camera",RECORD_AUDIO:"Record microphone audio",
+  READ_CLIPBOARD:"Read clipboard contents",POST_NOTIFICATION:"Show notifications",SYSTEM_ALERT_WINDOW:"Draw overlays on other apps",
+  WRITE_SETTINGS:"Modify system settings",USAGE_STATS:"Read app-usage statistics"};
+const APPOP_MODE={allow:"Allowed",foreground:"Foreground only",default:"Default",deny:"Denied",ignore:"Ignored (silently fails)"};
+function appopDesc(op){ return APPOP_DESC[op]||"Undocumented op — Android adds new ops every release; this is the raw name."; }
 function appopsFor(pkg){
   if(!S.appopsOps[pkg]) S.appopsOps[pkg]=APPOPS_OPS.map((op,i)=>({op,mode:["allow","ignore","deny","default"][(pkg.length+i)%4]}));
   return S.appopsOps[pkg];
@@ -3584,9 +3589,18 @@ function scrAppOps(){
       <button class="textbtn" data-nav="adb" style="margin-top:4px">Open Wireless ADB</button></div></div>`;
   if(S.appopsSel){
     const ops=appopsFor(S.appopsSel);
+    const order=["allow","foreground","default","deny","ignore"];
+    const stats=order.map(m=>[m,ops.filter(o=>o.mode===m).length]).filter(([,n])=>n>0);
+    const filt=S.appopsFilter||null;
+    const shown=filt?ops.filter(o=>o.mode===filt):ops;
     return `<div class="pad col">
       <button class="textbtn" data-act="appops-back" style="align-self:flex-start">←</button>
-      ${ops.map(o=>`<div class="card"><div class="row"><span class="grow t-small">${o.op}</span><span class="t-small pri">${o.mode}</span></div>
+      <div class="card"><div class="t-small" style="font-weight:600">Mode summary</div>
+        <div class="t-mini sub" style="margin-top:4px">${stats.map(([m,n])=>`${n} ${(APPOP_MODE[m]||m).toLowerCase()}`).join("  ·  ")}</div></div>
+      <div class="chiprow"><button class="fchip ${!filt?"sel":""}" data-appopfilter="all">All (${ops.length})</button>
+        ${stats.map(([m,n])=>`<button class="fchip ${filt===m?"sel":""}" data-appopfilter="${m}">${APPOP_MODE[m]} (${n})</button>`).join("")}</div>
+      ${shown.map(o=>`<div class="card"><div class="row"><span class="grow t-small">${o.op}</span><span class="t-small pri">${APPOP_MODE[o.mode]||o.mode}</span></div>
+        <div class="t-mini sub" style="margin-top:2px">${appopDesc(o.op)}</div>
         <div class="row" style="margin-top:8px">${["allow","ignore","deny","default"].map(m=>
           `<button class="fchip ${o.mode===m?"sel":""}" data-appop="${o.op}:${m}">${m}</button>`).join("")}</div></div>`).join("")}
     </div>`;
@@ -3855,6 +3869,7 @@ document.addEventListener("click", e => {
     else if(S.snapSel.after==null&&id!==S.snapSel.before) S.snapSel.after=id;
     else { S.snapSel.before=id; S.snapSel.after=null; }
     render(); return; }
+  const aof = e.target.closest("[data-appopfilter]"); if(aof){ S.appopsFilter=aof.dataset.appopfilter==="all"?null:aof.dataset.appopfilter; render(); return; }
   const ao = e.target.closest("[data-appop]"); if(ao){ const [op,m]=ao.dataset.appop.split(":");
     const conseq={allow:"lets the app use it normally.",ignore:"makes the operation silently fail — the app sees no error, it just gets nothing.",deny:"denies the operation — the app may crash or show a permission error.",default:"restores Android's default decision for this op."};
     dialog({title:`Set ${op}?`,text:`This changes how Android treats ${S.appopsSel} for the “${op}” operation. Setting ${op} to ${m} ${conseq[m]} The change applies immediately and persists until you change it back.`,
@@ -4070,8 +4085,8 @@ On Android &lt; 11 this section may be absent.</pre></div>
       "10-19 09:41:12.874  1842  1866 D OpenGLRenderer: Skia GL pipeline<br>"+
       "10-19 09:41:13.012  1842  1842 I DroidKit: capability resolve — ADB ready";
       pushElevLog("logcat -d -t "+($("#loglines")?.value||"200")); break; }
-    case "appops-sel": S.appopsSel=el.dataset.pkg; render(); break;
-    case "appops-back": S.appopsSel=null; render(); break;
+    case "appops-sel": S.appopsSel=el.dataset.pkg; S.appopsFilter=null; render(); break;
+    case "appops-back": S.appopsSel=null; S.appopsFilter=null; render(); break;
     case "perm-toggle": toast(el.dataset.p+" toggled (mock)"); break;
     case "pkg-restore": { const v=$("#pkgRestore")?.value.trim();
       if(v){ pushElevLog("pm install-existing "+v); toast("Restored "+v+" (mock)"); S.pkgRestore=""; render(); } break; }
