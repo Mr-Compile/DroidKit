@@ -181,4 +181,72 @@ class ElevatedActionTest {
         assertTrue(runCatching { ElevatedAction.ReadLog(0).command() }.isFailure)
         assertTrue(runCatching { ElevatedAction.ReadLog(5001).command() }.isFailure)
     }
+
+    @Test
+    fun `storage listing quotes the validated path and stats each entry`() {
+        val cmd = ElevatedAction.ListStorageDir("/sdcard/Android/data/com.app").command()
+        assertTrue(cmd.startsWith("cd '/sdcard/Android/data/com.app' &&"))
+        assertTrue(cmd.contains("stat -Lc '%F|%s|%Y|%n'"))
+        assertTrue(cmd.contains("2>/dev/null"))
+    }
+
+    @Test
+    fun `storage paths outside shared storage are rejected`() {
+        listOf(
+            "/data/data/com.app",
+            "/sdcard/../data/data",
+            "/sdcard/Android/../../etc/passwd",
+            "sdcard/Android/data", // not absolute
+            "/sdcardAndroid/data", // prefix trick — no separator
+            "",
+        ).forEach { bad ->
+            assertTrue(
+                "expected rejection of '$bad'",
+                runCatching { ElevatedAction.ListStorageDir(bad).command() }.isFailure,
+            )
+            assertTrue(
+                "expected rejection of '$bad'",
+                runCatching { ElevatedAction.CopyToDownload(bad).command() }.isFailure,
+            )
+        }
+    }
+
+    @Test
+    fun `storage paths with shell-breaking characters are rejected`() {
+        listOf(
+            "/sdcard/Android/data/it's",
+            "/sdcard/Android/data/x\ny",
+            "/sdcard/" + "a".repeat(600),
+        ).forEach { bad ->
+            assertTrue(
+                "expected rejection",
+                runCatching { ElevatedAction.ListStorageDir(bad).command() }.isFailure,
+            )
+        }
+    }
+
+    @Test
+    fun `storage roots and valid paths are accepted`() {
+        listOf(
+            "/sdcard",
+            "/storage/emulated/0",
+            "/sdcard/Android/data",
+            "/storage/emulated/0/Android/obb",
+            "/sdcard/Download/a file.txt",
+        ).forEach { good ->
+            assertTrue(
+                "expected acceptance of '$good'",
+                runCatching { ElevatedAction.ListStorageDir(good).command() }.isSuccess,
+            )
+        }
+    }
+
+    @Test
+    fun `copy-out writes only to the fixed Download destination`() {
+        val cmd = ElevatedAction.CopyToDownload("/sdcard/Android/data/com.app/files").command()
+        assertTrue(cmd.startsWith("mkdir -p '/sdcard/Download/DroidKit'"))
+        assertTrue(cmd.contains("cp -r '/sdcard/Android/data/com.app/files' '/sdcard/Download/DroidKit/'"))
+        // The destination is fixed — callers cannot redirect it.
+        assertTrue(cmd.endsWith("echo \"== /sdcard/Download/DroidKit/\""))
+    }
 }

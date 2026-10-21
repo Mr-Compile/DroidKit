@@ -42,6 +42,31 @@ sealed interface ElevatedAction {
             require(OP_RE.matches(op)) { "invalid appop name" }
             return op
         }
+
+        /** Roots the storage browser may touch — shared storage only. */
+        private val STORAGE_ROOTS = listOf("/sdcard/", "/storage/emulated/0/")
+        private const val STORAGE_MAX_PATH = 512
+
+        /**
+         * Validate [path] for storage actions: absolute, inside shared
+         * storage, no `..` traversal, no characters that could break the
+         * single-quote shell quoting used by commands. Returns [path].
+         */
+        fun requireStoragePath(path: String): String {
+            require(
+                path.length in 1..STORAGE_MAX_PATH &&
+                    "'" !in path && '\n' !in path && '\r' !in path,
+            ) { "invalid storage path" }
+            require(
+                STORAGE_ROOTS.any { path.startsWith(it) } ||
+                    path == "/sdcard" || path == "/storage/emulated/0",
+            ) { "path outside shared storage" }
+            require(path.split('/').none { it == ".." }) { "parent traversal not allowed" }
+            return path
+        }
+
+        /** Single-quote a validated path for `sh -c` (paths never contain `'`). */
+        fun quote(path: String): String = "'$path'"
     }
 
     /** Read AppOps entries for a package (`appops get`). */
@@ -263,6 +288,38 @@ sealed interface ElevatedAction {
     /** Reboot the device (`svc power reboot`). High-impact — confirm first. */
     data object Reboot : ElevatedAction {
         override fun command() = "svc power reboot"
+    }
+
+    /**
+     * List a directory on shared storage — one `type|size|mtime|name` line per
+     * entry via `stat`, so parsing does not depend on `ls` column layout.
+     * [path] must sit under a shared-storage root (validated at construction).
+     * Works for `Android/data` and `Android/obb`, which the shell identity can
+     * read even where SAF cannot grant them.
+     */
+    data class ListStorageDir(val path: String) : ElevatedAction {
+        init { requireStoragePath(path) }
+        override fun command() =
+            "cd ${quote(path)} && for f in ./* ./.[!.]* ./..?*; do" +
+                " [ -e \"\$f\" ] && stat -Lc '%F|%s|%Y|%n' \"\$f\" 2>/dev/null; done"
+    }
+
+    /**
+     * Copy a file or directory from shared storage into the user-visible
+     * copy-out destination `/sdcard/Download/DroidKit/` (`cp -r`; existing
+     * files are overwritten). [path] is validated by [requireStoragePath];
+     * the destination is fixed — callers never supply it.
+     */
+    data class CopyToDownload(val path: String) : ElevatedAction {
+        init { requireStoragePath(path) }
+        override fun command() =
+            "mkdir -p ${quote(COPY_OUT_DIR)} &&" +
+                " cp -r ${quote(path)} ${quote("$COPY_OUT_DIR/")} &&" +
+                " echo \"== $COPY_OUT_DIR/\""
+
+        companion object {
+            const val COPY_OUT_DIR = "/sdcard/Download/DroidKit"
+        }
     }
 }
 

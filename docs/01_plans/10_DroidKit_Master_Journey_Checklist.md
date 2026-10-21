@@ -649,6 +649,26 @@ Release:
 - [ ] App remains usable without ADB
 - [ ] Release version tagged
 
+## Restricted storage browser (Android/data)
+
+User-requested addition (2026-10-21): ZArchiver-style access to
+`Android/data` on Android 11+, where SAF can no longer grant it. Runs as
+the shell identity through `ElevatedOps` — works via wireless ADB or root,
+never free-form shell.
+
+Implementation:
+- [x] Typed actions: `ListStorageDir` + `CopyToDownload` (paths validated
+      to shared storage at construction; destination fixed to
+      `/sdcard/Download/DroidKit/`)
+- [x] `feature/files` module — path bar, `data`/`obb` shortcuts, folder
+      navigation, per-entry copy-out, setup-required state → ADB screen
+- [x] Tool registered (`files.storage`, route `files`, ELEVATED_SHELL)
+- [x] Mockup + unit tests for path validation/command rendering
+
+Release:
+- [ ] Browse + copy verified on hardware against Android/data
+- [ ] Copy-out confirmed visible in `Download/DroidKit/` on device
+
 ---
 
 # Journey 20 - DroidKit 2.x / Future

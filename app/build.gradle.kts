@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.feature.appops)
     implementation(projects.feature.packages)
     implementation(projects.feature.adb)
+    implementation(projects.feature.files)
     implementation(projects.feature.developer)
 
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

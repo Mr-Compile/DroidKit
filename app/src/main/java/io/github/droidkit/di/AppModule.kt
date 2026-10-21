@@ -29,6 +29,7 @@ import io.github.droidkit.feature.developer.DeveloperFeature
 import io.github.droidkit.feature.deviceinfo.DeviceInfoFeature
 import io.github.droidkit.feature.diagnostics.DiagnosticsFeature
 import io.github.droidkit.feature.display.DisplayFeature
+import io.github.droidkit.feature.files.FilesFeature
 import io.github.droidkit.feature.insights.InsightsFeature
 import io.github.droidkit.feature.network.NetworkFeature
 import io.github.droidkit.feature.nfc.NfcFeature
@@ -136,6 +137,7 @@ object AppModule {
         AppOpsFeature,
         PackagesFeature,
         AdbFeature,
+        FilesFeature,
         DeveloperFeature,
     )
 
