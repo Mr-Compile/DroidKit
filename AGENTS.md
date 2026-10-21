@@ -42,9 +42,9 @@ AUDIT -> PLAN -> IMPLEMENT -> TARGETED VALIDATION -> SELF-REVIEW -> UPDATE CHECK
 - Kotlin + Compose.
 - MVVM/Clean Architecture.
 - Features request capabilities through CapabilityManager.
-- No direct feature dependency on Shizuku/ADB/root — features never import `privilege.*` implementation modules.
+- No direct feature dependency on ADB/root — features never import `privilege.*` implementation modules.
 - Standard Android provider must remain first-class.
-- Elevated work goes through `core:privileges` `ElevatedOps` only: features construct typed `ElevatedAction`s (never raw shell strings), tools declare `Capability.ELEVATED_SHELL`, and provider selection (SHIZUKU → ROOT → ADB) stays inside the core layer.
+- Elevated work goes through `core:privileges` `ElevatedOps` only: features construct typed `ElevatedAction`s (never raw shell strings), tools declare `Capability.ELEVATED_SHELL`, and provider selection (ROOT → ADB) stays inside the core layer.
 - The shell allow-list lives exclusively in `ElevatedAction` — new actions must validate every parameter at construction; no `ElevatedAction` may accept free-form text that reaches a command line.
 - Provider setup/grant flows are surfaced through `ProviderSetup`/`AdbSessionSetup` interfaces, not provider classes.
 - AI lives in `core:ai` behind `AIProvider`/`AiUseCase`; only the Groq provider is implemented — BYOK, opt-in, off by default.

@@ -34,7 +34,7 @@ class ReportBuilderTest {
         storageTotalBytes = 128L * 1024 * 1024 * 1024,
         storageFreeBytes = 40L * 1024 * 1024 * 1024,
         displaySummary = "1080x2400 420dpi 120Hz",
-        capabilitySummary = "standard=ready shizuku=absent",
+        capabilitySummary = "standard=ready adb=absent",
     )
 
     private fun results() = listOf(

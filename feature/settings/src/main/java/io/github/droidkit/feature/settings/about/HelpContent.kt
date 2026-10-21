@@ -56,7 +56,7 @@ object HelpContent {
                 ),
                 FaqEntry(
                     "What is Advanced access?",
-                    "Settings lists optional elevated providers (Shizuku, wireless ADB, " +
+                    "Settings lists optional elevated providers (wireless ADB, " +
                         "root) for technician actions like AppOps changes. They are " +
                         "opt-in and off by default — every standard tool works without them.",
                 ),

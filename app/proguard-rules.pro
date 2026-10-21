@@ -12,6 +12,4 @@
 -if @kotlinx.serialization.Serializable class **
 -keep class <1>$Companion { *; }
 
-# Shizuku API is consumed reflectively through its AIDL stubs.
--keep class dev.rikka.shizuku.** { *; }
--dontwarn dev.rikka.shizuku.**
+

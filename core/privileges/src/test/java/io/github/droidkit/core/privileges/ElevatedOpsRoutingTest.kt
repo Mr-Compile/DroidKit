@@ -23,34 +23,43 @@ class ElevatedOpsRoutingTest {
         ElevatedOps(executors.toSet(), emptySet(), emptySet())
 
     @Test
-    fun `unpinned action prefers shizuku over root and adb`() = runBlocking {
-        val shizuku = FakeExecutor(ProviderKind.SHIZUKU)
+    fun `unpinned action prefers root over adb`() = runBlocking {
         val root = FakeExecutor(ProviderKind.ROOT)
         val adb = FakeExecutor(ProviderKind.ADB)
-        val result = ops(shizuku, root, adb).execute(ElevatedAction.WhoAmI)
-        assertEquals(ProviderKind.SHIZUKU, result.provider)
-        assertEquals(listOf("id"), shizuku.ran)
+        val result = ops(adb, root).execute(ElevatedAction.WhoAmI)
+        assertEquals(ProviderKind.ROOT, result.provider)
+        assertEquals(listOf("id"), root.ran)
+        assertTrue(adb.ran.isEmpty())
+    }
+
+    @Test
+    fun `unpinned action uses adb when root is unavailable`() = runBlocking {
+        val root = FakeExecutor(ProviderKind.ROOT, available = false)
+        val adb = FakeExecutor(ProviderKind.ADB)
+        val result = ops(root, adb).execute(ElevatedAction.WhoAmI)
+        assertEquals(ProviderKind.ADB, result.provider)
+        assertEquals(listOf("id"), adb.ran)
         assertTrue(root.ran.isEmpty())
     }
 
     @Test
     fun `pinned action runs on its provider even when a preferred one is ready`() = runBlocking {
-        val shizuku = FakeExecutor(ProviderKind.SHIZUKU)
         val root = FakeExecutor(ProviderKind.ROOT)
-        val result = ops(shizuku, root).execute(ElevatedAction.ReadWifiConfigStore)
+        val adb = FakeExecutor(ProviderKind.ADB)
+        val result = ops(adb, root).execute(ElevatedAction.ReadWifiConfigStore)
         assertEquals(ProviderKind.ROOT, result.provider)
         assertEquals(1, root.ran.size)
-        assertTrue(shizuku.ran.isEmpty())
+        assertTrue(adb.ran.isEmpty())
     }
 
     @Test
     fun `pinned action never falls back to a weaker provider`() = runBlocking {
-        val shizuku = FakeExecutor(ProviderKind.SHIZUKU)
-        val result = ops(shizuku).execute(ElevatedAction.ReadWifiConfigStore)
+        val adb = FakeExecutor(ProviderKind.ADB)
+        val result = ops(adb).execute(ElevatedAction.ReadWifiConfigStore)
         assertEquals(ProviderKind.ROOT, result.provider)
         assertEquals(-1, result.exitCode)
         assertTrue(result.stderr.contains("requires ROOT"))
-        assertTrue(shizuku.ran.isEmpty())
+        assertTrue(adb.ran.isEmpty())
     }
 
     @Test

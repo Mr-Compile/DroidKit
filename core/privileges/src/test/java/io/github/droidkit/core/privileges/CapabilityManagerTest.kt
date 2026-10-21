@@ -16,10 +16,10 @@ class CapabilityManagerTest {
         override val capabilities = setOf(Capability.STANDARD_API, Capability.RUNTIME_PERMISSION)
     }
 
-    private val shizukuStub = object : CapabilityProvider {
-        override val kind = ProviderKind.SHIZUKU
-        override val status = ProviderStatus.Unavailable("Coming in Phase 7")
-        override val capabilities = setOf(Capability.SHIZUKU_SERVICE)
+    private val adbStub = object : CapabilityProvider {
+        override val kind = ProviderKind.ADB
+        override val status = ProviderStatus.Unavailable("No ADB session")
+        override val capabilities = setOf(Capability.ADB_SHELL, Capability.ELEVATED_SHELL)
     }
 
     private fun manager(
@@ -27,7 +27,7 @@ class CapabilityManagerTest {
         features: Set<String> = emptySet(),
         sdk: Int = 36,
     ) = CapabilityManager(
-        providers = setOf(standardProvider, shizukuStub),
+        providers = setOf(standardProvider, adbStub),
         sdkInt = sdk,
         hasFeature = { it in features },
         permissionChecker = PermissionChecker { it in permissions },
@@ -72,12 +72,12 @@ class CapabilityManagerTest {
     }
 
     @Test
-    fun `shizuku capability resolves to needs-provider with stub status`() {
+    fun `elevated capability resolves to needs-provider with stub status`() {
         val tool = Tool("t", "T", "", ToolCategory.APPS, "r",
-            requiredCapabilities = setOf(Capability.SHIZUKU_SERVICE))
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL))
         val res = manager().resolve(tool)
         val reason = (res as ToolResolution.Blocked).reasons.filterIsInstance<BlockedReason.NeedsProvider>().single()
-        assertEquals(ProviderKind.SHIZUKU, reason.kind)
+        assertEquals(ProviderKind.ADB, reason.kind)
         assertTrue(reason.status is ProviderStatus.Unavailable)
     }
 
@@ -99,16 +99,16 @@ class CapabilityManagerTest {
     fun `providerStatuses maps all providers`() {
         val statuses = manager().providerStatuses()
         assertEquals(ProviderStatus.Ready, statuses[ProviderKind.STANDARD])
-        assertTrue(statuses[ProviderKind.SHIZUKU] is ProviderStatus.Unavailable)
+        assertTrue(statuses[ProviderKind.ADB] is ProviderStatus.Unavailable)
     }
 
     @Test
     fun `statuses flow reflects provider change after notifyChanged`() {
         val flipper = object : CapabilityProvider {
             var current: ProviderStatus = ProviderStatus.NeedsSetup("set up")
-            override val kind = ProviderKind.SHIZUKU
+            override val kind = ProviderKind.ADB
             override val status get() = current
-            override val capabilities = setOf(Capability.SHIZUKU_SERVICE)
+            override val capabilities = setOf(Capability.ELEVATED_SHELL)
         }
         val m = CapabilityManager(
             providers = setOf(standardProvider, flipper),
@@ -116,25 +116,25 @@ class CapabilityManagerTest {
             hasFeature = { true },
             permissionChecker = PermissionChecker { true },
         )
-        assertTrue(m.statuses.value[ProviderKind.SHIZUKU] is ProviderStatus.NeedsSetup)
+        assertTrue(m.statuses.value[ProviderKind.ADB] is ProviderStatus.NeedsSetup)
 
         flipper.current = ProviderStatus.Ready
         ProviderStatusBus.notifyChanged()
 
         // The bus collects on the manager's Default-dispatcher scope — poll briefly.
         val deadline = System.currentTimeMillis() + 5_000
-        while (m.statuses.value[ProviderKind.SHIZUKU] !is ProviderStatus.Ready &&
+        while (m.statuses.value[ProviderKind.ADB] !is ProviderStatus.Ready &&
             System.currentTimeMillis() < deadline
         ) {
             Thread.sleep(25)
         }
-        assertEquals(ProviderStatus.Ready, m.statuses.value[ProviderKind.SHIZUKU])
+        assertEquals(ProviderStatus.Ready, m.statuses.value[ProviderKind.ADB])
     }
 
     @Test
     fun `refreshStatuses republishes live provider state synchronously`() {
         val m = manager()
-        assertTrue(m.statuses.value[ProviderKind.SHIZUKU] is ProviderStatus.Unavailable)
+        assertTrue(m.statuses.value[ProviderKind.ADB] is ProviderStatus.Unavailable)
         m.refreshStatuses()
         assertEquals(m.providerStatuses(), m.statuses.value)
     }

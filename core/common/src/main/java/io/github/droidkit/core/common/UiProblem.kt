@@ -38,7 +38,7 @@ sealed interface RecoveryAction {
     /** Permission was permanently denied — only system Settings can fix it. */
     data object OpenAppSettings : RecoveryAction
 
-    /** An elevated provider needs setup/grant (Shizuku, ADB, root). */
+    /** An elevated provider needs setup/grant (wireless ADB, root). */
     data object RequestElevatedAccess : RecoveryAction
 
     /** Recovery lives on another in-app screen (e.g. Settings). Route is opaque to the model. */

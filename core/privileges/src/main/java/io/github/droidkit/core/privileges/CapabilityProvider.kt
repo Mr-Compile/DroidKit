@@ -4,7 +4,7 @@ import io.github.droidkit.core.common.Capability
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
-enum class ProviderKind { STANDARD, SHIZUKU, ADB, ROOT }
+enum class ProviderKind { STANDARD, ADB, ROOT }
 
 sealed interface ProviderStatus {
     data object Ready : ProviderStatus

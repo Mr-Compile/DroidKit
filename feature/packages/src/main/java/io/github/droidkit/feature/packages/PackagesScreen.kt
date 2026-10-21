@@ -85,14 +85,14 @@ fun PackagesScreen(
                             InfoRow("Active provider", e.kind.name, copyable = false)
                         PackagesViewModel.ElevatedState.Unavailable -> {
                             Text(
-                                "Package controls need an elevated provider — Shizuku, " +
-                                    "root, or a connected wireless ADB session.",
+                                "Package controls need an elevated provider — " +
+                                    "root or a connected wireless ADB session.",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedButton(onClick = {
                                     scope.launch { viewModel.requestAccess() }
-                                }) { Text("Grant via Shizuku/Root") }
+                                }) { Text("Grant root access") }
                                 OutlinedButton(onClick = onOpenAdb) { Text("Wireless ADB") }
                             }
                         }

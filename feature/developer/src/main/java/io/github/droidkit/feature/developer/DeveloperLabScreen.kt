@@ -100,7 +100,7 @@ fun DeveloperLabScreen(
                 Text(
                     "Launch system screens, test deep links, and inspect device state. " +
                         "Elevated log access uses whichever provider is connected " +
-                        "(Shizuku, root, or wireless ADB).",
+                        "(root or wireless ADB).",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -242,7 +242,7 @@ fun DeveloperLabScreen(
                     ) {
                         Text(
                             when (val p = activeProvider) {
-                                null -> "No elevated provider connected — connect Shizuku or wireless ADB first."
+                                null -> "No elevated provider connected — connect wireless ADB or grant root first."
                                 else -> "Active provider: ${p.name.lowercase()}"
                             },
                             style = MaterialTheme.typography.bodySmall,
@@ -280,7 +280,7 @@ fun DeveloperLabScreen(
                             DeveloperViewModel.LogState.Loading ->
                                 Text("Reading…", style = MaterialTheme.typography.bodyMedium)
                             DeveloperViewModel.LogState.NoProvider -> Text(
-                                "No elevated provider available — open the ADB Lab or grant Shizuku first.",
+                                "No elevated provider available — open the ADB Lab or grant root first.",
                                 color = MaterialTheme.colorScheme.error,
                             )
                             is DeveloperViewModel.LogState.Failed -> Text(

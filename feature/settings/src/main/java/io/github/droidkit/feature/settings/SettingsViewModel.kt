@@ -66,7 +66,7 @@ class SettingsViewModel @Inject constructor(
         capabilityManager.refreshStatuses()
     }
 
-    /** Runs the provider's own grant flow (Shizuku prompt, root-manager prompt). */
+    /** Runs the provider's own grant flow (root-manager prompt). */
     fun requestGrant(kind: ProviderKind) {
         viewModelScope.launch {
             _grantBusy.value = true

@@ -36,7 +36,7 @@ object ToolsFeature : FeatureContribution {
             route = "permissions",
             type = SearchResultType.PAGE,
             iconKey = ToolIconKeys.SECURITY,
-            keywords = setOf("permission", "shizuku", "root", "adb", "access"),
+            keywords = setOf("permission", "root", "adb", "access", "elevated"),
         ),
         SearchEntry(
             id = "page.privacy",

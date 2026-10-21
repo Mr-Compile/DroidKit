@@ -66,8 +66,8 @@ private val pages = listOf(
     Page(
         Icons.Filled.Shield,
         "Optional capabilities",
-        "Core tools work with standard Android access. Shizuku, wireless " +
-            "ADB, and root are optional providers you connect later in " +
+        "Core tools work with standard Android access. Wireless ADB and " +
+            "root are optional providers you connect later in " +
             "Settings → Advanced access — nothing requires them.",
     ),
     Page(

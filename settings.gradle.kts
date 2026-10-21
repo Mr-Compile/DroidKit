@@ -29,7 +29,6 @@ include(":core:system")
 include(":core:privileges")
 
 include(":privilege:standard")
-include(":privilege:shizuku")
 include(":privilege:adb")
 include(":privilege:root")
 

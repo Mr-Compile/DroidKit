@@ -67,9 +67,7 @@ class PackagesViewModel @Inject constructor(
     }
 
     suspend fun requestAccess() {
-        for (kind in listOf(ProviderKind.SHIZUKU, ProviderKind.ROOT)) {
-            if (elevatedOps.requestGrant(kind)) break
-        }
+        elevatedOps.requestGrant(ProviderKind.ROOT)
         refreshElevated()
     }
 

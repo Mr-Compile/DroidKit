@@ -133,7 +133,7 @@ private fun NoProviderCard(onOpenAdb: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Elevated provider required", style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "AppOps needs an elevated provider — Shizuku (preferred), root, or a live " +
+                    "AppOps needs an elevated provider — root or a live " +
                         "wireless-ADB session. Grant access in Settings → Advanced access, or open " +
                         "Wireless ADB to pair and connect.",
                     style = MaterialTheme.typography.bodyMedium,

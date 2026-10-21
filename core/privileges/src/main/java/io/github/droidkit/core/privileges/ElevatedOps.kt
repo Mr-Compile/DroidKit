@@ -367,7 +367,7 @@ interface ElevatedAuditSink {
 
 /**
  * Routes [ElevatedAction]s to an available [ElevatedExecutor]. Features never
- * see which provider executed; selection prefers SHIZUKU, then ROOT, then ADB.
+ * see which provider executed; selection prefers ROOT, then ADB.
  */
 @Singleton
 class ElevatedOps @Inject constructor(
@@ -375,7 +375,7 @@ class ElevatedOps @Inject constructor(
     setups: Set<@JvmSuppressWildcards ProviderSetup>,
     private val auditSinks: Set<@JvmSuppressWildcards ElevatedAuditSink>,
 ) {
-    private val preferenceOrder = listOf(ProviderKind.SHIZUKU, ProviderKind.ROOT, ProviderKind.ADB)
+    private val preferenceOrder = listOf(ProviderKind.ROOT, ProviderKind.ADB)
     private val executorsByKind = executors.associateBy { it.kind }
     private val setupsByKind = setups.associateBy { it.kind }
 

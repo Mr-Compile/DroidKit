@@ -19,7 +19,7 @@ object ReleaseNotes {
             dateLabel = "Unreleased",
             highlights = listOf(
                 "Insights: on-device analytics dashboard with verdict ring, pass-rate trends and activity counters",
-                "Elevated access groundwork: Shizuku, wireless ADB and root providers behind a shared ElevatedOps layer",
+                "Elevated access groundwork: wireless ADB and root providers behind a shared ElevatedOps layer",
                 "AppOps viewer, package controls and the ADB Lab for pairing and structured actions",
                 "DroidKit Intelligence: optional Groq-powered assistant with your own key, personas, chat and confirmed proposals",
                 "Technician workflow: session intake labels, technician signature on reports and before/after session compare",

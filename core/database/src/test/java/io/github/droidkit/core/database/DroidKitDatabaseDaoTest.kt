@@ -148,7 +148,7 @@ class DroidKitDatabaseDaoTest {
     fun `elevated log records and counts`() = runBlocking {
         db.elevatedLogDao().insert(
             ElevatedActionLogEntity(
-                epochMs = 9, provider = "SHIZUKU", command = "id",
+                epochMs = 9, provider = "ADB", command = "id",
                 exitCode = 0, stderrSummary = null,
             ),
         )

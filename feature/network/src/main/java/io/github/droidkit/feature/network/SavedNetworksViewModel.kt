@@ -69,7 +69,7 @@ class SavedNetworksViewModel @Inject constructor(
                     UiProblem(
                         title = "Root access required",
                         message = "Saved Wi-Fi passwords live in a system store only " +
-                            "root can read — Shizuku and wireless ADB cannot reach it. " +
+                            "root can read — wireless ADB cannot reach it. " +
                             "On a rooted device, grant DroidKit when your root manager asks.",
                         severity = UiProblem.Severity.INFO,
                         recoveries = listOf(

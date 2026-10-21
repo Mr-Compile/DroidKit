@@ -133,7 +133,7 @@ fun BatteryScreen(
                     } else {
                         Text(
                             "A measured capacity % needs the kernel fuel gauge via " +
-                                "Shizuku, wireless ADB, or root — it is not exposed to apps.",
+                                "wireless ADB or root — it is not exposed to apps.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

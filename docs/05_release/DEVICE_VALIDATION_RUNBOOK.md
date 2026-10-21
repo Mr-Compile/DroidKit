@@ -28,12 +28,12 @@ as a crash or a fabricated value.
 | # | Steps | Expected |
 |---|-------|----------|
 | 1.1 | Open Settings → Advanced access | All providers listed with honest status — no "ready" claims before grants |
-| 1.2 | Shizuku: install Shizuku app, start it, tap grant in DroidKit | Status flips to Ready; denies cleanly if Shizuku absent |
-| 1.3 | With Shizuku ready → AppOps screen → change one app mode | Mode changes; revert works; audit log entry appears in Settings |
+| 1.2 | Wireless ADB: enable wireless debugging → guided pairing (code or QR) → connect | ADB provider flips to Ready; elevated tools light up |
+| 1.3 | With ADB ready → AppOps screen → change one app mode | Mode changes; revert works; audit log entry appears in Settings |
 | 1.4 | Wireless ADB: enable wireless debugging → Pair → enter host:port + code | Pairing completes; status shows connected |
 | 1.5 | ADB Lab → Connect (host:port) → run a structured action (WhoAmI / GetProp) | Real output; audit log records it |
 | 1.6 | Root (rooted device only): grant su in your root manager | Provider Ready after uid=0 check; elevated tools work via root |
-| 1.7 | Non-rooted / no Shizuku device | Every elevated tool shows capability-unavailable, no crash |
+| 1.7 | Non-rooted / no ADB session device | Every elevated tool shows capability-unavailable, no crash |
 
 ## 2. Reports / technician workflow
 
@@ -104,8 +104,8 @@ Record one row per physical device. "N/A" is valid only with a reason
 
 | Gate | Item | Result | Notes/log ref |
 |------|------|--------|---------------|
-| DK-060 | Shizuku grant → Ready (runbook 1.2) | PENDING | |
-| DK-060 | Elevated action via Shizuku (1.3) | PENDING | |
+| DK-060 | Wireless ADB pair + connect → Ready (runbook 1.2) | PENDING | |
+| DK-060 | Elevated action via ADB provider (1.3) | PENDING | |
 | DK-061 | Wireless ADB pair + connect (1.4) | PENDING | |
 | DK-061 | Structured action + audit log (1.5) | PENDING | |
 | DK-062 | Root grant → provider Ready (1.6) | PENDING | |

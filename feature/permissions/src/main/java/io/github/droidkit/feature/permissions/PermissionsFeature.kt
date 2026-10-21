@@ -34,7 +34,7 @@ object PermissionsFeature : FeatureContribution {
             description = "Per-app granted/declared permissions and runtime state",
             category = ToolCategory.APPS,
             route = ROUTE,
-            requiredCapabilities = setOf(Capability.SHIZUKU_SERVICE),
+            requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
             keywords = setOf("perms", "apps", "granted", "declared"),
             iconKey = ToolIconKeys.APP_PERMS,

@@ -82,8 +82,7 @@ class CapabilityManager @Inject constructor(
 
     private fun providerKindFor(capability: Capability): ProviderKind = when (capability) {
         Capability.STANDARD_API, Capability.RUNTIME_PERMISSION -> ProviderKind.STANDARD
-        Capability.ELEVATED_SHELL -> ProviderKind.SHIZUKU
-        Capability.SHIZUKU_SERVICE -> ProviderKind.SHIZUKU
+        Capability.ELEVATED_SHELL -> ProviderKind.ADB
         Capability.ADB_SHELL -> ProviderKind.ADB
         Capability.ROOT -> ProviderKind.ROOT
     }

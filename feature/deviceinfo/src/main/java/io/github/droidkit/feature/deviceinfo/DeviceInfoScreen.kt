@@ -159,14 +159,14 @@ fun DeviceInfoScreen(
                 SectionCard(title = "Advanced detail") {
                     Text(
                         "Read-only deep snapshot via the active elevated provider " +
-                            "(Shizuku, root or wireless ADB): system props, thermal zones, " +
+                            "(root or wireless ADB): system props, thermal zones, " +
                             "/proc details, partitions, battery and Wi-Fi dumpsys fields. " +
                             "Nothing here is modified.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                     when {
                         elevatedProvider == null && advanced == null ->
-                            InfoRow("Elevated provider", "Not available — set up Shizuku, root or ADB in Permission Center")
+                            InfoRow("Elevated provider", "Not available — set up wireless ADB or root in Permission Center")
                         advanced == null && !advancedLoading ->
                             Button(onClick = { viewModel.loadAdvancedDetail() }) {
                                 Text("Load advanced detail")

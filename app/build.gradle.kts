@@ -56,7 +56,6 @@ dependencies {
     implementation(projects.core.privileges)
 
     implementation(projects.privilege.standard)
-    implementation(projects.privilege.shizuku)
     implementation(projects.privilege.adb)
     implementation(projects.privilege.root)
 

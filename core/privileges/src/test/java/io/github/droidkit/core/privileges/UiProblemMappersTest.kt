@@ -24,8 +24,8 @@ class UiProblemMappersTest {
     @Test
     fun `needs provider maps to elevated-access recovery`() {
         val problem = BlockedReason.NeedsProvider(
-            ProviderKind.SHIZUKU,
-            ProviderStatus.NeedsSetup("grant in Shizuku"),
+            ProviderKind.ADB,
+            ProviderStatus.NeedsSetup("pair wireless ADB"),
         ).toUiProblem()
         assertTrue(problem.recoveries.any { it == RecoveryAction.RequestElevatedAccess })
     }

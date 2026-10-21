@@ -391,7 +391,7 @@ const DK_WORDMARK = `<span style="display:inline-flex;align-items:center;gap:8px
 /* =====================================================================
    MOCK DEVICE STATE — a Pixel-8-Pro-ish phone, mid-setup:
    CAMERA granted; RECORD_AUDIO / BLUETOOTH_CONNECT / BLUETOOTH_SCAN not
-   granted; SHIZUKU + ROOT unavailable; ADB needs pairing. Everything
+   granted; ROOT unavailable; ADB needs pairing. Everything
    else ready, so V2 tools show real Blocked badges.
    ===================================================================== */
 const DEVICE = {
@@ -443,7 +443,6 @@ const DEVICE = {
 };
 const PROVIDERS = {
   STANDARD: { status: "ready" },
-  SHIZUKU:  { status: "unavailable", reason: "Shizuku service not running" },
   ADB:      { status: "setup", instructions: "enable wireless debugging in Developer options, then pair" },
   ROOT:     { status: "unavailable", reason: "No root provider registered" },
 };
@@ -501,7 +500,7 @@ const S = {
 /* ---------------- tools (mirrors every *Feature.kt tools list) ------- */
 const CAT = { DEVICE:"DEVICE", DIAGNOSTICS:"DIAGNOSTICS", APPS:"APPS", CONNECTIVITY:"CONNECTIVITY", HARDWARE:"HARDWARE", DEVELOPER:"DEVELOPER", REPORTS:"REPORTS" };
 const SAFE=0, MINOR=1, SYSCHG=2, HIGH=3, ADV=4;
-const CAP = { STD:"STANDARD_API", RUNTIME:"RUNTIME_PERMISSION", ELEV:"ELEVATED_SHELL", SHIZUKU:"SHIZUKU_SERVICE", ADB:"ADB_SHELL", ROOT:"ROOT" };
+const CAP = { STD:"STANDARD_API", RUNTIME:"RUNTIME_PERMISSION", ELEV:"ELEVATED_SHELL", ADB:"ADB_SHELL", ROOT:"ROOT" };
 const P = {
   INTERNET:"android.permission.INTERNET", ANS:"android.permission.ACCESS_NETWORK_STATE",
   REC:"android.permission.RECORD_AUDIO", CAM:"android.permission.CAMERA",
@@ -534,7 +533,7 @@ const TOOLS = [
   t("apps.components","Component Explorer","Activities, services, receivers and providers per app",CAT.APPS,"apps"),
   t("apps.permissions","Permission Inspector","Requested permissions grouped by grant state",CAT.APPS,"apps"),
   t("permissions.center","Permission Center","DroidKit's own declared and runtime permissions",CAT.APPS,"permissions"),
-  t("permissions.inspector","Permission Inspector","Per-app granted/declared permissions and runtime state",CAT.APPS,"permissions",{caps:[CAP.SHIZUKU],phase:"V2"}),
+  t("permissions.inspector","Permission Inspector","Per-app granted/declared permissions and runtime state",CAT.APPS,"permissions",{caps:[CAP.ELEV],phase:"V2"}),
   t("appops.view","AppOps Viewer","Per-app AppOps modes (usage access, overlays, background)",CAT.APPS,"appops",{caps:[CAP.ELEV],phase:"V2"}),
   t("appops.set","AppOps Controls","Change AppOps modes — modifies system permission state",CAT.APPS,"appops",{safety:SYSCHG,caps:[CAP.ELEV],phase:"V2"}),
   t("packages.disable","Disable Package","Enable/disable packages — bloatware control",CAT.APPS,"packages",{safety:HIGH,caps:[CAP.ELEV],phase:"V2"}),
@@ -718,7 +717,7 @@ const TEST_KW = {
 /* Non-tool searchable destinations, mirroring ToolsFeature.searchEntries. */
 const PAGES = [
   {id:"page.settings",title:"Settings",subtitle:"Theme, AI assistant, elevated access",route:"settings",group:"Settings",icon:"settings",kw:["preferences","options","theme","dark mode","appearance"]},
-  {id:"page.permissions",title:"Permissions & Access",subtitle:"Android permissions and elevated providers",route:"permissions",group:"Pages",icon:"security",kw:["permission","shizuku","root","adb","access"]},
+  {id:"page.permissions",title:"Permissions & Access",subtitle:"Android permissions and elevated providers",route:"permissions",group:"Pages",icon:"security",kw:["permission","root","adb","access","elevated"]},
   {id:"page.privacy",title:"Privacy Center",subtitle:"What stays on-device and what can go online",route:"settings/privacy",group:"Settings",icon:"privacy_tip",kw:["privacy","data","local","offline"]},
   {id:"page.about",title:"About DroidKit",subtitle:"Version, support and legal information",route:"settings/about",group:"Help",icon:"info",kw:["version","about","legal","developer"]},
   {id:"page.whats_new",title:"What's New",subtitle:"Release notes for this build",route:"settings/about/whats_new",group:"Help",icon:"new_releases",kw:["changelog","release","new","version"]},
@@ -759,9 +758,9 @@ function badgeLabel(r){
   if(api) return api.replace("Requires Android API","Needs API");
   return "Unavailable";
 }
-const CAP2KIND = { STANDARD_API:"STANDARD", RUNTIME_PERMISSION:"STANDARD", SHIZUKU_SERVICE:"SHIZUKU", ADB_SHELL:"ADB", ROOT:"ROOT" };
-const elevatedReady = () => ["SHIZUKU","ROOT","ADB"].some(k => PROVIDERS[k] && PROVIDERS[k].status === "ready");
-const elevatedProvider = () => ["SHIZUKU","ROOT","ADB"].find(k => PROVIDERS[k] && PROVIDERS[k].status === "ready") || null;
+const CAP2KIND = { STANDARD_API:"STANDARD", RUNTIME_PERMISSION:"STANDARD", ADB_SHELL:"ADB", ROOT:"ROOT" };
+const elevatedReady = () => ["ROOT","ADB"].some(k => PROVIDERS[k] && PROVIDERS[k].status === "ready");
+const elevatedProvider = () => ["ROOT","ADB"].find(k => PROVIDERS[k] && PROVIDERS[k].status === "ready") || null;
 function resolve(tool) {
   const reasons = [];
   if (tool.minSdk && DEVICE.sdkInt < tool.minSdk) reasons.push(`Requires Android API ${tool.minSdk}+`);
@@ -769,7 +768,7 @@ function resolve(tool) {
   tool.perms.forEach(p => { if (!S.perms[p]) reasons.push(`Permission required: ${p}`); });
   tool.caps.forEach(c => {
     if (c === "ELEVATED_SHELL") {
-      if (!elevatedReady()) reasons.push("Needs elevated provider: Shizuku, root, or a connected wireless ADB session");
+      if (!elevatedReady()) reasons.push("Needs elevated provider: root or a connected wireless ADB session");
       return;
     }
     const kind = CAP2KIND[c], p = PROVIDERS[kind];
@@ -1708,7 +1707,7 @@ function scrPrivacy(){
 const RELEASE_NOTES=[
   ["0.9.0-alpha.1","Unreleased",[
     "Insights: on-device analytics dashboard with verdict ring, pass-rate trends and activity counters",
-    "Elevated access groundwork: Shizuku, wireless ADB and root providers behind a shared ElevatedOps layer",
+    "Elevated access groundwork: wireless ADB and root providers behind a shared ElevatedOps layer",
     "AppOps viewer, package controls and the ADB Lab for pairing and structured actions",
     "DroidKit Intelligence: optional Groq-powered assistant with your own key, personas, chat and confirmed proposals",
     "Technician workflow: session intake labels, technician signature on reports and before/after session compare",
@@ -1761,7 +1760,7 @@ const HELP_CATS=[
     ["Where do saved results go?","Sessions and reports are stored on-device and listed under Reports. You can export a report as text or PDF, compare two sessions, or delete them individually."]]],
   ["Permissions",[
     ["Why does a tool ask for a permission?","Some tools need Android runtime permissions — for example the camera test needs CAMERA and the microphone test needs RECORD_AUDIO. Denying a permission shows PERMISSION_REQUIRED; the rest of the app keeps working."],
-    ["What is Advanced access?","Settings lists optional elevated providers (Shizuku, wireless ADB, root) for technician actions like AppOps changes. They are opt-in and off by default — every standard tool works without them."]]],
+    ["What is Advanced access?","Settings lists optional elevated providers (wireless ADB, root) for technician actions like AppOps changes. They are opt-in and off by default — every standard tool works without them."]]],
   ["Troubleshooting",[
     ["A field says \"Not exposed\" — is something broken?","No. Android hides some values on certain devices or versions. DroidKit reports what the system actually provides instead of guessing."],
     ["An elevated action says a provider is needed.","Open Settings → Advanced access, check the provider status and run its grant flow, or pair a wireless ADB session from the ADB Lab."]]],
@@ -1774,7 +1773,7 @@ const OSS_LICENSES=[
   ["Kotlin","JetBrains"],["Jetpack Compose (UI, Material3, Icons)","Google"],
   ["AndroidX Activity, Core, Lifecycle, Navigation","Google"],["AndroidX Room","Google"],
   ["AndroidX DataStore","Google"],["AndroidX CameraX","Google"],["Dagger Hilt","Google"],
-  ["kotlinx.coroutines","JetBrains"],["Shizuku API","RikkaApps"],
+  ["kotlinx.coroutines","JetBrains"],
 ];
 function scrAbout(){
   const updSub = S.upd==="checking" ? "Checking for updates…"
@@ -2072,7 +2071,7 @@ function scrDeviceInfo(){
     ${sectionCard("Hardware features", infoRow("NFC",f("android.hardware.nfc"),false)+infoRow("Bluetooth",f("android.hardware.bluetooth"),false)+infoRow("Bluetooth LE",f("android.hardware.bluetooth_le"),false)+infoRow("USB host",f("android.hardware.usb.host"),false)+infoRow("UWB",f("android.hardware.uwb"),false)+infoRow("Wi-Fi Aware",f("android.hardware.wifi.aware"),false)+infoRow("Satellite",f("android.hardware.telephony.satellite"),false)+infoRow("Telephony",f("android.hardware.telephony"),false)+infoRow("Location",f("android.hardware.location"),false)+copyBar("Hardware features"))}
     ${sectionCard("Access providers", provs+copyBar("Access providers","permissions","Permission Center"))}
     ${sectionCard("Advanced detail",
-      `<div class="t-mini sub">Read-only deep snapshot via the active elevated provider (Shizuku, root or wireless ADB): system props, thermal zones, /proc details, partitions, battery and Wi-Fi dumpsys fields. Nothing here is modified.</div>`+
+      `<div class="t-mini sub">Read-only deep snapshot via the active elevated provider (root or wireless ADB): system props, thermal zones, /proc details, partitions, battery and Wi-Fi dumpsys fields. Nothing here is modified.</div>`+
       (elevatedReady()
         ? (S.advLoaded
           ? infoRow("Source provider",providerLabel(elevatedProvider()),false)+
@@ -2091,7 +2090,7 @@ function scrDeviceInfo(){
             infoRow("System props total","612",false)+
             `<button class="textbtn" data-act="adv-load">Refresh</button>`
           :`<button class="btn-outline" style="margin-top:8px" data-act="adv-load">Load advanced detail</button>`)
-        : infoRow("Elevated provider","Not available — set up Shizuku, root or ADB in Permission Center",false)))}
+        : infoRow("Elevated provider","Not available — set up wireless ADB or root in Permission Center",false)))}
   </div>`;
 }
 function copyBar(name,route,label){
@@ -2140,7 +2139,7 @@ function scrBattery(){
       :"")+
       (elevatedReady()
         ?`<button class="textbtn" data-act="batt-measure" ${S.batt.measuring?"disabled":""}>${S.batt.measuring?"Reading fuel gauge…":"Measure via elevated access"}</button>`
-        :`<div class="t-mini sub" style="margin-top:4px">A measured capacity % needs the kernel fuel gauge via Shizuku, wireless ADB, or root — it is not exposed to apps.</div>
+        :`<div class="t-mini sub" style="margin-top:4px">A measured capacity % needs the kernel fuel gauge via wireless ADB or root — it is not exposed to apps.</div>
           <button class="textbtn" data-nav="permissions">Open Permission Center</button>`))}
     ${sectionCard("Capacity estimate",
       `<div class="t-mini sub">Tracks real charge flowing into the pack across sessions — an estimate, not a measured value.</div>`+
@@ -2479,7 +2478,7 @@ function scrPermCenter(){
 /* ---------- developer lab ---------- */
 function scrDeveloper(){
   return `<div class="pad col">
-    <div class="t-body">Launch system screens, test deep links, and inspect device state. Elevated log access uses whichever provider is connected (Shizuku, root, or wireless ADB).</div>
+    <div class="t-body">Launch system screens, test deep links, and inspect device state. Elevated log access uses whichever provider is connected (root or wireless ADB).</div>
     <div id="devErr" class="t-mini err"></div>
     <div class="sec-head">Display metrics</div>
     <div class="card">
@@ -2507,7 +2506,7 @@ function scrDeveloper(){
     </div></div>
     <div class="sec-head">Log viewer</div>
     <div class="card"><div class="col">
-      <div class="t-mini sub">${elevatedReady()?`Active provider: ${elevatedProvider().toLowerCase()}`:"No elevated provider connected — connect Shizuku or wireless ADB first."}</div>
+      <div class="t-mini sub">${elevatedReady()?`Active provider: ${elevatedProvider().toLowerCase()}`:"No elevated provider connected — connect wireless ADB or grant root first."}</div>
       <input class="field" id="loglines" placeholder="Lines (max 5000)" value="200">
       <input class="field" id="logtag" placeholder="Tag filter (optional)">
       <button class="btn-outline full" data-act="devlog" ${elevatedReady()?"":"disabled"}>Read logcat</button>
@@ -2544,7 +2543,7 @@ function scrReportDetail(id){
       ${infoRow("Device",`${DEVICE.manufacturer} ${DEVICE.model}`)}
       ${infoRow("Android",`${DEVICE.androidRelease} (API ${DEVICE.sdkInt}), patch ${DEVICE.securityPatch}`)}
       ${infoRow("RAM",DEVICE.ramTotalMb+" MB")}${infoRow("Display",`${DEVICE.display.w}x${DEVICE.display.h} ${DEVICE.display.dpi}dpi 120Hz`)}
-      ${infoRow("Providers","STANDARD ready; SHIZUKU unavailable; ADB setup required; ROOT unavailable")}
+      ${infoRow("Providers","STANDARD ready; ADB setup required; ROOT unavailable")}
     </div>
     <div class="sec-head">Results</div>
     ${Object.keys(s.results).length?Object.entries(s.results).map(([tid,r])=>{
@@ -2814,7 +2813,7 @@ function renderOnboarding(){
   const pages=[
     [DK_MARK.replaceAll("SIZE","72"),"Welcome to DroidKit","A technician's toolkit for Android: diagnostics, device inspection, connectivity labs, and repair reports — all running natively on this device.","TOOLS FOR A HEALTHIER ANDROID"],
     [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`,"Honest results, always","DroidKit never fabricates a reading. Missing hardware shows NOT SUPPORTED, denied permissions show PERMISSION REQUIRED — neither is a failure, both are facts about the device."],
-    [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`,"Optional capabilities","Core tools work with standard Android access. Shizuku, wireless ADB, and root are optional providers you connect later in Settings → Advanced access — nothing requires them."],
+    [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`,"Optional capabilities","Core tools work with standard Android access. Wireless ADB and root are optional providers you connect later in Settings → Advanced access — nothing requires them."],
     [`<svg viewBox="0 0 24 24" width="72" height="72" fill="currentColor" style="display:block"><path d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>`,"Your data stays here","Reports, scan history, and diagnostics are stored locally. AI assistance is off by default and opt-in only — you choose what leaves the device."],
   ];
   const i=Math.min(S.obPage,pages.length-1), [ic,ti,bo,tag]=pages[i];
@@ -2841,7 +2840,7 @@ function appopsFor(pkg){
 function scrAppOps(){
   if(!elevatedReady()) return `<div class="pad" style="display:flex;align-items:center;justify-content:center;min-height:80%">
     <div class="card"><div class="t-small">Elevated provider required</div>
-      <div class="t-body" style="margin-top:8px">AppOps needs an elevated provider — Shizuku (preferred), root, or a live wireless-ADB session. Grant access in Settings → Advanced access, or open Wireless ADB to pair and connect.</div>
+      <div class="t-body" style="margin-top:8px">AppOps needs an elevated provider — root or a live wireless-ADB session. Grant access in Settings → Advanced access, or open Wireless ADB to pair and connect.</div>
       <button class="textbtn" data-nav="adb" style="margin-top:4px">Open Wireless ADB</button></div></div>`;
   if(S.appopsSel){
     const ops=appopsFor(S.appopsSel);
@@ -2867,8 +2866,8 @@ function appopsListHtml(){
 /* ---------- package controls ---------- */
 function scrPackages(){
   if(!elevatedReady()) return `<div class="pad col">
-    ${sectionCard("Elevated access",`<div class="t-body">Package controls need an elevated provider — Shizuku, root, or a connected wireless ADB session.</div>
-      <div class="row" style="margin-top:8px"><button class="btn-outline" data-act="pkg-grant">Grant via Shizuku/Root</button>
+    ${sectionCard("Elevated access",`<div class="t-body">Package controls need an elevated provider — root or a connected wireless ADB session.</div>
+      <div class="row" style="margin-top:8px"><button class="btn-outline" data-act="pkg-grant">Grant root access</button>
       <button class="btn-outline" data-nav="adb">Wireless ADB</button></div>`)}
   </div>`;
   return `<div class="pad col">
@@ -3127,7 +3126,7 @@ On Android &lt; 11 this section may be absent.</pre></div>
       closeOverlay(); startGuided(c||null,d||null); break; }
     case "save-tech": S.technician=($("#techName")?.value||"").trim(); toast("Technician saved"); break;
     case "grant-provider": nav("adb"); break;
-    case "pkg-grant": toast("No Shizuku/root provider on this mock device — pair wireless ADB instead"); break;
+    case "pkg-grant": toast("No root on this mock device — pair wireless ADB instead"); break;
     case "clear-elevlog": S.elevLog=[]; render(); break;
     case "ai-toggle": S.ai.enabled=!S.ai.enabled; render(); break;
     case "ai-autosum": S.ai.autoSum=!S.ai.autoSum; render(); break;

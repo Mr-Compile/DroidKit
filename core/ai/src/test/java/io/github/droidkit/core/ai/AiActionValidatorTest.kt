@@ -86,7 +86,7 @@ class AiActionValidatorTest {
     fun `open_tool blocked when capability unsatisfied`() {
         val vp = validator().validate(AiProposal.OpenTool("needs.elevated"))
         assertFalse(vp.allowed)
-        assertTrue(vp.blockedReason!!.contains("SHIZUKU") || vp.blockedReason!!.isNotBlank())
+        assertTrue(vp.blockedReason!!.contains("ADB") || vp.blockedReason!!.isNotBlank())
     }
 
     @Test

@@ -25,6 +25,5 @@ object OpenSourceLicenses {
         LicenseEntry("AndroidX CameraX", "Google", APACHE_2),
         LicenseEntry("Dagger Hilt", "Google", APACHE_2),
         LicenseEntry("kotlinx.coroutines", "JetBrains", APACHE_2),
-        LicenseEntry("Shizuku API", "RikkaApps", APACHE_2),
     )
 }

@@ -18,12 +18,12 @@
   (diagnostics, tests, tools, scans, snapshots, reports, elevated
   actions) and most-used tools. 30-day / all-time range chips, honest
   empty states, summary card on Home, tool entry under Reports
-- Elevated capability providers (J18/J19/J20 groundwork): Shizuku provider
-  (live status, grant flow, `newProcess` exec), wireless ADB provider
+- Elevated capability providers (J19/J20 groundwork): wireless ADB provider
   (custom SPAKE2 pairing, TLS/plain sessions, RSA-2048 identity in
-  AndroidKeyStore, structured allow-listed actions), and a root `su`
-  executor — all routed through a shared `ElevatedOps`/`ELEVATED_SHELL`
-  abstraction so features never touch provider implementations
+  AndroidKeyStore, structured allow-listed actions) and a root `su`
+  executor — routed through a shared `ElevatedOps`/`ELEVATED_SHELL`
+  abstraction so features never touch provider implementations. No
+  third-party privilege app required
 - Elevated feature screens: AppOps viewer + mode controls, package
   controls (disable/clear data/uninstall-for-user with high-impact
   confirmation), and the ADB Lab (pair, connect, structured actions)

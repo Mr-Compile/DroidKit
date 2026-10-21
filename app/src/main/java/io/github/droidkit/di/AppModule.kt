@@ -41,7 +41,6 @@ import io.github.droidkit.feature.tools.ToolsFeature
 import io.github.droidkit.feature.usb.UsbFeature
 import io.github.droidkit.privilege.adb.WirelessAdbProvider
 import io.github.droidkit.privilege.root.RootProvider
-import io.github.droidkit.privilege.shizuku.ShizukuProvider
 import io.github.droidkit.privilege.standard.StandardAndroidProvider
 import javax.inject.Singleton
 
@@ -66,10 +65,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideShizukuProvider() = ShizukuProvider()
-
-    @Provides
-    @Singleton
     fun provideAdbProvider(@ApplicationContext context: Context) = WirelessAdbProvider(context)
 
     @Provides
@@ -83,12 +78,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideProviders(
-        shizuku: ShizukuProvider,
         adb: WirelessAdbProvider,
         root: RootProvider,
     ): Set<CapabilityProvider> = setOf(
         StandardAndroidProvider(),
-        shizuku,
         adb,
         root,
     )
@@ -96,17 +89,15 @@ object AppModule {
     @Provides
     @Singleton
     fun provideExecutors(
-        shizuku: ShizukuProvider,
         adb: WirelessAdbProvider,
         root: RootProvider,
-    ): Set<ElevatedExecutor> = setOf(shizuku, root, adb)
+    ): Set<ElevatedExecutor> = setOf(root, adb)
 
     @Provides
     @Singleton
     fun provideSetups(
-        shizuku: ShizukuProvider,
         root: RootProvider,
-    ): Set<ProviderSetup> = setOf(shizuku, root)
+    ): Set<ProviderSetup> = setOf(root)
 
     @Provides
     @Singleton
