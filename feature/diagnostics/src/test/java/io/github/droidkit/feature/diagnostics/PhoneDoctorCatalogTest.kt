@@ -37,6 +37,21 @@ class PhoneDoctorCatalogTest {
         }
     }
 
+    @Test fun `listener tests resolve to their dedicated screens`() {
+        assertEquals(
+            PhoneDoctorRoute.HeadsetJack,
+            routeFor(PhoneDoctorTests.findById("audio.headset_jack")!!),
+        )
+        assertEquals(
+            PhoneDoctorRoute.VolumeButtons,
+            routeFor(PhoneDoctorTests.findById("buttons.volume")!!),
+        )
+        assertEquals(
+            PhoneDoctorRoute.ChargingCheck,
+            routeFor(PhoneDoctorTests.findById("power.charging")!!),
+        )
+    }
+
     @Test fun `every catalog test is searchable with a real route and icon`() {
         val entries = DiagnosticsFeature.searchEntries
         val byId = entries.associateBy { it.id }

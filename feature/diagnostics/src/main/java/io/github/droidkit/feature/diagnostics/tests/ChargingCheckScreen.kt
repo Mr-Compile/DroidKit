@@ -1,5 +1,7 @@
 package io.github.droidkit.feature.diagnostics.tests
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
@@ -10,20 +12,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
@@ -43,11 +45,10 @@ fun ChargingCheckScreen(
 ) {
     val context = LocalContext.current
     var reading by remember { mutableStateOf<BatteryReading?>(null) }
-    var refreshes by remember { mutableIntStateOf(0) }
+    var plugEvents by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    fun read(): BatteryReading? {
-        val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-            ?: return null
+    fun parse(intent: Intent?): BatteryReading? {
+        if (intent == null) return null
         val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
         val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
@@ -73,10 +74,34 @@ fun ChargingCheckScreen(
         )
     }
 
+    // Live plug/unplug detection: the sticky ACTION_BATTERY_CHANGED delivers the
+    // current state on registration, then every transition fires the receiver.
+    DisposableEffect(Unit) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context, intent: Intent) {
+                val next = parse(intent) ?: return
+                val prev = reading
+                if (prev != null && (prev.charging != next.charging || prev.plugLabel != next.plugLabel)) {
+                    plugEvents = plugEvents + (
+                        if (next.charging) "Plugged in (${next.plugLabel})" else "Unplugged"
+                        )
+                }
+                reading = next
+            }
+        }
+        ContextCompat.registerReceiver(
+            context,
+            receiver,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+
     LaunchedEffect(Unit) {
-        val r = read()
-        reading = r
-        if (r == null && autoResult) {
+        // Wait a beat for the sticky broadcast before declaring unsupported.
+        kotlinx.coroutines.delay(1_500)
+        if (reading == null && autoResult) {
             onResult(TestResultState.NOT_SUPPORTED, "Battery status broadcast unavailable")
         }
     }
@@ -107,11 +132,16 @@ fun ChargingCheckScreen(
                     Row { Text("Level", Modifier.weight(1f)); Text("${r.levelPercent}%") }
                     Row { Text("Status", Modifier.weight(1f)); Text(r.statusLabel) }
                     Row { Text("Plug", Modifier.weight(1f)); Text(r.plugLabel) }
-                    Button(
-                        onClick = { reading = read(); refreshes++ },
+                    Text(
+                        "Live — updates as soon as a charger connects or disconnects.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp),
-                    ) {
-                        Text("Refresh reading")
+                    )
+                    if (plugEvents.isNotEmpty()) {
+                        plugEvents.takeLast(6).forEach {
+                            Text(it, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }

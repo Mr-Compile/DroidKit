@@ -114,6 +114,23 @@ object PhoneDoctorTests {
             permission = Manifest.permission.RECORD_AUDIO,
         ),
         PhoneDoctorTest(
+            id = "audio.headset_jack",
+            title = "Headset jack / USB-C audio",
+            category = "Audio",
+            instructions = "Insert and remove a wired headset (3.5 mm or USB-C). " +
+                "The live device list should show it appear and disappear. " +
+                "If your device has no wired audio path at all, mark the test failed only " +
+                "if a known-good headset is never detected.",
+        ),
+        PhoneDoctorTest(
+            id = "buttons.volume",
+            title = "Volume buttons",
+            category = "Buttons",
+            instructions = "Press volume up and volume down once each. " +
+                "Each press should register below. " +
+                "Power and other hardware keys are not capturable by apps and are not tested.",
+        ),
+        PhoneDoctorTest(
             id = "camera.front",
             title = "Front camera",
             category = "Camera",
@@ -184,8 +201,9 @@ object PhoneDoctorTests {
             id = "power.charging",
             title = "Charging / battery",
             category = "Power",
-            instructions = "Review the battery readings. Plug in a charger and confirm the " +
-                "charging state changes to charging and the plug source appears.",
+            instructions = "The charging state updates live. Plug a charger into the port " +
+                "and unplug it — the plug source should appear and disappear in the event " +
+                "log. No plug event after a solid connection means a port or cable fault.",
         ),
     )
 
@@ -201,7 +219,8 @@ object PhoneDoctorTests {
             "display.color", "display.dead_pixel",
             "touch.grid", "touch.multitouch",
             "haptics.vibration",
-            "audio.speaker", "audio.microphone",
+            "audio.speaker", "audio.microphone", "audio.headset_jack",
+            "buttons.volume",
             "camera.front", "camera.rear", "camera.flash",
             "connectivity.wifi", "connectivity.bluetooth",
             "connectivity.nfc", "connectivity.usb",

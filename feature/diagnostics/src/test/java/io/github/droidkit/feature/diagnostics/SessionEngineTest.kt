@@ -12,9 +12,9 @@ class SessionEngineTest {
     private fun engine() = SessionEngine(PhoneDoctorTests.ALL)
 
     @Test fun `registry contains core and hardware tests`() {
-        assertEquals(21, PhoneDoctorTests.ALL.size)
+        assertEquals(23, PhoneDoctorTests.ALL.size)
         assertEquals(10, PhoneDoctorTests.CORE.size)
-        assertEquals(11, PhoneDoctorTests.HARDWARE.size)
+        assertEquals(13, PhoneDoctorTests.HARDWARE.size)
         assertEquals(PhoneDoctorTests.CORE.last().id, PhoneDoctorTests.ALL[9].id)
     }
 

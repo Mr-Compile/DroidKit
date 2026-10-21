@@ -66,6 +66,7 @@ object DroidKitTestColors {
         "Camera" to Color(0xFFF38BA8),
         "Connectivity" to Color(0xFF64B5F6),
         "Power" to Color(0xFFF6C453),
+        "Buttons" to Color(0xFF9CCC65),
     )
 
     private val light = mapOf(
@@ -77,6 +78,7 @@ object DroidKitTestColors {
         "Camera" to Color(0xFFB23A6B),
         "Connectivity" to Color(0xFF2D6BCF),
         "Power" to Color(0xFF9A6A00),
+        "Buttons" to Color(0xFF558B2F),
     )
 
     fun accent(category: String, darkTheme: Boolean): Color? =

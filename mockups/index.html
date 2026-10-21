@@ -532,6 +532,8 @@ const S = {
   ]},
   ble: { scanning:false, results:[], gatt:{}, raw:{} },
   snapshots: [], snapSel: { before:null, after:null },
+  headset: { plugged:false, sawIn:false, sawOut:false, events:[] },
+  volUp: false, volDown: false, plugged: false, plugEvents: [],
   sensorRec: { recording:false, samples:0 },
   sensorCheck: { running:false, done:false, counts:{} },
   camExp: {},               // cameraId -> {sizes,modes} expanded state
@@ -743,7 +745,7 @@ const TEST_ICON = {
   "audio.speaker":"volume_up","audio.microphone":"mic","camera.front":"photo_camera","camera.rear":"photo_camera",
   "camera.flash":"flash_on","connectivity.wifi":"wifi","connectivity.bluetooth":"bluetooth",
   "connectivity.location":"gps_fixed","connectivity.nfc":"nfc","connectivity.usb":"usb",
-  "power.charging":"battery_charging_full",
+  "power.charging":"battery_charging_full","audio.headset_jack":"alt_route","buttons.volume":"volume_up",
 };
 /* Keyword aliases, mirroring Tool.keywords / SearchEntry.keywords. */
 const TOOL_KW = {
@@ -796,6 +798,7 @@ const TEST_KW = {
   "connectivity.bluetooth":["bt","radio"],"connectivity.location":["gps","gnss","location"],
   "connectivity.nfc":["nfc","contactless","tag"],"connectivity.usb":["usb","otg","host"],
   "power.charging":["charge","charger","plug","battery"],
+  "audio.headset_jack":["headset","headphones","3.5mm","usb-c audio","earphones"],"buttons.volume":["volume","buttons","keys","volume up","volume down"],
 };
 /* Non-tool searchable destinations, mirroring ToolsFeature.searchEntries. */
 const PAGES = [
@@ -879,6 +882,8 @@ const TESTS = [
   {id:"sensor.magnetometer",title:"Magnetometer",cat:"Sensors",instr:"Rotate the phone or move a magnet nearby. Field strength values should respond to orientation and magnets.",sensor:2},
   {id:"audio.speaker",title:"Speaker",cat:"Audio",instr:"Tap Play and confirm a clear tone comes from the speaker. Repeat to check consistency. Distortion, crackle or silence are failures."},
   {id:"audio.microphone",title:"Microphone",cat:"Audio",instr:"Record a few seconds of speech, then play it back. Confirm your voice is audible and clear. This test needs microphone permission.",perm:P.REC},
+  {id:"audio.headset_jack",title:"Headset jack / USB-C audio",cat:"Audio",instr:"Insert and remove a wired headset (3.5 mm or USB-C). The live device list should show it appear and disappear. If your device has no wired audio path at all, mark the test failed only if a known-good headset is never detected."},
+  {id:"buttons.volume",title:"Volume buttons",cat:"Buttons",instr:"Press volume up and volume down once each. Each press should register below. Power and other hardware keys are not capturable by apps and are not tested."},
   {id:"camera.front",title:"Front camera",cat:"Camera",instr:"Check the front camera preview renders a live image. Cover the lens briefly to confirm the feed is real.",perm:P.CAM},
   {id:"camera.rear",title:"Rear camera",cat:"Camera",instr:"Check the rear camera preview renders a live image. Cover the lens briefly to confirm the feed is real.",perm:P.CAM},
   {id:"camera.flash",title:"Flash",cat:"Camera",instr:"Toggle the torch on and off while watching the rear of the device. The LED should light clearly.",perm:P.CAM},
@@ -887,7 +892,7 @@ const TESTS = [
   {id:"connectivity.location",title:"Location / GPS",cat:"Connectivity",instr:"Checks GNSS capability, provider state and the cached fix. Tap Get live fix to prove GNSS acquires a position. Needs location permission; the capability result records automatically.",capKey:"location",perm:P.ACL},
   {id:"connectivity.nfc",title:"NFC",cat:"Connectivity",instr:"Checks NFC hardware capability and adapter state. The capability result records automatically.",capKey:"nfc"},
   {id:"connectivity.usb",title:"USB",cat:"Connectivity",instr:"Checks USB host/accessory capability. The capability result records automatically.",capKey:"usb"},
-  {id:"power.charging",title:"Charging / battery",cat:"Power",instr:"Review the battery readings. Plug in a charger and confirm the charging state changes to charging and the plug source appears."},
+  {id:"power.charging",title:"Charging / battery",cat:"Power",instr:"The charging state updates live. Plug a charger into the port and unplug it — the plug source should appear and disappear in the event log. No plug event after a solid connection means a port or cable fault."},
 ];
 const TEST = id => TESTS.find(x => x.id === id);
 /* ---------------- mock content -------------------------------------- */
@@ -1449,7 +1454,7 @@ const PRESETS = {
   FULL: { label:"Full diagnostic", ids:null },   // null → all TESTS
   USED_PHONE: { label:"Used-phone check", ids:[
     "display.color","display.dead_pixel","touch.grid","touch.multitouch","haptics.vibration",
-    "audio.speaker","audio.microphone","camera.front","camera.rear","camera.flash",
+    "audio.speaker","audio.microphone","audio.headset_jack","buttons.volume","camera.front","camera.rear","camera.flash",
     "connectivity.wifi","connectivity.bluetooth","connectivity.nfc","connectivity.usb","power.charging"] },
 };
 function presetTests(key){ const p=PRESETS[key]; return p.ids ? TESTS.filter(x=>p.ids.includes(x.id)) : TESTS; }
@@ -1642,6 +1647,23 @@ function testBody(test, mode){
           <div class="t-mini sub" style="margin-top:8px">${verdict}</div>
         </div></div>`;
     }
+    case test.id==="audio.headset_jack":
+      return std(test, `<div class="card">
+        <div class="row"><span class="grow t-body">Wired audio now</span><span class="t-body">${S.headset.plugged?"Wired headphones":"None"}</span></div>
+        <div class="row" style="margin-top:8px"><span class="grow t-body">Insert seen</span><span class="t-body">${S.headset.sawIn?"Yes":"Waiting…"}</span></div>
+        <div class="row" style="margin-top:8px"><span class="grow t-body">Remove seen</span><span class="t-body">${S.headset.sawOut?"Yes":"Waiting…"}</span></div>
+        ${S.headset.events.length?`<div class="t-mini sub" style="margin-top:8px">Events</div>${S.headset.events.map(e=>`<div class="t-mini">${e}</div>`).join("")}`:""}
+        <div class="row" style="margin-top:12px;gap:8px">
+          <button class="btn-outline grow" data-act="headset-in" ${S.headset.plugged?"disabled":""}>Simulate insert</button>
+          <button class="btn-outline grow" data-act="headset-out" ${S.headset.plugged?"":"disabled"}>Simulate remove</button></div></div>`);
+    case test.id==="buttons.volume":
+      return std(test, `<div class="card">
+        <div class="row"><span class="grow t-body">Volume up</span><span class="t-body">${S.volUp?"Pressed":"Waiting…"}</span></div>
+        <div class="row" style="margin-top:8px"><span class="grow t-body">Volume down</span><span class="t-body">${S.volDown?"Pressed":"Waiting…"}</span></div>
+        <div class="t-mini sub" style="margin-top:8px">Volume presses are consumed while this test is open — the volume level will not change. Power, Bixby and other protected keys never reach apps and cannot be tested this way.</div>
+        <div class="row" style="margin-top:12px;gap:8px">
+          <button class="btn-outline grow" data-act="vol-up">Press Vol+</button>
+          <button class="btn-outline grow" data-act="vol-down">Press Vol−</button></div></div>`);
     case test.id==="power.charging":
       return std(test, `<div class="card" id="chargeread">${chargeReading()}</div>`);
     default: return `<div class="pad empty">Test screen not yet wired: ${test.id}</div>`;
@@ -1665,9 +1687,11 @@ function capReading(key){
 function chargeReading(){
   const b=DEVICE.battery;
   return `<div class="row"><span class="grow t-body">Level</span><span class="t-body">${b.level}%</span></div>
-    <div class="row" style="margin-top:8px"><span class="grow t-body">Status</span><span class="t-body">${b.status}</span></div>
-    <div class="row" style="margin-top:8px"><span class="grow t-body">Plug</span><span class="t-body">${b.plug}</span></div>
-    <button class="btn" style="margin-top:10px" data-act="charge-refresh">Refresh reading</button>`;
+    <div class="row" style="margin-top:8px"><span class="grow t-body">Status</span><span class="t-body">${S.plugged?"Charging":b.status}</span></div>
+    <div class="row" style="margin-top:8px"><span class="grow t-body">Plug</span><span class="t-body">${S.plugged?"USB":"Unplugged"}</span></div>
+    <div class="t-mini sub" style="margin-top:8px">Live — updates as soon as a charger connects or disconnects.</div>
+    ${S.plugEvents.length?S.plugEvents.map(e=>`<div class="t-mini">${e}</div>`).join(""):""}
+    <button class="btn-outline" style="margin-top:10px" data-act="plug-toggle">${S.plugged?"Simulate unplug":"Simulate plug-in"}</button>`;
 }
 /* ---------- test interactions ---------- */
 function bindResultBar(test, mode){
@@ -4134,6 +4158,18 @@ On Android &lt; 11 this section may be absent.</pre></div>
       $("#torchstate").textContent=on?"":"Torch is ON — check the LED on the back.";
       $(".camview, .phone").classList?.toggle?.("torch-on",!on); break; }
     case "charge-refresh": $("#chargeread").innerHTML=chargeReading(); toast("Reading refreshed"); break;
+    case "plug-toggle":
+      S.plugged=!S.plugged;
+      S.plugEvents.push(S.plugged?"Plugged in (USB)":"Unplugged");
+      $("#chargeread").innerHTML=chargeReading(); break;
+    case "headset-in":
+      S.headset.plugged=true; S.headset.sawIn=true;
+      S.headset.events.push("Detected: Wired headphones"); render(); break;
+    case "headset-out":
+      S.headset.plugged=false; S.headset.sawOut=true;
+      S.headset.events.push("Removed: Wired headphones"); render(); break;
+    case "vol-up": S.volUp=true; render(); break;
+    case "vol-down": S.volDown=true; render(); break;
     case "adv-load": S.advLoaded=true; render(); break;
     case "saved-reveal": { const s=$("#psk"+el.dataset.i);
       if(!s) break;

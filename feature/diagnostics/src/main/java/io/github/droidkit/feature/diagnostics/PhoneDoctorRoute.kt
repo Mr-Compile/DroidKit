@@ -16,6 +16,8 @@ enum class PhoneDoctorRoute {
     ConnectivityCheck,
     LocationCheck,
     ChargingCheck,
+    HeadsetJack,
+    VolumeButtons,
     Sensor,
     Unsupported,
 }
@@ -32,6 +34,8 @@ fun routeFor(test: PhoneDoctorTest): PhoneDoctorRoute = when {
     test.id == "connectivity.location" -> PhoneDoctorRoute.LocationCheck
     test.capabilityKey != null -> PhoneDoctorRoute.ConnectivityCheck
     test.id == "power.charging" -> PhoneDoctorRoute.ChargingCheck
+    test.id == "audio.headset_jack" -> PhoneDoctorRoute.HeadsetJack
+    test.id == "buttons.volume" -> PhoneDoctorRoute.VolumeButtons
     test.sensorType != null -> PhoneDoctorRoute.Sensor
     else -> PhoneDoctorRoute.Unsupported
 }

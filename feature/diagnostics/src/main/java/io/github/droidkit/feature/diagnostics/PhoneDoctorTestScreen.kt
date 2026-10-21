@@ -18,6 +18,7 @@ import io.github.droidkit.feature.diagnostics.tests.ChargingCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.ConnectivityCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.DisplayColorScreen
 import io.github.droidkit.feature.diagnostics.tests.FlashTestScreen
+import io.github.droidkit.feature.diagnostics.tests.HeadsetJackScreen
 import io.github.droidkit.feature.diagnostics.tests.LocationCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.MicrophoneTestScreen
 import io.github.droidkit.feature.diagnostics.tests.MultitouchScreen
@@ -25,6 +26,7 @@ import io.github.droidkit.feature.diagnostics.tests.SensorTestScreen
 import io.github.droidkit.feature.diagnostics.tests.SpeakerTestScreen
 import io.github.droidkit.feature.diagnostics.tests.TouchGridScreen
 import io.github.droidkit.feature.diagnostics.tests.VibrationScreen
+import io.github.droidkit.feature.diagnostics.tests.VolumeButtonsScreen
 
 /**
  * Single dispatch point for every Phone Doctor test screen.
@@ -60,6 +62,8 @@ fun PhoneDoctorTestScreen(
             PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult, autoResult)
             PhoneDoctorRoute.LocationCheck -> LocationCheckScreen(test, onResult, autoResult)
             PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.HeadsetJack -> HeadsetJackScreen(test, onResult)
+            PhoneDoctorRoute.VolumeButtons -> VolumeButtonsScreen(test, onResult)
             PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult, autoResult)
             PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test, onBack)
         }
