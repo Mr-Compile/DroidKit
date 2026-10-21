@@ -34,6 +34,7 @@ fun UsbScreen(
     viewModel: UsbViewModel = hiltViewModel(),
 ) {
     val devices by viewModel.devices.collectAsStateWithLifecycle()
+    val events by viewModel.events.collectAsStateWithLifecycle()
     val windowInfo = rememberDroidKitWindowInfo()
 
     Scaffold(topBar = { DroidKitTopAppBar("USB Lab", onBack = onBack) }) { padding ->
@@ -46,6 +47,7 @@ fun UsbScreen(
                     UsbDeviceList(
                         devices = devices,
                         hostSupported = viewModel.hostSupported,
+                        events = events,
                         onSelect = onSelect,
                     )
                 },
@@ -62,6 +64,7 @@ fun UsbScreen(
             UsbDeviceList(
                 devices = devices,
                 hostSupported = viewModel.hostSupported,
+                events = events,
                 onSelect = onOpenDetail,
                 modifier = Modifier.padding(padding),
             )
@@ -73,6 +76,7 @@ fun UsbScreen(
 private fun UsbDeviceList(
     devices: List<UsbDevice>,
     hostSupported: Boolean,
+    events: List<UsbViewModel.UsbEvent>,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -97,6 +101,28 @@ private fun UsbDeviceList(
                 }
             }
         }
+        if (events.isNotEmpty()) {
+            item {
+                SectionCard(title = "Attach / detach log") {
+                    Text(
+                        "Session events while this screen was open — not persisted.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    events.asReversed().take(20).forEach { e ->
+                        Text(
+                            (if (e.attached) "▲ attached  " else "▽ detached  ") +
+                                (e.productName ?: e.deviceName) + "  ·  " + e.vidPid +
+                                "  ·  " + android.text.format.DateFormat.format(
+                                    "HH:mm:ss", e.atEpochMs,
+                                ),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                }
+            }
+        }
         if (hostSupported) {
             if (devices.isEmpty()) {
                 item { EmptyState("No USB devices attached.") }
@@ -114,6 +140,8 @@ private fun UsbDeviceList(
                             Text(
                                 "VID:PID ${UsbDescriptors.hex4(device.vendorId)}:" +
                                     UsbDescriptors.hex4(device.productId) +
+                                    (UsbDescriptors.vendorName(device.vendorId)
+                                        ?.let { " · $it" } ?: "") +
                                     " · ${UsbDescriptors.className(device.deviceClass)}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,

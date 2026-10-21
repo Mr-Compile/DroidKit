@@ -52,6 +52,31 @@ object UsbDescriptors {
     }
 
     /**
+     * Endpoint usage/synchronization bits (bmAttributes 5:2). Only meaningful
+     * for isochronous endpoints; interrupt/bulk report "—" usage per spec.
+     */
+    fun endpointUsage(attributes: Int, type: Int): String? {
+        if (type != UsbConstants.USB_ENDPOINT_XFER_ISOC) return null
+        return when ((attributes shr 4) and 0x03) {
+            0 -> "data"
+            1 -> "feedback"
+            2 -> "implicit feedback"
+            else -> "reserved"
+        }
+    }
+
+    /** Human-readable polling-interval text for interrupt/isochronous endpoints. */
+    fun intervalText(type: Int, interval: Int): String? {
+        if (interval <= 0) return null
+        return when (type) {
+            UsbConstants.USB_ENDPOINT_XFER_INT,
+            UsbConstants.USB_ENDPOINT_XFER_ISOC,
+            -> "interval ${interval}"
+            else -> null
+        }
+    }
+
+    /**
      * Interface-level interpretation — what a class/subclass/protocol triple
      * means in practice. Only statements justified by the USB-IF class codes
      * are returned; never claim internal detail Android cannot see.
@@ -121,6 +146,63 @@ object UsbDescriptors {
         else -> "Unrecognized class"
     }
 
+    /**
+     * Well-known USB-IF vendor IDs. Covers the common vendors a technician
+     * actually encounters; unknown VIDs return null — never guessed.
+     */
+    fun vendorName(vid: Int): String? = VENDOR_NAMES[vid and 0xFFFF]
+
+    private val VENDOR_NAMES = mapOf(
+        0x046D to "Logitech",
+        0x0489 to "Foxconn / Hon Hai",
+        0x04E8 to "Samsung Electronics",
+        0x0502 to "Acer",
+        0x05AC to "Apple",
+        0x0951 to "Kingston Technology",
+        0x0781 to "SanDisk",
+        0x090C to "Silicon Motion (flash controllers)",
+        0x0BDA to "Realtek",
+        0x0CF3 to "Qualcomm Atheros",
+        0x0E8D to "MediaTek",
+        0x1004 to "LG Electronics",
+        0x1058 to "Western Digital",
+        0x12D1 to "Huawei",
+        0x13FE to "Kingston (ADATA-class flash)",
+        0x1532 to "Razer",
+        0x154B to "PNY",
+        0x1687 to "Kingmax",
+        0x17EF to "Lenovo",
+        0x18D1 to "Google",
+        0x1949 to "Amazon",
+        0x1A40 to "Terminus Technology (hubs)",
+        0x1A86 to "QinHeng (CH340 serial)",
+        0x1BBB to "T&A (phones/tablets)",
+        0x1C7A to "Egis Technology (fingerprint)",
+        0x1D6B to "Linux Foundation",
+        0x2109 to "VIA Labs (hubs/PD)",
+        0x2357 to "TP-Link",
+        0x2717 to "Xiaomi",
+        0x28DE to "Valve",
+        0x2A70 to "OnePlus",
+        0x2E04 to "HMD Global (Nokia)",
+        0x2F76 to "Motorola",
+        0x303A to "Espressif",
+        0x056E to "Elecom",
+        0x05E3 to "Genesys Logic (readers/hubs)",
+        0x058F to "Alcor Micro (card readers)",
+        0x067B to "Prolific (serial adapters)",
+        0x0403 to "FTDI (serial adapters)",
+        0x10C4 to "Silicon Labs (CP210x serial)",
+        0x0483 to "STMicroelectronics",
+        0x03EB to "Atmel",
+        0x04B4 to "Cypress / Infineon",
+        0x0461 to "Primax (keyboards/mice)",
+        0x045E to "Microsoft",
+        0x03F0 to "HP",
+        0x413C to "Dell",
+        0x8087 to "Intel",
+    )
+
     /** Whole-device capability summary from its interface mix. */
     fun deviceInterpretation(interfaceTriples: List<Triple<Int, Int, Int>>): String {
         if (interfaceTriples.isEmpty()) return "No interfaces exposed."
@@ -145,6 +227,7 @@ fun UsbDevice.summaryText(serial: String?): String = buildString {
     appendLine("USB device: ${productName ?: deviceName}")
     appendLine("Device path: $deviceName")
     appendLine("VID:PID: ${UsbDescriptors.hex4(vendorId)}:${UsbDescriptors.hex4(productId)}")
+    appendLine("Vendor: ${UsbDescriptors.vendorName(vendorId) ?: "Unknown VID"}")
     appendLine("Class: ${UsbDescriptors.className(deviceClass)} (${UsbDescriptors.hex2(deviceClass)})")
     appendLine("Subclass/Protocol: ${UsbDescriptors.hex2(deviceSubclass)}/${UsbDescriptors.hex2(deviceProtocol)}")
     appendLine("USB version: ${version ?: "Not exposed"}")

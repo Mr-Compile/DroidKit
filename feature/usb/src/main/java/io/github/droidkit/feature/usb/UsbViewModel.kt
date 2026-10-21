@@ -31,6 +31,23 @@ class UsbViewModel @Inject constructor(
     private val _devices = MutableStateFlow<List<UsbDevice>>(emptyList())
     val devices: StateFlow<List<UsbDevice>> = _devices.asStateFlow()
 
+    /** One attach/detach observation, kept for the session only. */
+    data class UsbEvent(
+        val attached: Boolean,
+        val deviceName: String,
+        val productName: String?,
+        val vidPid: String,
+        val atEpochMs: Long,
+    )
+
+    /**
+     * Session attach/detach log — populated from USB broadcasts while this
+     * screen's ViewModel is alive. Not persisted; capped so a bus fault
+     * storm can't grow unboundedly.
+     */
+    private val _events = MutableStateFlow<List<UsbEvent>>(emptyList())
+    val events: StateFlow<List<UsbEvent>> = _events.asStateFlow()
+
     /** Bumped when a permission response arrives so the UI re-reads [hasPermission]. */
     private val _permissionVersion = MutableStateFlow(0)
     val permissionVersion: StateFlow<Int> = _permissionVersion.asStateFlow()
@@ -41,6 +58,18 @@ class UsbViewModel @Inject constructor(
 
     private val attachReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, intent: Intent) {
+            val device = intent.parcelableDevice()
+            val attached = intent.action == UsbManager.ACTION_USB_DEVICE_ATTACHED
+            if (device != null) {
+                _events.value = (_events.value + UsbEvent(
+                    attached = attached,
+                    deviceName = device.deviceName,
+                    productName = device.productName,
+                    vidPid = UsbDescriptors.hex4(device.vendorId) + ":" +
+                        UsbDescriptors.hex4(device.productId),
+                    atEpochMs = System.currentTimeMillis(),
+                )).takeLast(MAX_EVENTS)
+            }
             DLog.d(TAG, "USB ${intent.action}")
             refresh()
         }
@@ -123,6 +152,7 @@ class UsbViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "UsbViewModel"
+        private const val MAX_EVENTS = 100
         const val ACTION_USB_PERMISSION = "io.github.droidkit.feature.usb.USB_PERMISSION"
     }
 }

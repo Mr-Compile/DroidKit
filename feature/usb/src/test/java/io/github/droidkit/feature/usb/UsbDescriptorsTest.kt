@@ -93,4 +93,31 @@ class UsbDescriptorsTest {
         )
         assert(serial.contains("does not provide a serial console"))
     }
+
+    @Test
+    fun `vendorName resolves known ids and returns null otherwise`() {
+        assertEquals("SanDisk", UsbDescriptors.vendorName(0x0781))
+        assertEquals("Samsung Electronics", UsbDescriptors.vendorName(0x04E8))
+        assertEquals("FTDI (serial adapters)", UsbDescriptors.vendorName(0x0403))
+        assertEquals(null, UsbDescriptors.vendorName(0x0000))
+        assertEquals(null, UsbDescriptors.vendorName(0xDEAD))
+    }
+
+    @Test
+    fun `endpointUsage only applies to isochronous endpoints`() {
+        // isoc (type 1) with usage bits 0/1/2 in bmAttributes[5:4]
+        assertEquals("data", UsbDescriptors.endpointUsage(0x01, 1))
+        assertEquals("feedback", UsbDescriptors.endpointUsage(0x11, 1))
+        assertEquals("implicit feedback", UsbDescriptors.endpointUsage(0x21, 1))
+        // bulk (type 2) has no usage field per spec
+        assertEquals(null, UsbDescriptors.endpointUsage(0x12, 2))
+    }
+
+    @Test
+    fun `intervalText only reports interrupt and isochronous`() {
+        assertEquals("interval 10", UsbDescriptors.intervalText(3, 10))
+        assertEquals("interval 1", UsbDescriptors.intervalText(1, 1))
+        assertEquals(null, UsbDescriptors.intervalText(2, 5))
+        assertEquals(null, UsbDescriptors.intervalText(3, 0))
+    }
 }

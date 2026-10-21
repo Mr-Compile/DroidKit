@@ -710,6 +710,7 @@ const S = {
   theme: "dark",
   materialYou: true,
   usbPerm: {},            // deviceName -> granted
+  usbEvents: [{attached:true,label:"USB2.0 Flash Disk",vidpid:"090C:1000",at:"14:22:07"}],
   usbPermPending: {},
   nfc: { scanning: true, armed: null, tag: null, result: null, specs: [], nfcF: {}, nfcRaw: {}, history: [
     { time:"16:02:11", tail:"…61:80", tech:"Ndef, NfcA, MifareUltralight", summary:"URI record — https://droidkit.dev" },
@@ -2718,12 +2719,21 @@ function scrBluetooth(){
   </div>`;
 }
 /* ---------- usb ---------- */
+function usbVendor(vid){ const m={0x046D:"Logitech",0x04E8:"Samsung Electronics",0x05AC:"Apple",
+  0x0951:"Kingston Technology",0x0781:"SanDisk",0x090C:"Silicon Motion (flash controllers)",
+  0x0BDA:"Realtek",0x1058:"Western Digital",0x18D1:"Google",0x1A86:"QinHeng (CH340 serial)",
+  0x0403:"FTDI (serial adapters)",0x10C4:"Silicon Labs (CP210x serial)",0x045E:"Microsoft",
+  0x2717:"Xiaomi",0x03F0:"HP",0x8087:"Intel"}; return m[vid&0xFFFF]||null; }
 function scrUsb(){
+  const evts=S.usbEvents||[];
   return `<div class="pad col">
     ${sectionCard("Capability", `<div class="t-body">USB Host mode supported — attach a device to inspect it.</div>`)}
+    ${evts.length?sectionCard("Attach / detach log",
+      `<div class="t-mini sub">Session events while this screen was open — not persisted.</div>`+
+      evts.slice(-20).reverse().map(e=>`<div class="t-mini" style="margin-top:4px">${e.attached?"▲ attached":"▽ detached"}  ${esc(e.label)}  ·  ${e.vidpid}  ·  ${e.at}</div>`).join("")):""}
     ${USB_DEVS.map(d=>`<div class="card clickable" data-nav="usb/device/${encodeURIComponent(d.name)}">
       <div class="t-med">${d.product}</div>
-      <div class="t-mini sub">VID:PID ${hex4(d.vid)}:${hex4(d.pid)} · Defined at interface</div></div>`).join("")}
+      <div class="t-mini sub">VID:PID ${hex4(d.vid)}:${hex4(d.pid)}${usbVendor(d.vid)?" · "+usbVendor(d.vid):""} · Defined at interface</div></div>`).join("")}
   </div>`;
 }
 function hex4(n){return n.toString(16).padStart(4,"0");}
@@ -2733,7 +2743,8 @@ function scrUsbDetail(name){
   const has=S.usbPerm[d.name], pend=S.usbPermPending[d.name];
   return `<div class="pad col">
     ${sectionCard("Identity",
-      infoRow("Device path",d.name,false)+infoRow("Vendor ID",hex4(d.vid))+infoRow("Product ID",hex4(d.pid))+
+      infoRow("Device path",d.name,false)+infoRow("Vendor ID",hex4(d.vid))+
+      infoRow("Vendor",usbVendor(d.vid)||"Unknown VID")+infoRow("Product ID",hex4(d.pid))+
       infoRow("USB version",d.ver)+infoRow("Manufacturer",d.mfr)+infoRow("Product",d.product)+
       (has?infoRow("Serial",d.serial):
         `<div class="inforow"><span class="k">Serial</span>
@@ -2743,8 +2754,8 @@ function scrUsbDetail(name){
     ${sectionCard("Interfaces", `
       <div class="t-body" style="margin-top:8px">Interface 0 — Mass Storage (08/06/50)</div>
       <div class="t-mini sub">USB Mass Storage</div>
-      <div class="t-mini" style="margin-left:8px;margin-top:2px">ep 81 — IN, bulk, max packet 512</div>
-      <div class="t-mini" style="margin-left:8px;margin-top:2px">ep 02 — OUT, bulk, max packet 512</div>`)}
+      <div class="t-mini" style="margin-left:8px;margin-top:2px">ep 81 — IN (device → host), Bulk, max packet 512</div>
+      <div class="t-mini" style="margin-left:8px;margin-top:2px">ep 02 — OUT (host → device), Bulk, max packet 512</div>`)}
     ${sectionCard("Configurations", `
       <div class="t-body" style="margin-top:8px">Configuration 1</div>
       <div class="t-mini sub">self-powered=false, remote-wakeup=false, maxPower=500 mA</div>`)}

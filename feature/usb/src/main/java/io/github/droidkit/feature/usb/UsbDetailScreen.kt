@@ -78,6 +78,7 @@ fun UsbDetailScreen(
         val usbAiFields = buildMap<String, String?> {
             put("Device path", device.deviceName)
             put("Vendor ID", UsbDescriptors.hex4(device.vendorId))
+            put("Vendor", UsbDescriptors.vendorName(device.vendorId))
             put("Product ID", UsbDescriptors.hex4(device.productId))
             put("USB version", device.version)
             put("Manufacturer", device.manufacturerName)
@@ -98,6 +99,7 @@ fun UsbDetailScreen(
                 SectionCard(title = "Identity") {
                     InfoRow("Device path", device.deviceName, copyable = false)
                     InfoRow("Vendor ID", UsbDescriptors.hex4(device.vendorId))
+                    InfoRow("Vendor", UsbDescriptors.vendorName(device.vendorId) ?: "Unknown VID")
                     InfoRow("Product ID", UsbDescriptors.hex4(device.productId))
                     InfoRow("USB version", device.version)
                     InfoRow("Manufacturer", device.manufacturerName)
@@ -169,7 +171,11 @@ fun UsbDetailScreen(
                                 "  ep ${UsbDescriptors.hex2(ep.address)} — " +
                                     "${UsbDescriptors.directionName(ep.direction)}, " +
                                     "${UsbDescriptors.endpointTypeName(ep.type)}, " +
-                                    "max packet ${ep.maxPacketSize}",
+                                    "max packet ${ep.maxPacketSize}" +
+                                    (UsbDescriptors.intervalText(ep.type, ep.interval)
+                                        ?.let { ", $it" } ?: "") +
+                                    (UsbDescriptors.endpointUsage(ep.attributes, ep.type)
+                                        ?.let { " ($it)" } ?: ""),
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(start = 8.dp, top = 2.dp),
                             )
