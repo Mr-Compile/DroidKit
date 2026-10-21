@@ -292,9 +292,13 @@ Release gate:
 - [x] Advanced detail (elevated, on-demand) — curated getprop allow-list, thermal zones, /proc cpuinfo+meminfo+partitions, dumpsys battery + learned-capacity hint, dumpsys wifi link; provider-labeled, read-only, per-action "Not exposed" on failure
 - [x] Sensor inventory — Sensor Lab + live monitor for safe types
 - [x] Camera capability summary — count by facing via CameraManager
-- [x] Connectivity/hardware summary — NFC/BT/BLE/USB-host/telephony/location features
+- [x] Connectivity/hardware summary — NFC/BT/BLE/USB-host/telephony/location/UWB/Wi-Fi Aware/satellite features
 - [x] Copy/share useful device summary — per-field copy, copy-section, share intent
 - [x] Unsupported fields handled correctly — `Not exposed` on null/−1 reads
+- [x] About-phone parity fields (owner-approved extension) — device name, Android ID, codename, SDK extension, Play system update, Play services, MPC, IP addresses, storage encryption, eSIM, modem count, GLES, screen inches, boot time, USB-debugging/dev-options state
+- [x] SIM & network section — READ_PHONE_STATE-gated per-slot carrier/number/MCC-MNC/roaming/service/network-type/signal rows; PERMISSION_REQUIRED + grant flow on denial
+- [x] Restricted identifiers — IMEI/serial/Wi-Fi-MAC/BT-MAC rows; "Restricted" standard tier, elevated reads via `GetSeLinuxStatus`/`ReadLinkAddresses`/`ReadDeviceSettings`/`DumpPhoneIdentity` + serial props; excluded from AI/share/copy
+- [x] Device Overview naming — `dashboard.overview` home-alias removed; `deviceinfo.overview` retitled "Device Overview"; Home device card links to it
 - [ ] Real-device verification — requires attached device/emulator
 
 Release gate:

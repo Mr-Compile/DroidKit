@@ -33,6 +33,14 @@ data class AdvancedDetail(
     /** Learned-capacity hint with its unit preserved — e.g. "3018 mAh (learned)". */
     val learnedCapacityHint: String?,
     val wifiLink: WifiLinkDetail?,
+    /** Live SELinux mode from `getenforce`, e.g. "Enforcing". */
+    val selinuxStatus: String?,
+    /** iface name → MAC from /sys/class/net (restricted for app identities). */
+    val linkAddresses: List<Pair<String, String>>,
+    /** Allow-listed `settings get` values keyed "ns.key" (e.g. global.device_name). */
+    val settingsEntries: Map<String, String>,
+    /** Best-effort IMEI/MEID extracted from `dumpsys phone` — usually absent. */
+    val imeiHint: String?,
     val failures: List<String>,
 ) {
     companion object {
@@ -40,7 +48,9 @@ data class AdvancedDetail(
             provider = null, props = emptyList(), propsTotal = 0,
             thermalZones = emptyList(), cpu = null, mem = null,
             partitions = emptyList(), batteryDetail = emptyList(),
-            learnedCapacityHint = null, wifiLink = null, failures = emptyList(),
+            learnedCapacityHint = null, wifiLink = null,
+            selinuxStatus = null, linkAddresses = emptyList(),
+            settingsEntries = emptyMap(), imeiHint = null, failures = emptyList(),
         )
     }
 }
@@ -78,6 +88,10 @@ class DeviceDeepProbe @Inject constructor(
         val batteryOut = run(ElevatedAction.DumpBatteryDetail)
         val learnedOut = run(ElevatedAction.ReadLearnedBatteryCapacity)
         val wifiOut = run(ElevatedAction.DumpWifiLink)
+        val selinuxOut = run(ElevatedAction.GetSeLinuxStatus)
+        val linkOut = run(ElevatedAction.ReadLinkAddresses)
+        val settingsOut = run(ElevatedAction.ReadDeviceSettings)
+        val phoneIdOut = run(ElevatedAction.DumpPhoneIdentity)
 
         val allProps = parseProps(propsOut)
         return AdvancedDetail(
@@ -91,6 +105,10 @@ class DeviceDeepProbe @Inject constructor(
             batteryDetail = parseBatteryDump(batteryOut),
             learnedCapacityHint = parseLearnedCapacity(learnedOut),
             wifiLink = parseWifiLinkDump(wifiOut),
+            selinuxStatus = parseSeLinuxStatus(selinuxOut),
+            linkAddresses = parseLinkAddresses(linkOut),
+            settingsEntries = parseSettingsEntries(settingsOut),
+            imeiHint = parsePhoneIdentity(phoneIdOut),
             failures = failures,
         )
     }
@@ -132,6 +150,9 @@ val DISPLAY_PROP_NAMES: Set<String> = setOf(
     "dalvik.vm.heapsize",
     "dalvik.vm.heapgrowthlimit",
     "persist.sys.timezone",
+    "ro.serialno",
+    "sys.serialno",
+    "ro.boot.serialno",
 )
 
 // ---------- pure parsers (JVM-testable) ----------
@@ -287,3 +308,61 @@ fun parseWifiLinkDump(raw: String): WifiLinkDetail? {
     if (ssid == null && rssi == null && link == null && gen == null) return null
     return WifiLinkDetail(ssid, bssid, rssi, link, freq, gen)
 }
+
+/** `getenforce` prints one word: Enforcing / Permissive / Disabled. */
+fun parseSeLinuxStatus(raw: String): String? =
+    raw.lineSequence().map { it.trim() }
+        .firstOrNull {
+            it.equals("enforcing", ignoreCase = true) ||
+                it.equals("permissive", ignoreCase = true) ||
+                it.equals("disabled", ignoreCase = true)
+        }
+        ?.replaceFirstChar { it.titlecase() }
+
+private val MAC_LINE = Regex("""^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$""")
+
+/** `== /sys/class/net/wlan0/address` + MAC line pairs → iface name → MAC. */
+fun parseLinkAddresses(raw: String): List<Pair<String, String>> {
+    val out = mutableListOf<Pair<String, String>>()
+    var iface: String? = null
+    raw.lineSequence().map { it.trim() }.forEach { line ->
+        if (line.startsWith("== ")) {
+            iface = line.removePrefix("== ")
+                .removeSuffix("/address")
+                .substringAfterLast('/')
+        } else {
+            val name = iface
+            if (name != null && MAC_LINE.matches(line)) out += name to line.lowercase()
+        }
+    }
+    return out
+}
+
+/** `== ns.key` marker + value lines emitted by `ReadDeviceSettings`. */
+fun parseSettingsEntries(raw: String): Map<String, String> {
+    val out = mutableMapOf<String, String>()
+    var key: String? = null
+    raw.lineSequence().map { it.trim() }.forEach { line ->
+        if (line.startsWith("== ")) {
+            key = line.removePrefix("== ")
+        } else {
+            val k = key
+            if (k != null && line.isNotBlank() && line != "null") {
+                out[k] = line
+                key = null
+            }
+        }
+    }
+    return out
+}
+
+private val IDENT_RE = Regex("""\b(\d{14,15}|[0-9A-Fa-f]{14})\b""")
+
+/**
+ * Best-effort identifier extraction from a `dumpsys phone` grep — IMEI is 15
+ * digits, MEID 14 hex. Returns the first plausible candidate or null; modern
+ * builds usually print none.
+ */
+fun parsePhoneIdentity(raw: String): String? =
+    raw.lineSequence().mapNotNull { line -> IDENT_RE.find(line.trim())?.groupValues?.get(1) }
+        .firstOrNull()

@@ -131,6 +131,25 @@ class ElevatedActionTest {
     }
 
     @Test
+    fun `device-identity reads are unpinned and param-free`() {
+        listOf(
+            ElevatedAction.GetSeLinuxStatus,
+            ElevatedAction.ReadLinkAddresses,
+            ElevatedAction.ReadDeviceSettings,
+            ElevatedAction.DumpPhoneIdentity,
+        ).forEach { action ->
+            org.junit.Assert.assertNull(action.requiredProvider)
+            assertTrue(action.command().isNotBlank())
+        }
+        assertEquals("getenforce", ElevatedAction.GetSeLinuxStatus.command())
+        assertTrue(ElevatedAction.ReadLinkAddresses.command().contains("/sys/class/net/"))
+        val settings = ElevatedAction.ReadDeviceSettings.command()
+        assertTrue(settings.contains("global device_name"))
+        assertTrue(settings.contains("secure bluetooth_address"))
+        assertTrue(ElevatedAction.DumpPhoneIdentity.command().startsWith("dumpsys phone"))
+    }
+
+    @Test
     fun `power-supply read is a fixed allow-listed dump`() {
         val cmd = ElevatedAction.ReadPowerSupply.command()
         assertTrue(cmd.startsWith("grep -H . /sys/class/power_supply/"))

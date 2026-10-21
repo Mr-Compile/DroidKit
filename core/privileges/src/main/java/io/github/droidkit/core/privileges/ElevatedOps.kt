@@ -216,6 +216,45 @@ sealed interface ElevatedAction {
         override fun command() = "cat /proc/partitions"
     }
 
+    /** Live SELinux mode — `getenforce` prints Enforcing/Permissive/Disabled. */
+    data object GetSeLinuxStatus : ElevatedAction {
+        override fun command() = "getenforce"
+    }
+
+    /**
+     * Per-interface MAC addresses under `/sys/class/net` — hidden from app
+     * identities since Android 6 (they read `02:00:00:00:00:00`). `== path`
+     * markers delimit each interface for the parser.
+     */
+    data object ReadLinkAddresses : ElevatedAction {
+        override fun command() =
+            "for f in /sys/class/net/*/address; do" +
+                " echo \"== \$f\"; cat \"\$f\" 2>/dev/null; done"
+    }
+
+    /**
+     * Allow-listed `settings get` reads — owner-visible device fields the
+     * platform keeps from third-party apps (device name, Bluetooth MAC,
+     * developer flags). Fixed key set; `== ns.key` markers separate values.
+     */
+    data object ReadDeviceSettings : ElevatedAction {
+        override fun command() =
+            "for spec in 'global device_name' 'secure bluetooth_address'" +
+                " 'global adb_enabled' 'global development_settings_enabled'; do" +
+                " set -- \$spec; echo \"== \$1.\$2\";" +
+                " settings get \"\$1\" \"\$2\" 2>/dev/null; done"
+    }
+
+    /**
+     * Best-effort device identifiers from `dumpsys phone` — IMEI/MEID/ESN
+     * when the build prints them. Often empty on modern builds; the parser
+     * treats absence honestly.
+     */
+    data object DumpPhoneIdentity : ElevatedAction {
+        override fun command() =
+            "dumpsys phone | grep -iE 'imei|meid|esn|device ?id' | head -20"
+    }
+
     /** Identity of the shell user (`id`) — a read-only elevated proof. */
     data object WhoAmI : ElevatedAction {
         override fun command() = "id"

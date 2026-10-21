@@ -17,6 +17,7 @@ class DeviceInfoViewModel @Inject constructor(
     val probe: DeviceSystemProbe,
     capabilityManager: CapabilityManager,
     private val deepProbe: DeviceDeepProbe,
+    private val simReader: SimStatusReader,
 ) : ViewModel() {
     /** Reactive provider map — re-emits on provider status changes. */
     val providerStatuses: StateFlow<Map<ProviderKind, ProviderStatus>> = capabilityManager.statuses
@@ -29,6 +30,15 @@ class DeviceInfoViewModel @Inject constructor(
 
     private val _advancedLoading = MutableStateFlow(false)
     val advancedLoading: StateFlow<Boolean> = _advancedLoading
+
+    /** Active-subscription snapshot — non-empty only while READ_PHONE_STATE is held. */
+    private val _simStatus = MutableStateFlow<List<SimSlotStatus>>(emptyList())
+    val simStatus: StateFlow<List<SimSlotStatus>> = _simStatus
+
+    /** Re-read SIM data when the grant state flips; clears on revocation. */
+    fun refreshSimStatus(granted: Boolean) {
+        _simStatus.value = if (granted) simReader.read() else emptyList()
+    }
 
     init {
         viewModelScope.launch { _elevatedProvider.value = deepProbe.activeProvider() }

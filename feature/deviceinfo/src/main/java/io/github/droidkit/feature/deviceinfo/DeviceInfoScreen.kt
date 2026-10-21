@@ -1,7 +1,9 @@
 package io.github.droidkit.feature.deviceinfo
 
+import android.Manifest
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,33 +22,50 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.permissions.RuntimePermissionState
 import io.github.droidkit.core.system.DeviceSystemProbe
 import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.system.formatHz
+import io.github.droidkit.core.system.formatInches
 import io.github.droidkit.core.system.formatUptime
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
+import io.github.droidkit.core.ui.components.SectionHeader
+import io.github.droidkit.core.ui.components.rememberRuntimePermission
 import io.github.droidkit.core.ui.navigation.openRoute
+import java.text.DateFormat
+import java.util.Date
 
 private data class Section(
     val title: String,
     val rows: List<Pair<String, String?>>,
     val labRoute: String? = null,
     val labLabel: String? = null,
+    /** Sensitive values (identifiers, SIM data) — excluded from AI/copy/share. */
+    val sensitive: Boolean = false,
+    /** Custom body rendered after [rows] — used by the permission-gated SIM section. */
+    val trailing: (@Composable ColumnScope.() -> Unit)? = null,
 )
+
+private const val SHOW_REGULATORY_INFO = "android.settings.SHOW_REGULATORY_INFO"
+
+/** Row labels never forwarded to AI context or share/copy summaries. */
+private val SENSITIVE_ROW_LABELS = setOf("Android ID")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,12 +80,34 @@ fun DeviceInfoScreen(
     val elevatedProvider by viewModel.elevatedProvider.collectAsStateWithLifecycle()
     val advanced by viewModel.advanced.collectAsStateWithLifecycle()
     val advancedLoading by viewModel.advancedLoading.collectAsStateWithLifecycle()
-    val sections = buildSections(probe, providerStatuses.mapKeys { it.key.name })
+
+    val regulatoryIntent = remember { Intent(SHOW_REGULATORY_INFO) }
+    val canOpenRegulatory = remember {
+        runCatching { regulatoryIntent.resolveActivity(context.packageManager) != null }
+            .getOrDefault(false)
+    }
+
+    val sections = buildSections(
+        probe = probe,
+        providerStatuses = providerStatuses.mapKeys { it.key.name },
+        advanced = advanced,
+        elevatedReady = elevatedProvider != null,
+        regulatoryBody = if (canOpenRegulatory) {
+            {
+                TextButton(onClick = { context.startActivity(regulatoryIntent) }) {
+                    Text("Regulatory labels")
+                }
+            }
+        } else {
+            null
+        },
+        simBody = { SimSectionBody(viewModel) },
+    )
 
     Scaffold(
         topBar = {
             DroidKitTopAppBar(
-                title = "Device Inspector",
+                title = "Device Overview",
                 onBack = { nav.navigateUp() },
                 actions = {
                     IconButton(onClick = {
@@ -93,16 +134,21 @@ fun DeviceInfoScreen(
                 val section = sections[i]
                 SectionCard(title = section.title) {
                     section.rows.forEach { (label, value) -> InfoRow(label, value) }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TextButton(onClick = {
-                            copySection(context, section)
-                        }) { Text("Copy section") }
-                        if (section.labRoute != null && section.labLabel != null) {
-                            TextButton(onClick = { nav.openRoute(section.labRoute) }) {
-                                Text(section.labLabel)
+                    section.trailing?.invoke(this)
+                    if ((section.rows.isNotEmpty() && !section.sensitive) || section.labRoute != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (section.rows.isNotEmpty() && !section.sensitive) {
+                                TextButton(onClick = {
+                                    copySection(context, section)
+                                }) { Text("Copy section") }
+                            }
+                            if (section.labRoute != null && section.labLabel != null) {
+                                TextButton(onClick = { nav.openRoute(section.labRoute) }) {
+                                    Text(section.labLabel)
+                                }
                             }
                         }
                     }
@@ -134,7 +180,9 @@ fun DeviceInfoScreen(
             }
 
             val aiFields = sections
+                .filter { !it.sensitive }
                 .flatMap { s -> s.rows.map { (l, v) -> "${s.title} / $l" to v } }
+                .filter { (k, _) -> k.substringAfterLast(" / ") !in SENSITIVE_ROW_LABELS }
                 .toMap()
             item {
                 AiSummaryCard(
@@ -152,6 +200,65 @@ fun DeviceInfoScreen(
             }
         }
     }
+}
+
+@Composable
+private fun ColumnScope.SimSectionBody(viewModel: DeviceInfoViewModel) {
+    val probe = viewModel.probe
+    val phoneReq = rememberRuntimePermission(Manifest.permission.READ_PHONE_STATE)
+    val sims by viewModel.simStatus.collectAsStateWithLifecycle()
+
+    LaunchedEffect(phoneReq.state) {
+        viewModel.refreshSimStatus(phoneReq.state == RuntimePermissionState.GRANTED)
+    }
+
+    InfoRow("Supported modems", probe.supportedModemCount?.toString())
+    InfoRow("eSIM supported", probe.eSimSupported?.toString())
+
+    when (phoneReq.state) {
+        RuntimePermissionState.GRANTED -> {
+            if (sims.isEmpty()) {
+                InfoRow("Active SIMs", "None detected")
+            }
+            sims.forEach { sim -> SimSlotRows(sim) }
+        }
+        RuntimePermissionState.NOT_DECLARED ->
+            InfoRow("SIM detail", "READ_PHONE_STATE not declared — grant impossible")
+        RuntimePermissionState.DENIED_PERMANENT -> {
+            InfoRow("SIM detail", "Phone permission permanently denied")
+            TextButton(onClick = { phoneReq.openSettings() }) { Text("Open Settings") }
+        }
+        RuntimePermissionState.DENIED_REQUESTABLE -> {
+            InfoRow("SIM detail", "Permission required for carrier, number and network state")
+            Button(onClick = { phoneReq.request() }, modifier = Modifier.fillMaxWidth()) {
+                Text("Grant phone access")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.SimSlotRows(sim: SimSlotStatus) {
+    SectionHeader("SIM ${sim.slotIndex + 1}${if (sim.isEmbedded) " · eSIM" else ""}")
+    InfoRow("Carrier", sim.carrierName)
+    InfoRow("Display name", sim.displayName)
+    InfoRow("Number", sim.phoneNumber)
+    InfoRow("MCC/MNC", sim.mccMnc)
+    InfoRow("Carrier ID", sim.carrierId?.toString())
+    InfoRow("ICCID", sim.iccIdTail)
+    InfoRow("Data roaming", sim.dataRoaming?.let { if (it) "On" else "Off" })
+    InfoRow("Service state", sim.serviceState)
+    InfoRow("Data network", sim.dataNetworkType)
+    InfoRow("Voice network", sim.voiceNetworkType)
+    InfoRow("Roaming", sim.networkRoaming?.let { if (it) "Yes" else "No" })
+    InfoRow("Signal level", sim.signalLevel?.let { "$it/4" })
+    InfoRow(
+        "Default for",
+        listOfNotNull(
+            "Data".takeIf { sim.isDefaultData },
+            "Voice".takeIf { sim.isDefaultVoice },
+        ).joinToString(", ").ifBlank { null },
+    )
 }
 
 @Composable
@@ -203,42 +310,84 @@ private fun AdvancedDetailRows(adv: AdvancedDetail, onRefresh: () -> Unit) {
 private fun buildSections(
     probe: DeviceSystemProbe,
     providerStatuses: Map<String, *>,
+    advanced: AdvancedDetail?,
+    elevatedReady: Boolean,
+    regulatoryBody: (@Composable ColumnScope.() -> Unit)?,
+    simBody: @Composable ColumnScope.() -> Unit,
 ): List<Section> {
     val display = probe.displayInfo
     val battery = probe.batteryStatus
     val cameras = probe.cameraSummary
 
     fun feature(name: String) = probe.hasFeature(name).toString()
+    fun prop(name: String): String? = advanced?.props?.firstOrNull { it.name == name }
+        ?.value?.takeIf { it.isNotBlank() }
+
+    /** Value when the snapshot has it, else a tier-honest placeholder. */
+    fun elevatedOr(value: String?): String? = value
+        ?: when {
+            !elevatedReady -> "Restricted — no elevated provider"
+            advanced == null -> "Restricted — load advanced detail"
+            else -> null
+        }
 
     return listOf(
         Section("Identity", listOf(
+            "Device name" to probe.deviceName,
             "Manufacturer" to probe.manufacturer,
             "Model" to probe.model,
             "Device" to probe.device,
             "Product" to probe.product,
+            "Android ID" to probe.androidId,
             "App version" to probe.appVersionName,
         )),
+        Section("Status", listOf(
+            "Uptime" to formatUptime(probe.uptimeMs()),
+            "Boot time" to DateFormat.getDateTimeInstance().format(Date(probe.bootEpochMs)),
+            "IP addresses" to probe.ipAddresses().joinToString(", ").ifBlank { null },
+            "USB debugging" to probe.usbDebuggingEnabled?.let { if (it) "On" else "Off" },
+            "Developer options" to probe.developmentSettingsEnabled?.let { if (it) "On" else "Off" },
+        )),
+        Section("SIM & network", emptyList(), sensitive = true, trailing = simBody),
         Section("OS & build", listOf(
             "Android release" to probe.androidRelease,
             "API level" to probe.sdkInt.toString(),
+            "Codename" to probe.buildCodename,
+            "OS extension level" to probe.sdkExtensionLevel?.toString(),
             "Security patch" to probe.securityPatch,
+            "Google Play system update" to probe.googlePlaySystemUpdate,
+            "Google Play services" to probe.playServicesVersion,
+            "Media performance class" to probe.mediaPerformanceClass?.toString(),
             "Fingerprint" to probe.fingerprint,
             "Build ID / display" to "${probe.buildId} / ${probe.buildDisplay}",
             "Incremental" to probe.buildIncremental,
             "Type / tags" to "${probe.buildType} / ${probe.buildTags}",
             "Build date" to probe.buildTimeMs.takeIf { it > 0 }
-                ?.let { java.text.DateFormat.getDateInstance().format(java.util.Date(it)) },
+                ?.let { DateFormat.getDateInstance().format(Date(it)) },
             "Kernel" to (probe.kernelDetail ?: probe.kernelRelease),
             "ART runtime" to probe.artVersion,
-            "Uptime" to formatUptime(probe.uptimeMs()),
             "Deep sleep (approx.)" to formatUptime(probe.deepSleepMs()),
         )),
+        Section("Security", listOf(
+            "Security patch" to probe.securityPatch,
+            "Storage encryption" to probe.storageEncryptionStatus,
+            "SELinux" to elevatedOr(advanced?.selinuxStatus),
+            "Verified boot state" to elevatedOr(prop("ro.boot.verifiedbootstate")),
+            "Crypto state" to elevatedOr(prop("ro.crypto.state")),
+            "Crypto type" to elevatedOr(prop("ro.crypto.type")),
+            "Project Treble" to elevatedOr(prop("ro.treble.enabled")),
+            "Seamless (A/B) updates" to elevatedOr(prop("ro.build.ab_update")),
+            "Base OS" to elevatedOr(prop("ro.build.version.base_os")),
+            "First API level" to elevatedOr(prop("ro.product.first_api_level")),
+        ), trailing = regulatoryBody),
         Section("Hardware", listOf(
             "SoC" to listOfNotNull(probe.socManufacturer, probe.socModel)
                 .joinToString(" ").ifBlank { null },
             "Board / hardware" to "${probe.board} / ${probe.hardware}",
             "CPU cores" to probe.cpuCoreCount.toString(),
             "Supported ABIs" to probe.supportedAbis.joinToString(),
+            "OpenGL ES" to probe.glEsVersion,
+            "Screen size" to probe.screenSizeInches?.let { formatInches(it) },
             "Baseband" to probe.radioVersion,
             "Bootloader" to probe.bootloader,
             "Media codecs" to probe.codecSummary
@@ -247,6 +396,18 @@ private fun buildSections(
             "Cameras" to "${cameras.total} (back ${cameras.backFacing}, front ${cameras.frontFacing}, external ${cameras.external})",
             "Sensors" to probe.sensors.size.toString(),
         ), labRoute = "sensors", labLabel = "Sensor inventory"),
+        Section("Identifiers (restricted)", listOf(
+            "IMEI" to elevatedOr(advanced?.imeiHint),
+            "Serial number" to elevatedOr(
+                prop("ro.serialno") ?: prop("sys.serialno") ?: prop("ro.boot.serialno"),
+            ),
+            "Wi-Fi MAC" to elevatedOr(
+                advanced?.linkAddresses
+                    ?.firstOrNull { (iface, _) -> iface.startsWith("wlan") }?.second
+                    ?: advanced?.linkAddresses?.firstOrNull()?.second,
+            ),
+            "Bluetooth MAC" to elevatedOr(advanced?.settingsEntries?.get("secure.bluetooth_address")),
+        ), sensitive = true),
         Section("Memory & Storage", listOf(
             "Total RAM" to "${probe.memory.totalMb} MB",
             "Available RAM" to "${probe.memory.availableMb} MB",
@@ -273,6 +434,9 @@ private fun buildSections(
             "Bluetooth" to feature("android.hardware.bluetooth"),
             "Bluetooth LE" to feature("android.hardware.bluetooth_le"),
             "USB host" to feature("android.hardware.usb.host"),
+            "UWB" to feature("android.hardware.uwb"),
+            "Wi-Fi Aware" to feature("android.hardware.wifi.aware"),
+            "Satellite" to feature("android.hardware.telephony.satellite"),
             "Telephony" to feature("android.hardware.telephony"),
             "Location" to feature("android.hardware.location"),
         )),

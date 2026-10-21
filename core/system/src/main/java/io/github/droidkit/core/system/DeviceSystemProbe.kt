@@ -1,6 +1,7 @@
 package io.github.droidkit.core.system
 
 import android.app.ActivityManager
+import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.SensorManager
@@ -8,17 +9,23 @@ import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
 import android.media.MediaCodecList
 import android.media.MediaDrm
+import android.net.ConnectivityManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.os.SystemClock
+import android.os.ext.SdkExtensions
+import android.provider.Settings
+import android.telephony.TelephonyManager
+import android.telephony.euicc.EuiccManager
 import android.util.DisplayMetrics
 import android.view.Display
 import java.io.File
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.sqrt
 
 data class ProbeSensor(
     val name: String,
@@ -93,6 +100,127 @@ class DeviceSystemProbe @Inject constructor(
 
     val cpuCoreCount: Int = Runtime.getRuntime().availableProcessors()
     val artVersion: String? = System.getProperty("java.vm.version")
+
+    // ---- owner-facing "About phone" fields (all standard API, honest nulls) ----
+
+    /** User-set device name — Global "device_name" (API 25+), OEM fallbacks. */
+    val deviceName: String? by lazy {
+        fun read(read: () -> String?) = runCatching(read).getOrNull()?.takeIf { it.isNotBlank() }
+        read { Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) }
+            ?: read { Settings.Secure.getString(context.contentResolver, "bluetooth_name") }
+            ?: read { Settings.Global.getString(context.contentResolver, "bluetooth_name") }
+    }
+
+    /** App-scoped Android ID — stable per signing key, not a device identifier. */
+    val androidId: String? by lazy {
+        runCatching {
+            Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+    }
+
+    val buildCodename: String = Build.VERSION.CODENAME
+
+    /** Mainline SDK extension level of the S train (API 31+). */
+    val sdkExtensionLevel: Int? =
+        if (sdkInt >= Build.VERSION_CODES.S) {
+            runCatching { SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) }.getOrNull()
+        } else {
+            null
+        }
+
+    /** Media Performance Class (API 33+); 0 means unset. */
+    val mediaPerformanceClass: Int? =
+        if (sdkInt >= Build.VERSION_CODES.TIRAMISU) {
+            Build.VERSION.MEDIA_PERFORMANCE_CLASS.takeIf { it > 0 }
+        } else {
+            null
+        }
+
+    /** Google Play system (Mainline) train version — e.g. "2026-07-01". */
+    val googlePlaySystemUpdate: String? by lazy {
+        packageVersionName("com.google.android.modulemetadata")
+    }
+
+    val playServicesVersion: String? by lazy { packageVersionName("com.google.android.gms") }
+
+    private fun packageVersionName(pkg: String): String? =
+        runCatching { context.packageManager.getPackageInfo(pkg, 0).versionName }
+            .getOrNull()?.takeIf { it.isNotBlank() }
+
+    /** Active-network interface addresses ("addr (iface)"), IPv4 + IPv6. */
+    fun ipAddresses(): List<String> {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return emptyList()
+        val net = runCatching { cm.activeNetwork }.getOrNull() ?: return emptyList()
+        val props = runCatching { cm.getLinkProperties(net) }.getOrNull() ?: return emptyList()
+        return props.linkAddresses.mapNotNull { la ->
+            la.address.hostAddress?.let { "$it (${props.interfaceName})" }
+        }
+    }
+
+    /** FBE/FDE state as the platform reports it (deprecated on API 34, still valid). */
+    val storageEncryptionStatus: String? by lazy {
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
+        runCatching { dpm?.storageEncryptionStatus }.getOrNull()?.let { status ->
+            when (status) {
+                DevicePolicyManager.ENCRYPTION_STATUS_UNSUPPORTED -> "Unsupported on this device"
+                DevicePolicyManager.ENCRYPTION_STATUS_INACTIVE -> "Inactive"
+                DevicePolicyManager.ENCRYPTION_STATUS_ACTIVATING -> "Activating"
+                DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE -> "Active"
+                DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE_PER_USER -> "Active (per-user)"
+                DevicePolicyManager.ENCRYPTION_STATUS_ACTIVE_DEFAULT_KEY -> "Active (default key)"
+                else -> "Unknown ($status)"
+            }
+        }
+    }
+
+    /** "USB debugging" toggle state — Settings.Global reads need no permission. */
+    val usbDebuggingEnabled: Boolean? by lazy { globalIntEnabled(Settings.Global.ADB_ENABLED) }
+
+    val developmentSettingsEnabled: Boolean? by lazy {
+        globalIntEnabled("development_settings_enabled")
+    }
+
+    private fun globalIntEnabled(key: String): Boolean? =
+        runCatching { Settings.Global.getInt(context.contentResolver, key, -1) }
+            .getOrNull()?.takeIf { it >= 0 }?.let { it == 1 }
+
+    /** eUICC hardware present and enabled. */
+    val eSimSupported: Boolean? by lazy {
+        runCatching {
+            (context.getSystemService(Context.EUICC_SERVICE) as? EuiccManager)?.isEnabled
+        }.getOrNull()
+    }
+
+    /** Hardware modems the device supports (no permission needed). */
+    val supportedModemCount: Int? by lazy {
+        runCatching {
+            (context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager)
+                ?.supportedModemCount
+        }.getOrNull()?.takeIf { it >= 0 }
+    }
+
+    val glEsVersion: String? by lazy {
+        runCatching {
+            (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager)
+                .deviceConfigurationInfo.glEsVersion
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+    }
+
+    /** Physical screen diagonal in inches via xdpi/ydpi; null on degenerate metrics. */
+    val screenSizeInches: Float? by lazy {
+        val dm = context.resources.displayMetrics
+        if (dm.xdpi <= 0f || dm.ydpi <= 0f) {
+            null
+        } else {
+            val w = dm.widthPixels / dm.xdpi
+            val h = dm.heightPixels / dm.ydpi
+            sqrt(w * w + h * h).takeIf { it.isFinite() && it > 0f }
+        }
+    }
+
+    /** Wall-clock instant of boot (approx.) — now minus elapsed realtime. */
+    val bootEpochMs: Long get() = System.currentTimeMillis() - uptimeMs()
 
     /** Milliseconds since boot including deep sleep. */
     fun uptimeMs(): Long = SystemClock.elapsedRealtime()
@@ -299,6 +427,15 @@ class DeviceSystemProbe @Inject constructor(
         append(" | RAM ${totalRamMb}MB")
         append(" | Storage free ${storage.freeBytes / (1024 * 1024 * 1024)}GB/${storage.totalBytes / (1024 * 1024 * 1024)}GB")
     }
+
+    /** Second line for compact surfaces: SoC, resolution @ refresh, patch date. */
+    fun summaryDetail(): String = buildString {
+        val soc = listOfNotNull(socManufacturer, socModel).joinToString(" ")
+        append(soc.ifBlank { hardware })
+        val d = displayInfo
+        append(" | ${d.widthPx}x${d.heightPx} @ ${formatHz(d.refreshHz)}")
+        securityPatch?.let { append(" | patch $it") }
+    }
 }
 
 private const val WIDEVINE_UUID = "edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
@@ -331,3 +468,5 @@ fun formatBytes(bytes: Long): String {
 
 fun formatHz(hz: Float): String =
     if (hz == hz.toInt().toFloat()) "${hz.toInt()} Hz" else "%.2f Hz".format(hz)
+
+fun formatInches(inches: Float): String = "%.1f\"".format(inches)

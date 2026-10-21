@@ -396,6 +396,27 @@ const DK_WORDMARK = `<span style="display:inline-flex;align-items:center;gap:8px
    ===================================================================== */
 const DEVICE = {
   manufacturer: "Google", model: "Pixel 8 Pro", device: "husky", product: "husky",
+  deviceName: "My Pixel 8 Pro", androidId: "a1b2c3d4e5f60708",
+  androidRelease: "15", sdkInt: 35, securityPatch: "2026-09-05",
+  codename: "REL", sdkExt: "17", playSystemUpdate: "2026-08-01", gms: "25.32.33",
+  mpc: "35", glEs: "3.2", screenIn: "6.7\"",
+  ipAddrs: "192.168.1.23 (wlan0), fe80::1%wlan0 (wlan0)",
+  usbDebug: "On", devOpts: "On", encStatus: "Active", bootTime: "Oct 17, 8:41 PM",
+  selinux: "Enforcing", verifiedBoot: "green", cryptoState: "encrypted",
+  cryptoType: "file", treble: "true", abUpdate: "true", baseOs: "", firstApi: "33",
+  serial: "3A171JEHN04567", wifiMac: "3c:9c:0f:12:34:56", btMac: "3c:9c:0f:12:34:57",
+  imei: null,
+  sims: [
+    { slot:0, carrier:"T-Mobile", display:"T-Mobile", number:"+1 555-0100",
+      mccMnc:"310/260", carrierId:"1182", embedded:false, iccid:"…4321",
+      dataRoaming:"Off", service:"In service", dataNet:"LTE", voiceNet:"LTE",
+      roaming:"No", signal:"3/4", defaults:"Data, Voice" },
+    { slot:1, carrier:"Vodafone eSIM", display:"Work", number:"+44 7700 900123",
+      mccMnc:"234/15", carrierId:"2011", embedded:true, iccid:"…9988",
+      dataRoaming:"On", service:"In service", dataNet:"NR (5G)", voiceNet:"LTE",
+      roaming:"Yes", signal:"2/4", defaults:"" },
+  ],
+  eSim: "true", modems: "2",
   androidRelease: "15", sdkInt: 35, securityPatch: "2026-09-05",
   fingerprint: "google/husky/husky:15/AP4A.250105.002/14402196:user/release-keys",
   buildIdDisplay: "AP4A.250105.002 / husky-ota-14402196",
@@ -412,6 +433,8 @@ const DEVICE = {
     "android.hardware.nfc": true, "android.hardware.bluetooth": true,
     "android.hardware.bluetooth_le": true, "android.hardware.usb.host": true,
     "android.hardware.usb.accessory": true, "android.hardware.telephony": true,
+    "android.hardware.uwb": true, "android.hardware.wifi.aware": true,
+    "android.hardware.telephony.satellite": false,
     "android.hardware.location": true, "android.hardware.camera.any": true,
     "android.hardware.camera.flash": true, "android.hardware.wifi": true,
   },
@@ -426,7 +449,7 @@ const PROVIDERS = {
 };
 const S = {
   stack: ["splash"], tab: "home",
-  advLoaded: false,      // Device Inspector advanced-detail snapshot loaded
+  advLoaded: false,      // Device Overview advanced-detail snapshot loaded
   paneSel: null,         // expanded-mode detail selection (apps/usb/reports)
   perms: {
     "android.permission.INTERNET": true, "android.permission.ACCESS_NETWORK_STATE": true,
@@ -436,6 +459,7 @@ const S = {
     "android.permission.RECORD_AUDIO": false, "android.permission.BLUETOOTH_CONNECT": false,
     "android.permission.BLUETOOTH_SCAN": false, "android.permission.ACCESS_FINE_LOCATION": true,
     "android.permission.CHANGE_WIFI_MULTICAST_STATE": true,
+    "android.permission.READ_PHONE_STATE": false, "android.permission.READ_BASIC_PHONE_STATE": true,
   },
   btEnabled: false,
   favorites: new Set(["battery.lab"]),
@@ -486,8 +510,7 @@ const P = {
 };
 const NETP = [P.INTERNET, P.ANS];
 const TOOLS = [
-  t("dashboard.overview","Device Overview","Summary of this device and its capabilities",CAT.DEVICE,"home"),
-  t("deviceinfo.overview","Device Inspector","Identity, OS, hardware, memory, storage, display, battery, capabilities",CAT.DEVICE,"deviceinfo"),
+  t("deviceinfo.overview","Device Overview","About-phone style device identity, status, SIM, OS, hardware and capabilities",CAT.DEVICE,"deviceinfo"),
   t("deviceinfo.storage","Storage Lab","Volumes, capacity, free space, storage warnings",CAT.DEVICE,"deviceinfo/storage"),
   t("battery.lab","Battery Lab","Charge level, status, temperature, voltage, power draw",CAT.DEVICE,"battery"),
   t("sensors.lab","Sensor Lab","Full sensor inventory with vendor, power and range details",CAT.DEVICE,"sensors"),
@@ -620,7 +643,7 @@ const ICONS = {
 };
 /* tool.id → icon name, mirroring Tool.iconKey in the feature graphs. */
 const TOOL_ICON = {
-  "dashboard.overview":"phone_android","deviceinfo.overview":"manage_search","deviceinfo.storage":"storage",
+  "deviceinfo.overview":"phone_android","deviceinfo.storage":"storage",
   "battery.lab":"battery_std","sensors.lab":"sensors","sensors.orientation":"explore",
   "diagnostics.full":"monitor_heart","diagnostics.quick":"fact_check","sensors.live":"timeline",
   "display.deadpixel":"fiber_manual_record","display.touch":"touch_app","display.modes":"display_settings",
@@ -661,9 +684,9 @@ const TOOL_KW = {
   "bluetooth.gatt":["gatt","services","characteristics","connect"],"bluetooth.scan":["ble","scan","nearby","low energy"],
   "bluetooth.status":["bt","adapter","bonded","paired"],"camera.capture":["photo","preview","capture","selfie"],
   "camera.details":["camera2","lens","sensor","capabilities"],"camera.flash":["torch","led","light"],
-  "dashboard.overview":["summary","overview","home","dashboard"],"developer.deeplink":["uri","url","link","resolve"],
+  "developer.deeplink":["uri","url","link","resolve"],
   "developer.display":["resolution","density","dpi","refresh","hdr"],"developer.intents":["intent","launch","developer options","activity"],
-  "developer.logs":["logcat","logs","read"],"deviceinfo.overview":["phone info","build","hardware","specs","model"],
+  "developer.logs":["logcat","logs","read"],"deviceinfo.overview":["phone info","build","hardware","specs","model","about phone","device name","imei","sim","status","serial"],
   "deviceinfo.storage":["disk","space","memory","volumes","free"],"diagnostics.full":["phone doctor","checkup","health check","all tests"],
   "diagnostics.quick":["single test","check","test"],"display.deadpixel":["pixel","screen","stuck","colors"],
   "display.modes":["refresh","resolution","hdr","hz"],"display.motion":["judder","motion","animation","pattern"],
@@ -1000,7 +1023,7 @@ function dialog({title, text, confirm="OK", cancel=null, onConfirm, danger=false
 }
 function closeOverlay(){ $("#overlay").innerHTML=""; delete $("#overlay").dataset.dlgOk; }
 function sysPermDialog(perm, cb){
-  dialog({ title:"Allow DroidKit to " + (perm===P.REC?"record audio?":perm===P.CAM?"take pictures and record video?":perm.includes("BLUETOOTH")?"find, connect to, and determine the relative position of nearby devices?":"access this device's location?"),
+  dialog({ title:"Allow DroidKit to " + (perm===P.REC?"record audio?":perm===P.CAM?"take pictures and record video?":perm.includes("BLUETOOTH")?"find, connect to, and determine the relative position of nearby devices?":perm.includes("PHONE")?"access phone status and identity?":"access this device's location?"),
     text:`<span class="mono t-mini">${esc(perm)}</span>`,
     confirm:"While using the app", cancel:"Don't allow",
     onConfirm:"grant:"+perm });
@@ -1085,7 +1108,7 @@ function render(){
     /* ---------- device labs ---------- */
     case "deviceinfo":
       if(parts[1]==="storage"){ body=scrStorage(); title="Storage Lab"; }
-      else { body=scrDeviceInfo(); title="Device Inspector"; actions=`<span class="iconbtn" data-act="share-device" title="Share summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L8.9 12.7a3.2 3.2 0 0 0 0-1.4l7-4a3 3 0 1 0-.9-1.7l-7 4a3 3 0 1 0 0 4.8l7.1 4.1A3 3 0 1 0 18 16z"/></svg></span>`; }
+      else { body=scrDeviceInfo(); title="Device Overview"; actions=`<span class="iconbtn" data-act="share-device" title="Share summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L8.9 12.7a3.2 3.2 0 0 0 0-1.4l7-4a3 3 0 1 0-.9-1.7l-7 4a3 3 0 1 0 0 4.8l7.1 4.1A3 3 0 1 0 18 16z"/></svg></span>`; }
       break;
     case "battery": body = scrBattery(); title="Battery Lab"; break;
     case "insights": body = scrInsights(); title="Insights"; back=true; break;
@@ -1185,8 +1208,10 @@ function scrHome(){
   const pinned = [...S.favorites].map(id => TOOLS.find(x=>x.id===id)).filter(Boolean);
   const quick = TOOLS.filter(x => resolve(x).ready).slice(0,6);
   return `<div class="pad col">
-    <div class="card"><div class="t-small">This device</div>
-      <div class="t-body" style="margin-top:4px">${DEVICE.manufacturer} ${DEVICE.model} · Android ${DEVICE.androidRelease} (API ${DEVICE.sdkInt}) · ${fmtBytes(DEVICE.storageFree)} free</div></div>
+    <div class="card clickable" data-nav="deviceinfo"><div class="t-small">This device</div>
+      <div class="t-body" style="margin-top:4px">${DEVICE.manufacturer} ${DEVICE.model} · Android ${DEVICE.androidRelease} (API ${DEVICE.sdkInt}) · ${fmtBytes(DEVICE.storageFree)} free</div>
+      <div class="t-mini sub" style="margin-top:2px">${DEVICE.soc} · ${DEVICE.display.w}x${DEVICE.display.h} @ ${DEVICE.display.refresh} · patch ${DEVICE.securityPatch}</div>
+      <div class="t-mini" style="margin-top:8px;color:var(--primary)">Device overview →</div></div>
     <div class="card"><div class="t-small">Elevated access</div><div style="margin-top:4px">${prov}</div></div>
     ${insightsHomeCard()}
     <button class="btn full" data-nav="diagnose">Start Full Diagnostic</button>
@@ -1995,22 +2020,55 @@ function scrInsights(){
 function scrDeviceInfo(){
   const f = n => DEVICE.features[n].toString();
   const provs = Object.keys(PROVIDERS).map(k=>infoRow(k,providerLabel(k),false)).join("");
+  /* Mirrors elevatedOr() in DeviceInfoScreen: value only when the snapshot has it. */
+  const elev = v => !elevatedReady() ? "Restricted — no elevated provider"
+    : !S.advLoaded ? "Restricted — load advanced detail" : v;
+  const simRows = DEVICE.sims.map(s =>
+    `<div class="t-small" style="margin-top:6px">SIM ${s.slot+1}${s.embedded?" · eSIM":""}</div>`+
+    infoRow("Carrier",s.carrier)+infoRow("Display name",s.display)+infoRow("Number",s.number)+
+    infoRow("MCC/MNC",s.mccMnc)+infoRow("Carrier ID",s.carrierId)+infoRow("ICCID",s.iccid)+
+    infoRow("Data roaming",s.dataRoaming)+infoRow("Service state",s.service)+
+    infoRow("Data network",s.dataNet)+infoRow("Voice network",s.voiceNet)+
+    infoRow("Roaming",s.roaming)+infoRow("Signal level",s.signal)+infoRow("Default for",s.defaults||null)).join("");
+  const simSection =
+    infoRow("Supported modems",DEVICE.modems)+infoRow("eSIM supported",DEVICE.eSim)+
+    (S.perms["android.permission.READ_PHONE_STATE"]
+      ? (DEVICE.sims.length ? simRows : infoRow("Active SIMs","None detected",false))
+      : infoRow("SIM detail","Permission required for carrier, number and network state",false)+
+        `<button class="btn full" style="margin-top:8px" data-act="req-perm" data-perm="android.permission.READ_PHONE_STATE">Grant phone access</button>`);
   return `<div class="pad col">
-    ${sectionCard("Identity", infoRow("Manufacturer",DEVICE.manufacturer)+infoRow("Model",DEVICE.model)+infoRow("Device",DEVICE.device)+infoRow("Product",DEVICE.product)+infoRow("App version",DEVICE.appVersion)+copyBar("Identity"))}
-    ${sectionCard("OS & build", infoRow("Android release",DEVICE.androidRelease)+infoRow("API level",DEVICE.sdkInt)+infoRow("Security patch",DEVICE.securityPatch)+
+    ${sectionCard("Identity", infoRow("Device name",DEVICE.deviceName)+infoRow("Manufacturer",DEVICE.manufacturer)+infoRow("Model",DEVICE.model)+infoRow("Device",DEVICE.device)+infoRow("Product",DEVICE.product)+infoRow("Android ID",DEVICE.androidId)+infoRow("App version",DEVICE.appVersion)+copyBar("Identity"))}
+    ${sectionCard("Status", infoRow("Uptime","3d 4h 12m")+infoRow("Boot time",DEVICE.bootTime)+infoRow("IP addresses",DEVICE.ipAddrs,false)+infoRow("USB debugging",DEVICE.usbDebug)+infoRow("Developer options",DEVICE.devOpts)+copyBar("Status"))}
+    ${sectionCard("SIM & network", simSection)}
+    ${sectionCard("OS & build", infoRow("Android release",DEVICE.androidRelease)+infoRow("API level",DEVICE.sdkInt)+infoRow("Codename",DEVICE.codename)+
+      infoRow("OS extension level",DEVICE.sdkExt)+infoRow("Security patch",DEVICE.securityPatch)+
+      infoRow("Google Play system update",DEVICE.playSystemUpdate)+infoRow("Google Play services",DEVICE.gms)+
+      infoRow("Media performance class",DEVICE.mpc)+
       infoRow("Fingerprint",DEVICE.fingerprint)+infoRow("Build ID / display",DEVICE.buildIdDisplay)+
       infoRow("Incremental",DEVICE.buildIncremental)+infoRow("Type / tags",DEVICE.buildTypeTags)+
       infoRow("Build date",DEVICE.buildDate)+infoRow("Kernel",DEVICE.kernel)+
-      infoRow("ART runtime","2.1.0")+infoRow("Uptime","3d 4h 12m")+infoRow("Deep sleep (approx.)","2d 18h 40m")+copyBar("OS & build"))}
+      infoRow("ART runtime","2.1.0")+infoRow("Deep sleep (approx.)","2d 18h 40m")+copyBar("OS & build"))}
+    ${sectionCard("Security",
+      infoRow("Security patch",DEVICE.securityPatch)+infoRow("Storage encryption",DEVICE.encStatus)+
+      infoRow("SELinux",elev(DEVICE.selinux),false)+infoRow("Verified boot state",elev(DEVICE.verifiedBoot),false)+
+      infoRow("Crypto state",elev(DEVICE.cryptoState),false)+infoRow("Crypto type",elev(DEVICE.cryptoType),false)+
+      infoRow("Project Treble",elev(DEVICE.treble),false)+infoRow("Seamless (A/B) updates",elev(DEVICE.abUpdate),false)+
+      infoRow("Base OS",elev(DEVICE.baseOs),false)+infoRow("First API level",elev(DEVICE.firstApi),false)+
+      copyBar("Security"))}
     ${sectionCard("Hardware", infoRow("SoC",DEVICE.soc)+infoRow("Board / hardware",DEVICE.boardHardware)+
-      infoRow("CPU cores","9")+infoRow("Supported ABIs",DEVICE.abis)+infoRow("Baseband",DEVICE.baseband)+
+      infoRow("CPU cores","9")+infoRow("Supported ABIs",DEVICE.abis)+infoRow("OpenGL ES",DEVICE.glEs)+
+      infoRow("Screen size",DEVICE.screenIn)+infoRow("Baseband",DEVICE.baseband)+
       infoRow("Bootloader",DEVICE.bootloader)+infoRow("Media codecs","68 decoders / 24 encoders")+
       infoRow("Widevine security level","L1")+
       infoRow("Cameras",`${DEVICE.cameras.total} (back ${DEVICE.cameras.back}, front ${DEVICE.cameras.front}, external ${DEVICE.cameras.external})`)+infoRow("Sensors",SENSORS.length)+copyBar("Hardware","sensors","Sensor inventory"))}
+    ${sectionCard("Identifiers (restricted)",
+      `<div class="t-mini sub" style="margin-bottom:4px">Blocked for regular apps since Android 10 — shown only when an elevated provider can read them. Never sent to AI or shared.</div>`+
+      infoRow("IMEI",elev(DEVICE.imei),false)+infoRow("Serial number",elev(DEVICE.serial),false)+
+      infoRow("Wi-Fi MAC",elev(DEVICE.wifiMac),false)+infoRow("Bluetooth MAC",elev(DEVICE.btMac),false))}
     ${sectionCard("Memory & Storage", infoRow("Total RAM",DEVICE.ramTotalMb+" MB")+infoRow("Available RAM",DEVICE.ramAvailMb+" MB")+infoRow("Low-memory threshold",DEVICE.ramThresholdMb+" MB")+infoRow("Internal storage total",fmtBytes(DEVICE.storageTotal))+infoRow("Internal storage free",fmtBytes(DEVICE.storageFree))+copyBar("Memory & Storage","deviceinfo/storage","Storage Lab"))}
     ${sectionCard("Display", infoRow("Resolution",DEVICE.display.w+" x "+DEVICE.display.h)+infoRow("Density",DEVICE.display.dpi+" dpi")+infoRow("Current refresh rate",DEVICE.display.refresh)+infoRow("Supported modes",DEVICE.display.modes)+infoRow("HDR","HDR10, HLG")+infoRow("Wide color gamut","true")+copyBar("Display"))}
     ${sectionCard("Battery", infoRow("Charge level",DEVICE.battery.level+"%")+infoRow("Status",DEVICE.battery.status)+infoRow("Source",DEVICE.battery.plug)+infoRow("Temperature",DEVICE.battery.tempC+" °C")+copyBar("Battery","battery","Battery Lab"))}
-    ${sectionCard("Hardware features", infoRow("NFC",f("android.hardware.nfc"),false)+infoRow("Bluetooth",f("android.hardware.bluetooth"),false)+infoRow("Bluetooth LE",f("android.hardware.bluetooth_le"),false)+infoRow("USB host",f("android.hardware.usb.host"),false)+infoRow("Telephony",f("android.hardware.telephony"),false)+infoRow("Location",f("android.hardware.location"),false)+copyBar("Hardware features"))}
+    ${sectionCard("Hardware features", infoRow("NFC",f("android.hardware.nfc"),false)+infoRow("Bluetooth",f("android.hardware.bluetooth"),false)+infoRow("Bluetooth LE",f("android.hardware.bluetooth_le"),false)+infoRow("USB host",f("android.hardware.usb.host"),false)+infoRow("UWB",f("android.hardware.uwb"),false)+infoRow("Wi-Fi Aware",f("android.hardware.wifi.aware"),false)+infoRow("Satellite",f("android.hardware.telephony.satellite"),false)+infoRow("Telephony",f("android.hardware.telephony"),false)+infoRow("Location",f("android.hardware.location"),false)+copyBar("Hardware features"))}
     ${sectionCard("Access providers", provs+copyBar("Access providers","permissions","Permission Center"))}
     ${sectionCard("Advanced detail",
       `<div class="t-mini sub">Read-only deep snapshot via the active elevated provider (Shizuku, root or wireless ADB): system props, thermal zones, /proc details, partitions, battery and Wi-Fi dumpsys fields. Nothing here is modified.</div>`+
@@ -2924,7 +2982,7 @@ const FLOW = [
     ["Insights","insights",1],
   ]},
   {h:"Device labs", nodes:[
-    ["Device Inspector","deviceinfo"],["Storage Lab","deviceinfo/storage",1],
+    ["Device Overview","deviceinfo"],["Storage Lab","deviceinfo/storage",1],
     ["Battery Lab","battery"],["Sensor Lab","sensors"],["Live sensor picker","sensors/live",1],
     ["Live Sensor Monitor","sensors/live/1",2],
     ["Orientation Helper","sensors/orientation",1],

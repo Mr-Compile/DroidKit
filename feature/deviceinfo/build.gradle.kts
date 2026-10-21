@@ -10,6 +10,7 @@ android {
 dependencies {
     implementation(projects.core.common)
     implementation(projects.core.privileges)
+    implementation(projects.core.permissions)
     implementation(projects.core.system)
     implementation(projects.core.database)
     implementation(projects.core.ui)

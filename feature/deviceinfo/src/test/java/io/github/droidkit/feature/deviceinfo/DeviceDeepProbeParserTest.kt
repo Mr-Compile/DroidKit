@@ -122,4 +122,53 @@ class DeviceDeepProbeParserTest {
         assertEquals("Wi-Fi 6", link.wifiGeneration)
         assertNull(parseWifiLinkDump(""))
     }
+
+    @Test
+    fun `getenforce output normalizes to title case`() {
+        assertEquals("Enforcing", parseSeLinuxStatus("Enforcing\n"))
+        assertEquals("Permissive", parseSeLinuxStatus(" permissive "))
+        assertNull(parseSeLinuxStatus("getenforce: not found"))
+        assertNull(parseSeLinuxStatus(""))
+    }
+
+    @Test
+    fun `link addresses pair iface name with mac`() {
+        val raw = """
+            == /sys/class/net/lo/address
+            00:00:00:00:00:00
+            == /sys/class/net/wlan0/address
+            3C:9C:0F:12:34:56
+            == /sys/class/net/rmnet_data0/address
+        """.trimIndent()
+        val links = parseLinkAddresses(raw)
+        assertEquals(listOf("lo" to "00:00:00:00:00:00", "wlan0" to "3c:9c:0f:12:34:56"), links)
+        assertTrue(parseLinkAddresses("").isEmpty())
+    }
+
+    @Test
+    fun `settings entries keep namespace dot keys and skip null`() {
+        val raw = """
+            == global.device_name
+            My Pixel 8 Pro
+            == secure.bluetooth_address
+            null
+            == global.adb_enabled
+            1
+        """.trimIndent()
+        val entries = parseSettingsEntries(raw)
+        assertEquals("My Pixel 8 Pro", entries["global.device_name"])
+        assertTrue("secure.bluetooth_address" !in entries)
+        assertEquals("1", entries["global.adb_enabled"])
+    }
+
+    @Test
+    fun `phone identity extracts 15-digit imei or returns null`() {
+        assertEquals(
+            "351234567890123",
+            parsePhoneIdentity("  Device ID: 351234567890123"),
+        )
+        assertEquals("A000002F123456", parsePhoneIdentity("MEID=A000002F123456"))
+        assertNull(parsePhoneIdentity("Phone service running\n no identifiers"))
+        assertNull(parsePhoneIdentity(""))
+    }
 }

@@ -14,12 +14,15 @@ object DeviceInfoFeature : FeatureContribution {
     override val tools = listOf(
         Tool(
             id = "deviceinfo.overview",
-            title = "Device Inspector",
-            description = "Identity, OS, hardware, memory, storage, display, battery, capabilities",
+            title = "Device Overview",
+            description = "About-phone style device identity, status, SIM, OS, hardware and capabilities",
             category = ToolCategory.DEVICE,
             route = ROUTE,
-            keywords = setOf("phone info", "build", "hardware", "specs", "model"),
-            iconKey = ToolIconKeys.INSPECTOR,
+            keywords = setOf(
+                "phone info", "build", "hardware", "specs", "model",
+                "about phone", "device name", "imei", "sim", "status", "serial",
+            ),
+            iconKey = ToolIconKeys.DEVICE,
         ),
         Tool(
             id = "deviceinfo.storage",

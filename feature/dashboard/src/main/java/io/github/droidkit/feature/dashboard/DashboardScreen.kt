@@ -47,6 +47,7 @@ fun DashboardScreen(
     onNavigateToDiagnose: () -> Unit,
     onOpenTool: (String) -> Unit,
     onOpenInsights: () -> Unit,
+    onOpenDeviceInfo: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val latestInsight by viewModel.latestInsight.collectAsStateWithLifecycle(initialValue = null)
@@ -70,11 +71,20 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpenDeviceInfo),
+                ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("This device", style = MaterialTheme.typography.titleSmall)
                         Text(viewModel.probe.summary(), style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 4.dp))
+                        Text(viewModel.probe.summaryDetail(), style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 2.dp))
+                        Text("Device overview →", style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp))
                     }
                 }
             }

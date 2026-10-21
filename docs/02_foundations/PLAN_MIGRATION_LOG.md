@@ -92,3 +92,16 @@ Owner approval required?: yes — given in session ("include, root-only (recomme
 Files/docs updated: `core/privileges/.../ElevatedOps.kt` (+`requiredProvider`, `ReadWifiConfigStore`, read-only dump actions), `feature/network/.../{SavedWifiParser,SavedNetworksViewModel,SavedNetworksScreen,NetworkFeature,NetworkScreen,NetworkViewModel}.kt`, `core/system/.../DeviceSystemProbe.kt` (deeper fields + fuel-gauge nodes), `feature/deviceinfo/.../{DeviceDeepProbe,DeviceInfoViewModel,DeviceInfoScreen}.kt`, `feature/battery/.../{FuelGauge,BatteryHealth,BatteryViewModel,BatteryScreen,BatteryFeature}.kt`, tests, `mockups/index.html`
 Migration completed? [x]
 Notes: Wi-Fi store paths vary by Android/OEM (apexdata `WifiConfigStore.xml` on API 29+, `wpa_supplicant.conf` pre-10); root may still be denied by the user's root manager — the tool reports `requires ROOT` honestly instead of degrading to shell identity. Hex PSKs are labeled "derived key", never presented as the passphrase.
+
+## Entry
+Date: 2026-10-21
+Feature: Device Overview → About-phone parity
+Old document/decision: `dashboard.overview` "Device Overview" tool routed to `home` (Home tab); `deviceinfo.overview` "Device Inspector" held the real spec screen; SIM/carrier/status fields and restricted identifiers were out of scope
+Improved v2 decision: owner request — "Device Overview" must be the About-phone-grade screen: remove the Home alias, retitle Device Inspector, add standard-tier fields, a READ_PHONE_STATE-gated SIM & network section, and elevated reads for restricted identifiers (serial, MACs, SELinux, best-effort IMEI)
+Repository reality: `dashboard.overview` only ever switched tabs to Home (one-line `probe.summary()` card); Device Inspector already had deep standard + elevated fields
+Conflict classification: scope extension beyond frozen V1 (runtime-permission SIM section + restricted-identifier elevated reads), owner-approved
+Decision: `dashboard.overview` removed from the tool catalog (recents/favorites degrade gracefully via `mapNotNull`); `deviceinfo.overview` retitled "Device Overview"; new `ElevatedAction`s are unpinned param-free reads; identifiers + SIM numbers + Android ID excluded from AI fields, share, and section-copy; SIM section renders Grant/PERMISSION_REQUIRED honestly
+Owner approval required?: yes — given in session (all four recommended options chosen)
+Files/docs updated: `feature/dashboard/.../{DashboardFeature,DashboardScreen}.kt`, `feature/deviceinfo/.../{DeviceInfoFeature,DeviceInfoScreen,DeviceInfoViewModel,DeviceDeepProbe,SimStatusReader(new)}.kt`, `feature/deviceinfo/AndroidManifest.xml` (READ_PHONE_STATE + READ_BASIC_PHONE_STATE), `core/system/.../DeviceSystemProbe.kt` (device name, Android ID, codename, SDK extension, Play system update, GMS, IPs, encryption, eSIM, modems, GLES, screen inches, boot time, debug flags), `core/privileges/.../ElevatedOps.kt` (GetSeLinuxStatus, ReadLinkAddresses, ReadDeviceSettings, DumpPhoneIdentity + serial props), tests, `mockups/index.html`, master journey checklist
+Migration completed? [x]
+Notes: IMEI via `dumpsys phone` grep is best-effort — most modern builds print none, so the row usually shows "Not exposed"; per-slot network/service reads vary by OEM and fail per-field, not per-screen.
