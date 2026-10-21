@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 /**
  * Wireless-ADB provider. Two ways to a live session:
  *
- *  - Guided (Shizuku-style): [startPairingSearch] discovers the pairing
+ *  - Guided: [startPairingSearch] discovers the pairing
  *    service via mDNS, the code comes in through the pairing notification or
  *    the screen, pairing chains straight into connect-discovery + connect.
  *  - Manual: explicit host/port pair + connect (fallback when mDNS is blocked).
@@ -109,8 +109,9 @@ class WirelessAdbProvider(
 
     override fun startPairingSearch(): Result<Unit> = runCatching {
         qrPayload = null
-        beginDiscovery(AdbDiscovery.SERVICE_TYPE_PAIRING, serviceName = null)
+        // State before discovery — an early endpoint emit must see Searching.
         _pairingState.value = AdbPairingState.SearchingPairing
+        beginDiscovery(AdbDiscovery.SERVICE_TYPE_PAIRING, serviceName = null)
         startService()
         armTimeout("No pairing service found — is “Pair device with pairing code” open?")
     }
@@ -123,8 +124,8 @@ class WirelessAdbProvider(
 
     override fun startQrPairing(payload: AdbQrPayload): Result<Unit> = runCatching {
         qrPayload = payload
-        beginDiscovery(AdbDiscovery.SERVICE_TYPE_PAIRING, serviceName = payload.serviceName)
         _pairingState.value = AdbPairingState.SearchingPairing
+        beginDiscovery(AdbDiscovery.SERVICE_TYPE_PAIRING, serviceName = payload.serviceName)
         startService()
         armTimeout("No device advertised the QR pairing service “${payload.serviceName}”.")
     }
@@ -246,7 +247,7 @@ class WirelessAdbProvider(
 
     /**
      * Pairing against 127.0.0.1 when the service is on this device — the
-     * pairing/connect sockets listen on loopback too (what Shizuku relies on).
+     * pairing/connect sockets listen on loopback too.
      */
     private suspend fun loopbackIfReachable(endpoint: AdbEndpoint): String =
         withContext(Dispatchers.IO) {

@@ -1,18 +1,12 @@
 package io.github.droidkit.privilege.adb
 
-import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.net.InetSocketAddress
-import java.net.Socket
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
-import javax.net.ssl.X509TrustManager
 
 /**
  * ADB wireless-debugging pairing client — the on-device equivalent of
@@ -39,12 +33,16 @@ object AdbPairing {
      * public key and [AdbConnection] can connect on the normal service port.
      */
     fun pair(host: String, port: Int, code: String, keys: AdbKeys): PairResult {
-        val socket = trustAllSocket(host, port)
+        val socket = tlsSocket(host, port, keys)
         try {
             val input = DataInputStream(socket.getInputStream())
             val output = DataOutputStream(socket.getOutputStream())
 
-            val spake2 = Spake2(code.toByteArray(Charsets.UTF_8))
+            // SPAKE2 password = pairing code || TLS exported keying material —
+            // AOSP appends 64 bytes of EKM (label "adb-label\0") so the PAKE is
+            // bound to this TLS session and can't be relayed.
+            val password = code.toByteArray(Charsets.UTF_8) + keys.exportedKeyMaterial(socket)
+            val spake2 = Spake2(password)
             writePacket(output, TYPE_SPAKE2_MSG, spake2.generateMsg())
 
             val their = readPacket(input)
@@ -96,15 +94,8 @@ object AdbPairing {
      * authenticity is established by SPAKE2 (the pairing code) and the later
      * ADB RSA auth, not by CA — same trust model as `adb pair`.
      */
-    private fun trustAllSocket(host: String, port: Int): SSLSocket {
-        val tm = object : X509TrustManager {
-            override fun checkClientTrusted(certs: Array<X509Certificate>?, auth: String?) {}
-            override fun checkServerTrusted(certs: Array<X509Certificate>?, auth: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        }
-        val ctx = SSLContext.getInstance("TLS")
-        ctx.init(null, arrayOf(tm), SecureRandom())
-        val socket = ctx.socketFactory.createSocket() as SSLSocket
+    private fun tlsSocket(host: String, port: Int, keys: AdbKeys): SSLSocket {
+        val socket = keys.sslContext().socketFactory.createSocket() as SSLSocket
         socket.soTimeout = CONNECT_TIMEOUT_MS
         socket.connect(InetSocketAddress(host, port), CONNECT_TIMEOUT_MS)
         socket.startHandshake()

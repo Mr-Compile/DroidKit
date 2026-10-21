@@ -20,11 +20,7 @@ import java.io.EOFException
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocket
-import javax.net.ssl.X509TrustManager
 
 /**
  * A live ADB session — TCP or TLS (wireless debugging). One connection runs
@@ -54,31 +50,33 @@ class AdbConnection(private val keys: AdbKeys) {
         val sock = Socket()
         sock.soTimeout = timeoutMs
         sock.connect(InetSocketAddress(host, port), timeoutMs)
+        sock.tcpNoDelay = true
         socket = sock
         input = DataInputStream(sock.getInputStream())
         output = sock.getOutputStream()
 
-        if (useTls) upgradeTls(sock, timeoutMs)
-        handshake()
+        // Client speaks first: CNXN in the clear. A TLS listener answers with
+        // STLS instead of CNXN; legacy `adb tcpip` ports answer AUTH/CNXN.
+        send(AdbMessage(A_CNXN, A_VERSION, MAX_PAYLOAD, BANNER.toByteArray()))
+        var first = read()
+        if (first.command == A_STLS) {
+            if (!useTls) throw IOException("adb: server requires a TLS session")
+            send(AdbMessage(A_STLS, STLS_VERSION, 0, ByteArray(0)))
+            upgradeTls(sock, timeoutMs)
+            first = read() // peer resumes the protocol inside TLS
+        }
+        finishHandshake(first)
         // Keep reads blocking with a moderate timeout for command streams.
         socket?.soTimeout = 10_000
     }
 
-    /** STLS upgrade — wireless debugging wraps the channel in TLS first. */
+    /**
+     * STLS upgrade — wraps the channel in TLS. The adbd TLS listener
+     * authenticates the client by the certificate's public key (paired keys),
+     * so the SSLContext carries our identity, not just trust-all.
+     */
     private fun upgradeTls(plain: Socket, timeoutMs: Int) {
-        send(AdbMessage(A_STLS, STLS_VERSION, 0, ByteArray(0)))
-        val reply = read()
-        if (reply.command != A_STLS) {
-            throw IOException("adb: expected STLS, got 0x${reply.command.toString(16)}")
-        }
-        val tm = object : X509TrustManager {
-            override fun checkClientTrusted(c: Array<X509Certificate>?, a: String?) {}
-            override fun checkServerTrusted(c: Array<X509Certificate>?, a: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-        }
-        val ctx = SSLContext.getInstance("TLS")
-        ctx.init(null, arrayOf(tm), SecureRandom())
-        val tls = ctx.socketFactory.createSocket(
+        val tls = keys.sslContext().socketFactory.createSocket(
             plain, plain.inetAddress.hostAddress, plain.port, true,
         ) as SSLSocket
         tls.soTimeout = timeoutMs
@@ -88,28 +86,34 @@ class AdbConnection(private val keys: AdbKeys) {
         output = tls.getOutputStream()
     }
 
-    /** CNXN / AUTH key exchange — signs tokens; offers our public key once. */
-    private fun handshake() {
-        send(AdbMessage(A_CNXN, A_VERSION, MAX_PAYLOAD, BANNER.toByteArray()))
-        var offeredKey = false
+    /**
+     * AUTH exchange after the transport is up — signs the token once, then
+     * offers our public key if the device challenges again. [first] is the
+     * first post-connect (or post-TLS) message already read by the caller.
+     */
+    private fun finishHandshake(first: AdbMessage) {
+        var msg = first
+        var sentSignature = false
+        var sentPubkey = false
         repeat(8) {
-            val msg = read()
             when {
                 msg.command == A_CNXN -> {
                     systemBanner = String(msg.payload, Charsets.UTF_8)
                     return
                 }
-                msg.command == A_AUTH && msg.arg0 == AUTH_TOKEN -> {
+                msg.command == A_AUTH && msg.arg0 == AUTH_TOKEN && !sentSignature -> {
                     send(AdbMessage(A_AUTH, AUTH_SIGNATURE, 0, keys.signToken(msg.payload)))
+                    sentSignature = true
                 }
-                msg.command == A_AUTH && !offeredKey -> {
+                msg.command == A_AUTH && !sentPubkey -> {
                     send(AdbMessage(A_AUTH, AUTH_RSAPUBLICKEY, 0, keys.publicKeyPayload()))
-                    offeredKey = true
+                    sentPubkey = true
                 }
                 else -> throw IOException(
                     "adb: unexpected auth message 0x${msg.command.toString(16)} arg0=${msg.arg0}",
                 )
             }
+            msg = read()
         }
         throw IOException("adb: authentication failed — device did not accept the key")
     }
@@ -191,6 +195,9 @@ class AdbConnection(private val keys: AdbKeys) {
 
     private companion object {
         const val EXIT_MARKER = "__DKX_"
-        const val BANNER = "host::features=cmd,shell_v2,stat_v2"
+        // No feature claims: we implement the legacy `shell:` service and parse
+        // its raw stream. Advertising shell_v2 would make adbd send framed
+        // output and break the exit-marker parsing below.
+        const val BANNER = "host::"
     }
 }

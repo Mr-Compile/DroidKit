@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 /**
  * Foreground service that keeps mDNS discovery alive while the user is in the
  * developer-options pairing dialog, and collects the 6-digit pairing code via
- * a notification [RemoteInput] — the Shizuku-style flow. Required on OEMs that
+ * a notification [RemoteInput] — no need to leave the dialog. Required on OEMs that
  * stop advertising the pairing service when the dialog is backgrounded.
  *
  * All pairing work happens in [WirelessAdbProvider]; this service only renders
