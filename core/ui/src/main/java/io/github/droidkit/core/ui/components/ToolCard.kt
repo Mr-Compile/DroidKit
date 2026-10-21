@@ -92,7 +92,7 @@ fun ToolCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ToolIcon(ToolIcons.forTool(tool))
+            ToolIcon(ToolIcons.forTool(tool), category = tool.category)
             Column(
                 modifier = Modifier
                     .weight(1f)

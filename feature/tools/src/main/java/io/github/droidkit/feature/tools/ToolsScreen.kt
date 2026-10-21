@@ -230,6 +230,15 @@ fun ToolsScreen(
     }
 }
 
+/** Accent hue for non-tool search rows — grouping cue only, HELP stays neutral. */
+private fun SearchResultType.accentCategory(): ToolCategory? = when (this) {
+    SearchResultType.PAGE -> ToolCategory.DEVICE
+    SearchResultType.SETTING -> ToolCategory.DEVELOPER
+    SearchResultType.DIAGNOSTIC -> ToolCategory.DIAGNOSTICS
+    SearchResultType.REPORT -> ToolCategory.REPORTS
+    SearchResultType.HELP -> null
+}
+
 /** Uniform search-result row: icon, title, contextual subtitle (plan file 08). */
 @Composable
 private fun SearchResultRow(entry: SearchEntry, onClick: () -> Unit) {
@@ -238,7 +247,7 @@ private fun SearchResultRow(entry: SearchEntry, onClick: () -> Unit) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ToolIcon(ToolIcons.forEntry(entry))
+            ToolIcon(ToolIcons.forEntry(entry), category = entry.type.accentCategory())
             Column(
                 modifier = Modifier
                     .weight(1f)

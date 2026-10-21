@@ -83,6 +83,9 @@
     --primary: #a8c7fa; --on-primary: #0a2a5e; --error: #f2b8b5;
     --tonal: #2a2f3a; --ok: #a8c7fa; --field: #171a20; --kit: #3CE88A;
     --gradb: #b08cff;
+    /* ToolCategory accents — mirror DroidKitCategoryColors (dark) in Tokens.kt */
+    --c-device: #3CE88A; --c-diagnostics: #14B8CC; --c-connectivity: #64B5F6;
+    --c-hardware: #F6C453; --c-apps: #B08CFF; --c-developer: #FF8A66; --c-reports: #F38BA8;
   }
   .phone[data-theme="light"] {
     --surface: #fbf8fd; --card: #f0edf4; --card2: #e6e1ea;
@@ -90,6 +93,9 @@
     --primary: #425e91; --on-primary: #ffffff; --error: #b3261e;
     --tonal: #e6e1ea; --ok: #425e91; --field: #f3f0f7; --kit: #0E9E6B;
     --gradb: #7a5fd0;
+    /* ToolCategory accents — mirror DroidKitCategoryColors (light) in Tokens.kt */
+    --c-device: #0E9E6B; --c-diagnostics: #0B7C8C; --c-connectivity: #2D6BCF;
+    --c-hardware: #9A6A00; --c-apps: #7A4FD0; --c-developer: #C2481F; --c-reports: #B23A6B;
   }
   .statusbar {
     height: 26px; flex: none; display: flex; align-items: center;
@@ -110,6 +116,14 @@
   #appbar .iconbtn:hover { background: rgba(128,128,128,.18); }
   .tic { flex:none; width:40px; height:40px; border-radius:12px; background:var(--tonal); color:var(--primary); display:flex; align-items:center; justify-content:center; }
   .tic svg { width:22px; height:22px; fill:currentColor; }
+  /* Category-tinted glyph on the neutral tile (UI v6 ToolIcon category param) */
+  .tic.tic-device { color: var(--c-device); }
+  .tic.tic-diagnostics { color: var(--c-diagnostics); }
+  .tic.tic-connectivity { color: var(--c-connectivity); }
+  .tic.tic-hardware { color: var(--c-hardware); }
+  .tic.tic-apps { color: var(--c-apps); }
+  .tic.tic-developer { color: var(--c-developer); }
+  .tic.tic-reports { color: var(--c-reports); }
   #appbar .textbtn { margin-left: 4px; }
   .progress-line { height: 3px; background: var(--card2); flex: none; }
   .progress-line > div { height: 100%; background: var(--primary); transition: width .3s; }
@@ -477,6 +491,7 @@ const S = {
     "android.permission.POST_NOTIFICATIONS": true, "android.permission.CAMERA": true,
     "android.permission.RECORD_AUDIO": false, "android.permission.BLUETOOTH_CONNECT": false,
     "android.permission.BLUETOOTH_SCAN": false, "android.permission.ACCESS_FINE_LOCATION": true,
+    "android.permission.ACCESS_COARSE_LOCATION": true,
     "android.permission.CHANGE_WIFI_MULTICAST_STATE": true,
     "android.permission.READ_PHONE_STATE": false, "android.permission.READ_BASIC_PHONE_STATE": true,
   },
@@ -527,6 +542,7 @@ const P = {
   REC:"android.permission.RECORD_AUDIO", CAM:"android.permission.CAMERA",
   VIB:"android.permission.VIBRATE", NFC:"android.permission.NFC",
   BTC:"android.permission.BLUETOOTH_CONNECT", BTS:"android.permission.BLUETOOTH_SCAN",
+  ACL:"android.permission.ACCESS_COARSE_LOCATION", AFL:"android.permission.ACCESS_FINE_LOCATION",
 };
 const NETP = [P.INTERNET, P.ANS];
 const TOOLS = [
@@ -757,7 +773,9 @@ const PAGES = [
   {id:"page.insights",title:"Insights",subtitle:"On-device analytics for your diagnostics",route:"insights",group:"Pages",icon:"insights",kw:["insights","analytics","trends","stats"]},
   {id:"page.home",title:"Home",subtitle:"Device summary and pinned tools",route:"home",group:"Pages",icon:"home",kw:["home","dashboard","start"]},
 ];
-function tic(name){ return `<span class="tic"><svg viewBox="0 0 24 24"><path d="${ICONS[name]||ICONS.info}"/></svg></span>`; }
+/* Search group → category accent, mirroring SearchResultType.accentCategory() */
+const SRCH_GROUP_CAT = { "Pages":"device", "Settings":"developer", "Diagnostics":"diagnostics", "Reports":"reports" };
+function tic(name, cat){ return `<span class="tic${cat?` tic-${cat.toLowerCase()}`:""}"><svg viewBox="0 0 24 24"><path d="${ICONS[name]||ICONS.info}"/></svg></span>`; }
 /* Same matching as ToolRegistry: lowercase alphanumerics only. */
 const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g,"");
 function scoreFields(title, kws, desc, nq){
@@ -830,7 +848,7 @@ const TESTS = [
   {id:"camera.flash",title:"Flash",cat:"Camera",instr:"Toggle the torch on and off while watching the rear of the device. The LED should light clearly.",perm:P.CAM},
   {id:"connectivity.wifi",title:"Wi-Fi",cat:"Connectivity",instr:"Checks Wi-Fi hardware capability and whether the radio is enabled. The capability result records automatically.",capKey:"wifi"},
   {id:"connectivity.bluetooth",title:"Bluetooth",cat:"Connectivity",instr:"Checks Bluetooth hardware capability and adapter state. The capability result records automatically.",capKey:"bluetooth"},
-  {id:"connectivity.location",title:"Location / GPS",cat:"Connectivity",instr:"Checks GNSS location capability and whether location is enabled. The capability result records automatically.",capKey:"location"},
+  {id:"connectivity.location",title:"Location / GPS",cat:"Connectivity",instr:"Checks GNSS capability, provider state and the cached fix. Tap Get live fix to prove GNSS acquires a position. Needs location permission; the capability result records automatically.",capKey:"location",perm:P.ACL},
   {id:"connectivity.nfc",title:"NFC",cat:"Connectivity",instr:"Checks NFC hardware capability and adapter state. The capability result records automatically.",capKey:"nfc"},
   {id:"connectivity.usb",title:"USB",cat:"Connectivity",instr:"Checks USB host/accessory capability. The capability result records automatically.",capKey:"usb"},
   {id:"power.charging",title:"Charging / battery",cat:"Power",instr:"Review the battery readings. Plug in a charger and confirm the charging state changes to charging and the plug source appears."},
@@ -1064,7 +1082,7 @@ function toolCard(tool,{fav=null}={}){
   const r = resolve(tool);
   const catline = tool.category.charAt(0)+tool.category.slice(1).toLowerCase() + (tool.phase!=="V1" ? ` · ${tool.phase}` : "");
   return `<div class="card clickable" data-nav="${tool.route}" data-tool="${tool.id}" style="display:flex;align-items:center;gap:8px">
-    ${tic(TOOL_ICON[tool.id])}
+    ${tic(TOOL_ICON[tool.id], tool.category)}
     <div class="grow">
       <div style="font-size:15px;font-weight:600">${esc(tool.title)}</div>
       <div class="t-mini sub" style="margin:2px 0 4px">${esc(tool.description)}</div>
@@ -1331,7 +1349,7 @@ function renderToolList(){
   let html = ORDER.filter(g=>groups[g]).map(g =>
     `<div class="sec-head">${g}</div>` + groups[g].map(e=>`
       <div class="card clickable" data-nav="${e.route}" style="display:flex;align-items:center;gap:8px">
-        ${tic(e.icon)}
+        ${tic(e.icon, SRCH_GROUP_CAT[e.group])}
         <div class="grow"><div style="font-size:15px;font-weight:600">${esc(e.title)}</div>
         <div class="t-mini sub">${esc(e.subtitle)}</div></div>
       </div>`).join("")).join("");
@@ -1518,6 +1536,23 @@ function testBody(test, mode){
     case test.id==="camera.flash":
       return std(test, `<button class="btn full" data-act="torch" id="torchbtn">Turn torch ON</button>
         <div class="t-mini" id="torchstate" style="margin-top:8px"></div>`);
+    case test.id==="connectivity.location": {
+      const verdict = mode==="guided" ? "Result recorded: PASS" : "Result: PASS";
+      return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
+        <div class="t-body" style="margin-top:4px">${test.instr}</div>
+        <div class="card" style="margin-top:16px">
+          <div class="row"><span class="grow t-body">Hardware capability</span><span class="t-body">Present</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Location enabled</span><span class="t-body">yes</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">GPS provider</span><span class="t-body">on</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Network provider</span><span class="t-body">on</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Fused provider</span><span class="t-body">on</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Precise location</span><span class="t-body">granted</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Cached fix</span><span class="t-body">gps: 42.69771, 23.32187, ±14 m, 40s ago</span></div>
+          <div class="row" id="loclive" style="margin-top:8px;display:none"><span class="grow t-body">Live fix</span><span class="t-body" id="locliveval"></span></div>
+          <div class="t-mini sub" style="margin-top:8px">${verdict}</div>
+        </div>
+        <button class="btn full" id="locfix" style="margin-top:12px">Get live fix</button></div>`;
+    }
     case test.capKey!==undefined: {
       const r = capReading(test.capKey);
       const verdict = mode==="guided"
@@ -1640,9 +1675,21 @@ function bindTest(test, mode){
       S.sensorLast = () => `Last reading: ${vals.join(", ")}`;
     },300);
   }
+  if(test.id==="connectivity.location"){
+    $("#locfix")?.addEventListener("click",()=>{
+      const row=$("#loclive"), val=$("#locliveval"), btn=$("#locfix");
+      row.style.display=""; val.textContent="Requesting (up to 20 s)…"; btn.disabled=true;
+      later(()=>{ val.textContent="gps: 42.69776, 23.32181, ±9 m, 1s ago"; },1500);
+    });
+  }
   if(test.capKey && mode==="guided"){
     const r=capReading(test.capKey);
-    later(()=>emitResult(test, r.supported?"PASS":"NOT_SUPPORTED", r.supported?`${r.label}: ${r.value}`:r.label),1100);
+    const locNoPerm = test.id==="connectivity.location" && !S.perms["android.permission.ACCESS_COARSE_LOCATION"];
+    const state = locNoPerm ? "PERMISSION_REQUIRED" : (r.supported?"PASS":"NOT_SUPPORTED");
+    const note = locNoPerm ? "ACCESS_COARSE_LOCATION denied"
+      : test.id==="connectivity.location" ? "Location enabled: yes · last fix: gps, ~14 m, 40s ago"
+      : (r.supported?`${r.label}: ${r.value}`:r.label);
+    later(()=>emitResult(test, state, note),1100);
   }
 }
 function emitResult(test, state, auto){
