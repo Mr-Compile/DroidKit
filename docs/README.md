@@ -9,7 +9,7 @@ Numbered in workflow order. Read `00` for the rules, `01` for what to do next.
 | `02_foundations/` | Phase A gate evidence — what was decided before code | J01–J04 (done) |
 | `03_design_system/` | Brand assets + UI/UX design system packages | J03 → ongoing (Q16b) |
 | `04_audits/` | Audit reports produced during implementation | J14+ (ongoing) |
-| `05_release/` | Release notes, privacy policy, device validation runbook | J15–J16 (pending) |
+| `05_release/` | Release notes, privacy policy, user manual, device validation runbook | J15–J16 (pending) |
 | `06_research/` | Research notes (post-V1 capability research) | Reference |
 
 ## What's inside `00_specs/`
