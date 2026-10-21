@@ -545,7 +545,7 @@ const S = {
          pairState:"idle", qr:null, manual:false },
   files: { path:"/sdcard/Android/data", copying:null },
   appopsQuery: "", appopsSel: null, appopsOps: {},
-  pkgQuery: "", pkgRestore: "",
+  pkgQuery: "", pkgRestore: "", pkgSel: new Set(),
   nsd: null, ports: null,
   cmp: { before:null, after:null, done:false },
   obPage: 0, upd: "idle",
@@ -910,7 +910,7 @@ const APPS = [
   {label:"Google",pkg:"com.google.android.googlequicksearchbox",ver:"16.40.19",sys:false},
   {label:"Google Play services",pkg:"com.google.android.gms",ver:"25.38.32",sys:true},
   {label:"Maps",pkg:"com.google.android.apps.maps",ver:"25.42.04",sys:false},
-  {label:"Messages",pkg:"com.google.android.apps.messaging",ver:"20251001_00",sys:false},
+  {label:"Messages",pkg:"com.google.android.apps.messaging",ver:"20251001_00",sys:false,enabled:false},
   {label:"Photos",pkg:"com.google.android.apps.photos",ver:"7.49.0",sys:false},
   {label:"Settings",pkg:"com.android.settings",ver:"15",sys:true},
   {label:"Spotify",pkg:"com.spotify.music",ver:"9.0.84.1236",sys:false},
@@ -3391,19 +3391,29 @@ function scrPackages(){
       <div class="row" style="margin-top:8px"><input class="field grow" id="pkgRestore" placeholder="package.name" value="${esc(S.pkgRestore)}">
       <button class="btn-outline" data-act="pkg-restore" ${S.pkgRestore.trim()?"":"disabled"}>Restore</button></div>`)}
     <input class="field" id="pkgQuery" placeholder="Filter packages" value="${esc(S.pkgQuery)}">
+    <div class="row"><button class="btn-outline" data-act="pkg-selall">Select shown</button>
+      ${S.pkgSel.size?`<button class="textbtn" data-act="pkg-selclear">Clear (${S.pkgSel.size})</button>`:""}</div>
+    ${S.pkgSel.size?`<div class="card"><div class="t-small" style="font-weight:600">Batch — ${S.pkgSel.size} selected</div>
+      <div class="t-mini sub" style="margin-top:2px">Reversible actions only — wipe/uninstall stay per-package.</div>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap">${["disable","enable","suspend","unsuspend"].map(b=>
+        `<button class="btn-outline" data-pkgbatch="${b}">${b[0].toUpperCase()+b.slice(1)}</button>`).join("")}</div></div>`:""}
     <div class="col" id="pkgList">${pkgListHtml()}</div>
   </div>`;
 }
 function pkgListHtml(){
   const q=S.pkgQuery.trim().toLowerCase();
   const list=APPS.filter(a=>!q||a.label.toLowerCase().includes(q)||a.pkg.includes(q)).slice(0,30);
-  return list.map(a=>`<div class="card"><div class="t-med">${a.label}</div><div class="t-mini sub">${a.pkg}</div>
+  return list.map(a=>`<div class="card"><div class="row" style="align-items:flex-start">
+    <input type="checkbox" data-pkgsel="${a.pkg}" ${S.pkgSel.has(a.pkg)?"checked":""} style="margin-top:3px">
+    <div class="grow"><div class="t-med">${a.label}${a.enabled===false?` <span class="t-mini" style="color:var(--error)">disabled</span>`:""}</div>
+    <div class="t-mini sub">${a.pkg}</div>
     <div class="row" style="margin-top:8px;flex-wrap:wrap">
-      <button class="btn-outline" data-pkgact="disable:${a.pkg}">Disable</button>
+      <button class="btn-outline" data-pkgact="${a.enabled===false?"enable":"disable"}:${a.pkg}">${a.enabled===false?"Enable":"Disable"}</button>
+      <button class="btn-outline" data-pkgact="suspend:${a.pkg}">Suspend</button>
       <button class="btn-outline" data-pkgact="clear:${a.pkg}">Clear data</button>
       <button class="btn-outline" data-pkgact="uninstall:${a.pkg}">Uninstall</button>
       <button class="btn-outline" data-pkgact="perms:${a.pkg}">Perms</button>
-    </div></div>`).join("")||`<div class="empty">No packages match.</div>`;
+    </div></div></div>`).join("")||`<div class="empty">No packages match.</div>`;
 }
 function pkgPermSheet(pkg){
   const perms=[["CAMERA",true],["RECORD_AUDIO",false],["ACCESS_FINE_LOCATION",true],["POST_NOTIFICATIONS",true],["READ_CONTACTS",false]];
@@ -3633,9 +3643,19 @@ document.addEventListener("click", e => {
     const conseq={allow:"lets the app use it normally.",ignore:"makes the operation silently fail — the app sees no error, it just gets nothing.",deny:"denies the operation — the app may crash or show a permission error.",default:"restores Android's default decision for this op."};
     dialog({title:`Set ${op}?`,text:`This changes how Android treats ${S.appopsSel} for the “${op}” operation. Setting ${op} to ${m} ${conseq[m]} The change applies immediately and persists until you change it back.`,
       confirm:"Set to "+m,cancel:"Cancel",onConfirm:"appop:"+op+":"+m}); return; }
+  const ps = e.target.closest("[data-pkgsel]"); if(ps){ const p=ps.dataset.pkgsel;
+    S.pkgSel.has(p)?S.pkgSel.delete(p):S.pkgSel.add(p); render(); return; }
+  const pb = e.target.closest("[data-pkgbatch]"); if(pb){ const b=pb.dataset.pkgbatch;
+    const n=S.pkgSel.size; const shown=[...S.pkgSel].slice(0,10).join("\n");
+    dialog({title:`${b[0].toUpperCase()+b.slice(1)} ${n} package${n===1?"":"s"}?`,
+      text:"The action runs on each selected package in turn — reversible, but apps may misbehave until you undo it.\n\n"+shown+(n>10?`\n… +${n-10} more`:""),
+      confirm:b[0].toUpperCase()+b.slice(1),cancel:"Cancel",onConfirm:"pkgbatch:"+b}); return; }
   const pa = e.target.closest("[data-pkgact]"); if(pa){ const [act2,pkg]=pa.dataset.pkgact.split(":");
     if(act2==="perms"){ pkgPermSheet(pkg); return; }
     const msgs={disable:[`Disable ${pkg}?`,"The app will stop running and disappear from launchers. Reversible — re-enable it later from its App Info page."],
+      enable:[`Enable ${pkg}?`,"The app becomes runnable and appears in launchers again."],
+      suspend:[`Suspend ${pkg}?`,"The app cannot start activities, its notifications are hidden and its icon is greyed — until unsuspended. Reversible. (Android 10+)"],
+      unsuspend:[`Unsuspend ${pkg}?`,"The app runs and notifies normally again."],
       clear:[`Clear data for ${pkg}?`,"Permanently wipes all of the app's data: accounts, settings, files, databases. This cannot be undone."],
       uninstall:[`Uninstall ${pkg} for this user?`,"Removed for the current user profile only; other users keep it. For preinstalled apps it can be restored with 'pm install-existing'."]};
     dialog({title:msgs[act2][0],text:msgs[act2][1],confirm:"Confirm",cancel:"Cancel",danger:true,onConfirm:"pkg:"+act2+":"+pkg}); return; }
@@ -3849,6 +3869,10 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "perm-toggle": toast(el.dataset.p+" toggled (mock)"); break;
     case "pkg-restore": { const v=$("#pkgRestore")?.value.trim();
       if(v){ pushElevLog("pm install-existing "+v); toast("Restored "+v+" (mock)"); S.pkgRestore=""; render(); } break; }
+    case "pkg-selall": { const q=S.pkgQuery.trim().toLowerCase();
+      APPS.filter(a=>!q||a.label.toLowerCase().includes(q)||a.pkg.includes(q)).slice(0,30)
+        .forEach(a=>S.pkgSel.add(a.pkg)); render(); break; }
+    case "pkg-selclear": S.pkgSel.clear(); render(); break;
     case "adb-tls": S.adb.useTls=!S.adb.useTls; break;
     case "adb-start": { const a=S.adb; a.pairState="searching"; render();
       toast("Discovery started — a pairing notification is waiting for the code");
@@ -4045,8 +4069,14 @@ function dlgOk(cb){
       const o=appopsFor(S.appopsSel).find(x=>x.op===op); if(o)o.mode=m;
       pushElevLog(`appops set ${S.appopsSel} ${op} ${m}`); render(); break; }
     case cb.startsWith("pkg:"): { const [,act2,pkg]=cb.split(":");
-      pushElevLog(`pm ${act2==="disable"?"disable-user":act2==="clear"?"clear":"uninstall --user 0"} ${pkg}`);
-      toast(`${act2} ${pkg} — done (mock)`); break; }
+      const cmd={disable:"disable-user --user 0",enable:"enable",suspend:"suspend --user 0",
+        unsuspend:"unsuspend --user 0",clear:"clear --user 0",uninstall:"uninstall -k --user 0"}[act2]||act2;
+      pushElevLog(`pm ${cmd} ${pkg}`); toast(`${act2} ${pkg} — done (mock)`); break; }
+    case cb.startsWith("pkgbatch:"): { const b=cb.slice(9);
+      const cmd={disable:"disable-user --user 0",enable:"enable",suspend:"suspend --user 0",unsuspend:"unsuspend --user 0"}[b];
+      [...S.pkgSel].forEach(p=>pushElevLog(`pm ${cmd} ${p}`));
+      toast(`${b}: ${S.pkgSel.size} package${S.pkgSel.size===1?"":"s"} — done (mock)`);
+      S.pkgSel.clear(); render(); break; }
   }
 }
 function pushElevLog(command, exit=0){

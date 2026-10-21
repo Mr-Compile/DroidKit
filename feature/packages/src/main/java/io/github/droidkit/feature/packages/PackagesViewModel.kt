@@ -23,7 +23,11 @@ class PackagesViewModel @Inject constructor(
     private val elevatedOps: ElevatedOps,
 ) : ViewModel() {
 
-    data class PackageEntry(val packageName: String, val label: String)
+    data class PackageEntry(
+        val packageName: String,
+        val label: String,
+        val enabled: Boolean,
+    )
 
     sealed interface ElevatedState {
         data object Loading : ElevatedState
@@ -35,7 +39,12 @@ class PackagesViewModel @Inject constructor(
         data class Message(val text: String) : Event
     }
 
-    enum class Action { DISABLE, ENABLE, CLEAR_DATA, UNINSTALL, RESTORE }
+    enum class Action { DISABLE, ENABLE, SUSPEND, UNSUSPEND, CLEAR_DATA, UNINSTALL, RESTORE }
+
+    /** Batch-capable actions — reversible only; destructive ops stay per-package. */
+    enum class BatchAction(val label: String) {
+        DISABLE("Disable"), ENABLE("Enable"), SUSPEND("Suspend"), UNSUSPEND("Unsuspend"),
+    }
 
     private val _elevated = MutableStateFlow<ElevatedState>(ElevatedState.Loading)
     val elevated: StateFlow<ElevatedState> = _elevated.asStateFlow()
@@ -54,6 +63,22 @@ class PackagesViewModel @Inject constructor(
     /** Runtime permissions of the package currently open in the perms dialog. */
     private val _perms = MutableStateFlow<List<Pair<String, Boolean>>?>(null)
     val perms: StateFlow<List<Pair<String, Boolean>>?> = _perms.asStateFlow()
+
+    /** Package names currently selected for a batch action. */
+    private val _selected = MutableStateFlow<Set<String>>(emptySet())
+    val selected: StateFlow<Set<String>> = _selected.asStateFlow()
+
+    fun toggleSelect(pkg: String) {
+        _selected.value = _selected.value.let { if (pkg in it) it - pkg else it + pkg }
+    }
+
+    fun selectAll(pkgs: List<String>) {
+        _selected.value = pkgs.toSet()
+    }
+
+    fun clearSelection() {
+        _selected.value = emptySet()
+    }
 
     init {
         viewModelScope.launch { refreshElevated() }
@@ -77,7 +102,11 @@ class PackagesViewModel @Inject constructor(
             pm.getInstalledPackages(PackageManager.PackageInfoFlags.of(0))
                 .mapNotNull { info ->
                     info.applicationInfo?.let {
-                        PackageEntry(info.packageName, it.loadLabel(pm).toString())
+                        PackageEntry(
+                            info.packageName,
+                            it.loadLabel(pm).toString(),
+                            it.enabled,
+                        )
                     }
                 }
                 .sortedBy { it.label.lowercase() }
@@ -90,6 +119,8 @@ class PackagesViewModel @Inject constructor(
             val elevated = when (action) {
                 Action.DISABLE -> ElevatedAction.SetPackageEnabled(pkg, enabled = false)
                 Action.ENABLE -> ElevatedAction.SetPackageEnabled(pkg, enabled = true)
+                Action.SUSPEND -> ElevatedAction.SuspendPackage(pkg, suspended = true)
+                Action.UNSUSPEND -> ElevatedAction.SuspendPackage(pkg, suspended = false)
                 Action.CLEAR_DATA -> ElevatedAction.ClearPackageData(pkg)
                 Action.UNINSTALL -> ElevatedAction.UninstallForUser(pkg)
                 Action.RESTORE -> ElevatedAction.InstallExisting(pkg)
@@ -138,6 +169,30 @@ class PackagesViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Run [action] on each package in [pkgs] sequentially, then emit one
+     * summary naming any failures. Clears the selection afterwards.
+     */
+    fun runBatch(action: BatchAction, pkgs: List<String>) {
+        if (pkgs.isEmpty()) return
+        viewModelScope.launch {
+            _busy.value = true
+            val results = pkgs.map { pkg ->
+                val elevated = when (action) {
+                    BatchAction.DISABLE -> ElevatedAction.SetPackageEnabled(pkg, enabled = false)
+                    BatchAction.ENABLE -> ElevatedAction.SetPackageEnabled(pkg, enabled = true)
+                    BatchAction.SUSPEND -> ElevatedAction.SuspendPackage(pkg, suspended = true)
+                    BatchAction.UNSUSPEND -> ElevatedAction.SuspendPackage(pkg, suspended = false)
+                }
+                pkg to elevatedOps.execute(elevated).ok
+            }
+            emit(PackagesInfo.batchSummary(action.label, results))
+            _selected.value = emptySet()
+            loadPackages()
+            _busy.value = false
+        }
+    }
+
     fun clearPermissions() {
         _perms.value = null
     }
@@ -153,6 +208,8 @@ class PackagesViewModel @Inject constructor(
     private fun labelFor(action: Action) = when (action) {
         Action.DISABLE -> "Disable"
         Action.ENABLE -> "Enable"
+        Action.SUSPEND -> "Suspend"
+        Action.UNSUSPEND -> "Unsuspend"
         Action.CLEAR_DATA -> "Clear data"
         Action.UNINSTALL -> "Uninstall for user"
         Action.RESTORE -> "Restore for user"

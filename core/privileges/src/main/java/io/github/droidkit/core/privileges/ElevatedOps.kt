@@ -101,6 +101,16 @@ sealed interface ElevatedAction {
         override fun command() = "pm uninstall -k --user 0 ${requirePackage(packageName)}"
     }
 
+    /**
+     * Suspend or unsuspend a package (`pm suspend`/`pm unsuspend`, API 29+).
+     * A suspended app cannot start activities, its notifications are hidden
+     * and its launcher icon is greyed — reversible, unlike uninstall.
+     */
+    data class SuspendPackage(val packageName: String, val suspended: Boolean) : ElevatedAction {
+        override fun command() =
+            "pm ${if (suspended) "suspend" else "unsuspend"} --user 0 ${requirePackage(packageName)}"
+    }
+
     /** Runtime permission state for a package (`dumpsys package` runtime section). */
     data class GetRuntimePermissions(val packageName: String) : ElevatedAction {
         override fun command() = "dumpsys package ${requirePackage(packageName)}"

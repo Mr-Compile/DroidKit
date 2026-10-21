@@ -19,13 +19,13 @@ object PackagesFeature : FeatureContribution {
         Tool(
             id = "packages.disable",
             title = "Disable Package",
-            description = "Enable/disable packages — bloatware control",
+            description = "Enable/disable/suspend packages — incl. batch ops",
             category = ToolCategory.APPS,
             route = ROUTE,
             safetyLevel = SafetyLevel.HIGH_IMPACT,
             requiredCapabilities = setOf(Capability.ELEVATED_SHELL),
             phase = ToolPhase.V2,
-            keywords = setOf("bloatware", "enable", "disable", "freeze"),
+            keywords = setOf("bloatware", "enable", "disable", "freeze", "suspend", "batch"),
             iconKey = ToolIconKeys.BLOCK,
         ),
         Tool(

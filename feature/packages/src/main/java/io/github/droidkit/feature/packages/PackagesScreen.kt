@@ -3,6 +3,8 @@ package io.github.droidkit.feature.packages
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -39,7 +42,7 @@ import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PackagesScreen(
     onOpenAdb: () -> Unit,
@@ -52,7 +55,12 @@ fun PackagesScreen(
     val busy by viewModel.busy.collectAsStateWithLifecycle()
     val events by viewModel.events.collectAsStateWithLifecycle()
 
+    val selected by viewModel.selected.collectAsStateWithLifecycle()
+
     var pending by remember { mutableStateOf<Pair<PackagesViewModel.Action, String>?>(null) }
+    var pendingBatch by remember {
+        mutableStateOf<Pair<PackagesViewModel.BatchAction, List<String>>?>(null)
+    }
     var permTarget by remember { mutableStateOf<String?>(null) }
     var restoreTarget by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -148,44 +156,123 @@ fun PackagesScreen(
                         it.label.contains(query, true) ||
                         it.packageName.contains(query, true)
                 }.take(30)
+
+                item {
+                    Row(
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.selectAll(filtered.map { it.packageName })
+                            },
+                            enabled = filtered.isNotEmpty() && !busy,
+                        ) { Text("Select shown") }
+                        if (selected.isNotEmpty()) {
+                            TextButton(onClick = { viewModel.clearSelection() }) {
+                                Text("Clear (${selected.size})")
+                            }
+                        }
+                    }
+                }
+
+                if (selected.isNotEmpty()) {
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    "Batch — ${selected.size} selected",
+                                    style = MaterialTheme.typography.labelLarge,
+                                )
+                                Text(
+                                    "Reversible actions only — wipe/uninstall stay per-package.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 2.dp),
+                                )
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(top = 8.dp),
+                                ) {
+                                    PackagesViewModel.BatchAction.entries.forEach { ba ->
+                                        OutlinedButton(
+                                            onClick = {
+                                                pendingBatch = ba to selected.toList()
+                                            },
+                                            enabled = !busy,
+                                        ) { Text(ba.label) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 items(filtered, key = { it.packageName }) { pkg ->
                     Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(pkg.label, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                pkg.packageName,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Row(
+                            modifier = Modifier.padding(start = 4.dp, end = 12.dp, top = 4.dp, bottom = 12.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        ) {
+                            Checkbox(
+                                checked = pkg.packageName in selected,
+                                onCheckedChange = { viewModel.toggleSelect(pkg.packageName) },
                             )
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(top = 8.dp),
-                            ) {
-                                OutlinedButton(
-                                    onClick = {
-                                        pending = PackagesViewModel.Action.DISABLE to pkg.packageName
-                                    },
-                                    enabled = !busy,
-                                ) { Text("Disable") }
-                                OutlinedButton(
-                                    onClick = {
-                                        pending = PackagesViewModel.Action.CLEAR_DATA to pkg.packageName
-                                    },
-                                    enabled = !busy,
-                                ) { Text("Clear data") }
-                                OutlinedButton(
-                                    onClick = {
-                                        pending = PackagesViewModel.Action.UNINSTALL to pkg.packageName
-                                    },
-                                    enabled = !busy,
-                                ) { Text("Uninstall") }
-                                OutlinedButton(
-                                    onClick = {
-                                        permTarget = pkg.packageName
-                                        viewModel.loadPermissions(pkg.packageName)
-                                    },
-                                    enabled = !busy,
-                                ) { Text("Perms") }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    Text(pkg.label, style = MaterialTheme.typography.bodyLarge)
+                                    if (!pkg.enabled) {
+                                        Text(
+                                            "  disabled",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                    }
+                                }
+                                Text(
+                                    pkg.packageName,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(top = 8.dp),
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            pending = (
+                                                if (pkg.enabled) PackagesViewModel.Action.DISABLE
+                                                else PackagesViewModel.Action.ENABLE
+                                                ) to pkg.packageName
+                                        },
+                                        enabled = !busy,
+                                    ) { Text(if (pkg.enabled) "Disable" else "Enable") }
+                                    OutlinedButton(
+                                        onClick = {
+                                            pending = PackagesViewModel.Action.SUSPEND to pkg.packageName
+                                        },
+                                        enabled = !busy,
+                                    ) { Text("Suspend") }
+                                    OutlinedButton(
+                                        onClick = {
+                                            pending = PackagesViewModel.Action.CLEAR_DATA to pkg.packageName
+                                        },
+                                        enabled = !busy,
+                                    ) { Text("Clear data") }
+                                    OutlinedButton(
+                                        onClick = {
+                                            pending = PackagesViewModel.Action.UNINSTALL to pkg.packageName
+                                        },
+                                        enabled = !busy,
+                                    ) { Text("Uninstall") }
+                                    OutlinedButton(
+                                        onClick = {
+                                            permTarget = pkg.packageName
+                                            viewModel.loadPermissions(pkg.packageName)
+                                        },
+                                        enabled = !busy,
+                                    ) { Text("Perms") }
+                                }
                             }
                         }
                     }
@@ -211,6 +298,22 @@ fun PackagesScreen(
                     "Enable $pkg?",
                     "The app becomes runnable and appears in launchers again.",
                     "Enable",
+                    destructive = false,
+                )
+            PackagesViewModel.Action.SUSPEND ->
+                ConfirmSpec(
+                    "Suspend $pkg?",
+                    "The app cannot start activities, its notifications are " +
+                        "hidden and its icon is greyed — until unsuspended. " +
+                        "Reversible. (Android 10+)",
+                    "Suspend",
+                    destructive = false,
+                )
+            PackagesViewModel.Action.UNSUSPEND ->
+                ConfirmSpec(
+                    "Unsuspend $pkg?",
+                    "The app runs and notifies normally again.",
+                    "Unsuspend",
                     destructive = false,
                 )
             PackagesViewModel.Action.CLEAR_DATA ->
@@ -260,6 +363,31 @@ fun PackagesScreen(
             },
             dismissButton = {
                 TextButton(onClick = { pending = null }) { Text("Cancel") }
+            },
+        )
+    }
+
+    // Batch confirm — one dialog for the whole selection, then sequential run.
+    pendingBatch?.let { (action, pkgs) ->
+        val (title, body) = PackagesInfo.batchConfirm(action.label, pkgs.size)
+        AlertDialog(
+            onDismissRequest = { pendingBatch = null },
+            title = { Text(title) },
+            text = {
+                Text(body + "\n\n" + pkgs.take(10).joinToString("\n") +
+                    if (pkgs.size > 10) "\n… +${pkgs.size - 10} more" else "")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.runBatch(action, pkgs)
+                        pendingBatch = null
+                    },
+                    enabled = !busy,
+                ) { Text(action.label) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingBatch = null }) { Text("Cancel") }
             },
         )
     }

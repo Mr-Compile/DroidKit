@@ -51,6 +51,23 @@ class ElevatedActionTest {
     }
 
     @Test
+    fun `suspend and unsuspend commands are user-scoped`() {
+        assertEquals(
+            "pm suspend --user 0 com.example.app",
+            ElevatedAction.SuspendPackage("com.example.app", suspended = true).command(),
+        )
+        assertEquals(
+            "pm unsuspend --user 0 com.example.app",
+            ElevatedAction.SuspendPackage("com.example.app", suspended = false).command(),
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `suspend rejects injection`() {
+        ElevatedAction.SuspendPackage("com.a;b", suspended = true).command()
+    }
+
+    @Test
     fun `runtime permission commands grant and revoke`() {
         assertEquals(
             "pm grant com.example.app android.permission.CAMERA",
