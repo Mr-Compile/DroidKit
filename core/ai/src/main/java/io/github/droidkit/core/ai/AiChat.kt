@@ -457,12 +457,15 @@ private fun MessageText(text: String, onUserBubble: Boolean) {
                 }
             }
         } else if (trimmed.isNotEmpty()) {
-            Text(
-                trimmed,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (onUserBubble) MaterialTheme.colorScheme.onPrimary
-                else MaterialTheme.colorScheme.onSurface,
-            )
+            if (onUserBubble) {
+                Text(
+                    trimmed,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            } else {
+                AiRichText(trimmed)
+            }
         }
     }
 }

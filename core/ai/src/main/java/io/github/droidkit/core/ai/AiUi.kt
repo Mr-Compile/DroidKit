@@ -137,9 +137,8 @@ fun AiSummaryContent(
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                 Text("Summarizing…", style = MaterialTheme.typography.bodyMedium)
             }
-            summary.result?.text != null -> Text(
+            summary.result?.text != null -> AiRichText(
                 summary.result!!.text!!,
-                style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 8.dp),
             )
             summary.result?.error != null -> Column(modifier = Modifier.padding(top = 8.dp)) {
@@ -190,7 +189,7 @@ fun AiResultDialog(
                     )
                 }
                 result.text?.let {
-                    Text(it, style = MaterialTheme.typography.bodyMedium)
+                    AiRichText(AiProposalParser.stripStructuredBlocks(it))
                 }
                 if (proposals.isNotEmpty()) {
                     Column(modifier = Modifier.padding(top = 8.dp)) {

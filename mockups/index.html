@@ -173,6 +173,23 @@
   .badge { display: inline-block; border: 1px solid var(--outline); border-radius: 8px; font-size: 11.5px; padding: 4px 9px; flex: none; }
   .badge.ready { color: var(--primary); }
   .badge.blocked { color: var(--error); }
+  /* AI rich text — mirrors AiRichText.kt: verdict pills + per-line status icons */
+  .ai-line { display: flex; align-items: flex-start; gap: 6px; margin: 3px 0; }
+  .ai-ico { width: 20px; flex: none; margin-top: 1px; display: flex; justify-content: center; }
+  .ai-ico svg { width: 15px; height: 15px; fill: currentColor; }
+  .ai-ico.ok { color: var(--kit); }
+  .ai-ico.warn { color: #F6C453; }
+  .ai-ico.bad { color: var(--error); }
+  .ai-ico.inf { color: #14B8CC; }
+  .ai-dot { width: 20px; flex: none; text-align: center; color: var(--sub); }
+  .ai-num { width: 20px; flex: none; color: var(--sub); }
+  .ai-h { font-weight: 700; margin: 8px 0 2px; }
+  .ai-hr { height: 1px; background: var(--outline); opacity: .45; margin: 8px 0; }
+  .ai-verdict { display: inline-block; border-radius: 8px; font-size: 11.5px; font-weight: 600; padding: 3px 9px; flex: none; margin-top: 1px; }
+  .ai-verdict.ok { color: var(--kit); border: 1px solid color-mix(in srgb, var(--kit) 40%, transparent); background: color-mix(in srgb, var(--kit) 12%, transparent); }
+  .ai-verdict.warn { color: #F6C453; border: 1px solid #F6C45366; background: #F6C45314; }
+  .ai-verdict.bad { color: var(--error); border: 1px solid color-mix(in srgb, var(--error) 45%, transparent); background: color-mix(in srgb, var(--error) 12%, transparent); }
+  .ai-line code { font-family: Consolas, monospace; font-size: 12px; background: var(--card2); border-radius: 4px; padding: 0 4px; }
   .field {
     width: 100%; background: var(--field); border: 1px solid var(--outline);
     border-radius: 4px 4px 0 0; border-bottom-width: 2px;
@@ -603,6 +620,9 @@ const ICONS = {
   home: "M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z ",
   hub: "M21 6.5a2.996 2.996 0 0 0-2.99 3.21l-2.03.68a4.468 4.468 0 0 0-3.22-2.32V5.91A3.018 3.018 0 0 0 15 3c0-1.66-1.34-3-3-3S9 1.34 9 3c0 1.4.96 2.57 2.25 2.91v2.16c-1.4.23-2.58 1.11-3.22 2.32l-2.04-.68C6 9.64 6 9.57 6 9.5c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3c1.06 0 1.98-.55 2.52-1.37l2.03.68c-.2 1.29.17 2.66 1.09 3.69l-1.41 1.77C6.85 17.09 6.44 17 6 17c-1.66 0-3 1.34-3 3s3-1.34 3-3-1.34-3-3-3c0-.68-.22-1.3-.6-1.8l1.41-1.77c1.36.76 3.02.75 4.37 0l1.41 1.77c-.37.5-.59 1.12-.59 1.8 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3c-.44 0-.85.09-1.23.26l-1.41-1.77a4.49 4.49 0 0 0 1.09-3.69l2.03-.68c.53.82 1.46 1.37 2.52 1.37 1.66 0 3-1.34 3-3S22.66 6.5 21 6.5zm-18 4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM6 21c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-18c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1zm1 12a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5zm6 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm3-8.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z ",
   info: "M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8z ",
+  check_circle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z ",
+  warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z ",
+  cancel: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S6.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z ",
   insights: "M21 8c-1.45 0-2.26 1.44-1.93 2.51l-3.55 3.56c-.3-.09-.74-.09-1.04 0l-2.55-2.55C12.27 10.45 11.46 9 10 9c-1.45 0-2.27 1.44-1.93 2.52l-4.56 4.55C2.44 15.74 1 16.55 1 18c0 1.1.9 2 2 2c1.45 0 2.26-1.44 1.93-2.51l4.55-4.56c.3.09.74.09 1.04 0l2.55 2.55C12.73 16.55 13.54 18 15 18c1.45 0 2.27-1.44 1.93-2.52l3.56-3.55c1.07.33 2.51-.48 2.51-1.93c0-1.1-.9-2-2-2z M15 9l.94-2.07L18 6l-2.06-.93L15 3l-.92 2.07L12 6l2.08.93zM3.5 11L4 9l2-.5L4 8l-.5-2L3 8l-2 .5L3 9z ",
   lan: "M13 22h8v-7h-3v-4h-5V9h3V2H8v7h3v2H6v4H3v7h8v-7H8v-2h8v2h-3v7zM10 7V4h4v3h-4zM9 17v3H5v-3h4zm10 0v3h-4v-3h4z ",
   link: "M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z ",
@@ -968,8 +988,8 @@ function sectionCard(title, inner){ return `<div class="card"><div class="sec-he
    Auto mode (S.ai.autoSum) renders the verdict immediately; otherwise a
    "Summarize with AI" button fills it in on tap. */
 const VSUM = {
-  "diag-review": "NEEDS ATTENTION — Touch grid failed (74/96 cells, dead zone top-left): usually a digitizer fault or damaged panel region. The proximity sensor is absent on this device, which is missing hardware, not a failure. Everything else that ran looks normal.",
-  "battery": "ALL GOOD — 72% and discharging normally for screen-on use. Temperature 31.4 °C is well inside the healthy range, voltage looks normal, and the reported health is Good.",
+  "diag-review": "NEEDS ATTENTION\n- Touch grid — failing: 74/96 cells, dead zone top-left; usually a digitizer fault or damaged panel.\n- Proximity sensor — unusual: absent, which is missing hardware rather than a failure.\n- Everything else that ran — normal.",
+  "battery": "ALL GOOD\n- Level — normal: 72%, discharging for screen-on use.\n- Temperature — normal: 31.4 °C, well inside the healthy range.\n- Voltage — normal; reported health is Good.",
 };
 function aiSumCard(id){
   if(!(S.ai.enabled&&S.ai.hasKey)) return "";
@@ -977,7 +997,7 @@ function aiSumCard(id){
   return `<div class="card">
     <div class="row"><span class="t-small grow">AI summary</span>
       <button class="textbtn" data-act="ai-vsum" data-id="${id}">↻</button></div>
-    ${v?`<div class="t-body" style="margin-top:6px">${esc(v)}</div>`
+    ${v?`<div class="t-body" style="margin-top:6px">${fmtAi(v)}</div>`
        :`<button class="btn-outline full" data-act="ai-vsum" data-id="${id}" style="margin-top:8px">Summarize with AI</button>`}
   </div>`;
 }
@@ -2739,12 +2759,88 @@ function fmtChat(text){
     return esc(s);
   }).join("");
 }
+/* AI rich text — mirrors AiTextFormat.kt: markdown markers become real
+   styling, status keywords become tinted icons, symbols never show. */
+const AI_CUE_ICON={POSITIVE:"check_circle",WARNING:"warning",NEGATIVE:"cancel",INFO:"info"};
+const AI_CUE_CLS={POSITIVE:"ok",WARNING:"warn",NEGATIVE:"bad",INFO:"inf"};
+const AI_NEG_BAD=/\b(no|not|nothing|without|never|hardly|barely|no signs of)\s+(abnormal\w*|unusual|fail(ed|ing|s|ure)?|failures?|issues?|problems?|errors?|critical|wrong|high|low|hot|bad)\b/ig;
+const AI_NEG_GOOD=/\b(no|not|nothing|isn't|isnt|without|never|hardly|barely)\s+(normal|healthy|good|fine|ok(ay)?|passed?|in range|within (the )?normal)\b/ig;
+function aiCue(t){
+  const s=t.replace(AI_NEG_BAD," ").replace(AI_NEG_GOOD," ");
+  let cue="NONE";
+  if(/\b(fail(ed|ing|s|ure)?|critical|needs attention|errors?|dead|broken|not working)\b|[❌✗✘🔴]/i.test(s))cue="NEGATIVE";
+  else if(/\b(worth checking|unusual|warnings?|warn|abnormal|elevated|high|low|overheat(ing)?|hot)\b|[⚠🟡🟠]/i.test(s))cue="WARNING";
+  else if(/\b(all good|normals?|pass(ed)?|healthy|ok(ay)?|in range|within (the )?normal|looks good|no issues?)\b|[✅✓✔🟢]/i.test(s))cue="POSITIVE";
+  else if(/^(note|tip)\b|[ℹ💡]/i.test(s))cue="INFO";
+  if(cue==="NONE"){
+    AI_NEG_GOOD.lastIndex=0; AI_NEG_BAD.lastIndex=0;
+    if(AI_NEG_GOOD.test(t))cue="WARNING"; else if(AI_NEG_BAD.test(t))cue="POSITIVE";
+  }
+  return cue;
+}
+const aiStripLead=s=>s.replace(/^[\s✅❌⚠✓✔✗✘🟢🔴🟡🟠ℹ💡🔥⭐️]+/,"");
+function fmtInline(s){
+  let h=esc(s);
+  h=h.replace(/\*\*([^*\s](?:[^]*?[^*\s])?)\*\*/g,"<b>$1</b>")
+     .replace(/(?<![A-Za-z0-9_])__([^_\s](?:[^]*?[^_\s])?)__(?![A-Za-z0-9_])/g,"<b>$1</b>")
+     .replace(/\*([^*\s](?:[^]*?[^*\s])?)\*/g,"<i>$1</i>")
+     .replace(/(?<![A-Za-z0-9_])_([^_\s](?:[^]*?[^_\s])?)_(?![A-Za-z0-9_])/g,"<i>$1</i>")
+     .replace(/`([^`]+)`/g,"<code>$1</code>")
+     .replace(/--+/g,"—")
+     .replace(/[*_`]+/g,(m,o,str)=>/[A-Za-z0-9]/.test(str[o-1]||"")&&/[A-Za-z0-9]/.test(str[o+m.length]||"")?m:"")
+     .replace(/ {2,}/g," ");
+  return h.trim();
+}
+const aiIco=cue=>`<span class="ai-ico ${AI_CUE_CLS[cue]}"><svg viewBox="0 0 24 24"><path d="${ICONS[AI_CUE_ICON[cue]]||ICONS.info}"/></svg></span>`;
+function fmtAiProse(s){
+  const out=[]; let para=[];
+  const flush=()=>{ if(!para.length)return;
+    const joined=para.join(" "); para=[];
+    const cue=aiCue(joined);
+    const h=fmtInline(cue==="NONE"?joined:aiStripLead(joined));
+    if(h) out.push(`<div class="ai-line">${cue==="NONE"?"":aiIco(cue)}${h}</div>`);
+  };
+  for(const raw of s.split("\n")){
+    const t=raw.trim(); if(!t){flush();continue;}
+    let m;
+    if(/^\s*([\-*_])(\s*\1){2,}\s*$/.test(t)){flush();out.push(`<div class="ai-hr"></div>`);continue;}
+    if(m=t.match(/^#{1,6}\s+(.+)$/)){flush();out.push(`<div class="ai-h">${fmtInline(aiStripLead(m[1]))}</div>`);continue;}
+    if(m=t.match(/^(all good|worth checking|needs attention)\b[\s:—–.,!-]*(.*)$/i)){
+      flush();
+      const ph=m[1].toLowerCase(), cue=ph==="all good"?"POSITIVE":ph==="worth checking"?"WARNING":"NEGATIVE";
+      const rest=fmtInline(aiStripLead(m[2]));
+      out.push(`<div class="ai-line"><span class="ai-verdict ${AI_CUE_CLS[cue]}">${ph[0].toUpperCase()+ph.slice(1)}</span>`+
+        (rest?`<span>${rest}</span>`:"")+`</div>`);
+      continue;
+    }
+    if(m=t.match(/^[-*+•]\s+(.+)$/)){flush();
+      const cue=aiCue(m[1]), body=cue==="NONE"?m[1]:aiStripLead(m[1]);
+      out.push(`<div class="ai-line">${cue==="NONE"?`<span class="ai-dot">•</span>`:aiIco(cue)}${fmtInline(body)}</div>`);continue;}
+    if(m=t.match(/^(\d{1,2})[.)]\s+(.+)$/)){flush();
+      const cue=aiCue(m[2]), body=cue==="NONE"?m[2]:aiStripLead(m[2]);
+      out.push(`<div class="ai-line"><span class="ai-num">${m[1]}.</span>${fmtInline(body)}</div>`);continue;}
+    para.push(t.replace(/^#+/,""));
+  }
+  flush();
+  return out.join("");
+}
+function fmtAi(text){
+  return text.split("```").map((p,i)=>{
+    const s=p.trim(); if(!s) return "";
+    if(i%2===1){
+      const nl=s.indexOf("\n"), first=(nl<0?s:s.slice(0,nl)).toLowerCase();
+      const body=nl>0&&/^(json|kotlin|java|bash|sh|shell|xml|yaml|text)$/.test(first)?s.slice(nl+1).trim():s;
+      return `<span class="code">${esc(body)}</span>`;
+    }
+    return fmtAiProse(s);
+  }).join("");
+}
 function chatTurn(t,i,isLast){
   if(t.role==="user")
     return `<div class="msgrow user"><div class="msgcol"><div class="msg user">${fmtChat(t.text)}</div></div></div>`;
   const sugs=(t.suggestions&&t.suggestions.length)?t.suggestions:AI_FALLBACK_SUG;
   return `<div class="msgrow">${aiAvatar()}<div class="msgcol">
-    ${t.text?`<div class="msg ai">${fmtChat(t.text)}</div>`:""}
+    ${t.text?`<div class="msg ai">${fmtAi(t.text)}</div>`:""}
     ${(t.proposals||[]).map((p,j)=>{
       const nav=p.action.startsWith("nav:");
       return `<div class="prop${p.allowed?"":" disabled"}" ${p.allowed?`data-prop="${i}:${j}"`:""}>
@@ -3145,18 +3241,18 @@ On Android &lt; 11 this section may be absent.</pre></div>
       if(!S.ai.hasKey){ t.textContent="No API key stored — add one in Settings."; t.className="t-mini err"; break; }
       t.textContent="Summarizing…";
       later(()=>{ const tt=$("#aiSummaryText"); if(tt){
-        tt.textContent="21 checks ran: 18 passed. Touch grid failed (74/96 cells, dead zone top-left) — consistent with a digitizer fault or damaged panel region. Proximity sensor absent (NOT_SUPPORTED). Recommend panel replacement, then re-run Full diagnostic and use Compare sessions to verify the fix.";
+        tt.innerHTML=fmtAi("NEEDS ATTENTION — 1 of 21 checks failed.\n- Touch grid — failing: 74/96 cells, dead zone top-left; consistent with a digitizer fault.\n- 18 checks — normal.\n- Proximity sensor — unusual: absent (missing hardware, not a failure).\n\nNext step: panel replacement, then re-run Full diagnostic and compare sessions to verify the fix.");
         tt.className="t-body"; } },1300); break; }
     case "ai-explain": { const en=S.engine; if(!en) break;
       const fails=Object.entries(en.results).filter(([,s])=>s==="FAIL");
-      const name=t=>esc(TEST(t)?.title||t);
-      const note=t=>en.notes[t]?` — ${esc(en.notes[t])}`:"";
+      const name=t=>TEST(t)?.title||t;
+      const note=t=>en.notes[t]?" — "+en.notes[t]:"";
       const body = el.dataset.kind==="repair"
-        ? (fails.map(([t])=>`• ${name(t)}${note(t)}: re-test once, then check the related hardware or permission path.`).join("<br>")||"No failures to repair.")
-        : `${Object.keys(en.results).length} checks ran. `+(fails.length?fails.map(([t])=>`${name(t)} failed${note(t)}`).join("; ")+".":"No failures recorded.");
+        ? (fails.map(([t])=>`- ${name(t)} — failing${note(t)}. Re-test once, then check the related hardware or permission path.`).join("\n")||"No failures to repair.")
+        : `${Object.keys(en.results).length} checks ran.\n`+(fails.length?fails.map(([t])=>`- ${name(t)} — failed${note(t)}`).join("\n"):"All results normal.");
       $("#overlay").innerHTML=`<div class="scrim" data-act="dlg-close"></div>
         <div class="dialog"><h3>DroidKit Intelligence</h3>
-          <div class="dtext">${body}</div>
+          <div class="dtext">${fmtAi(body)}</div>
           <div class="dbtns"><button class="textbtn" data-act="dlg-close">Close</button></div></div>`;
       break; }
     case "splash-next": if(cur()==="splash") replace("onboarding"); break;
@@ -3393,7 +3489,7 @@ function sendAi(v){
   S.ai.turns.push({role:"user",text:v}); S.ai.busy=true; render();
   later(()=>{ S.ai.busy=false;
     S.ai.turns.push({role:"assistant",
-      text:"Battery is at 72%, discharging at ~412 mA with a healthy 31.4 °C. Nothing abnormal — the drain is consistent with screen-on use.\n\nI can open a relevant tool if you want to dig deeper.",
+      text:"ALL GOOD — your battery looks healthy.\n- Level — normal: 72%, discharging at about 412 mA.\n- Temperature — normal: 31.4 °C.\n- Drain — normal for screen-on use.\n\nI can open a relevant tool if you want to dig deeper.",
       proposals:[
         {label:"Open Battery Lab",allowed:true,action:"nav:battery"},
         {label:"dumpsys batterystats",allowed:elevatedReady(),
