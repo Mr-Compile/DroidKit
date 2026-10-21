@@ -533,6 +533,7 @@ const S = {
   ble: { scanning:false, results:[], gatt:{}, raw:{} },
   snapshots: [], snapSel: { before:null, after:null },
   sensorRec: { recording:false, samples:0 },
+  sensorCheck: { running:false, done:false, counts:{} },
   preset: "FULL",
   technician: "",
   elevLog: [],
@@ -570,7 +571,8 @@ const TOOLS = [
   t("ai.chat","DroidKit Chat","AI assistant — device answers, tool shortcuts and read-only checks",CAT.DEVICE,"settings/ai_chat"),
   t("diagnostics.full","Full Diagnostic","Guided end-to-end hardware check with a saved report",CAT.DIAGNOSTICS,"diagnose/guided"),
   t("diagnostics.quick","Quick Tests","Jump straight to a single hardware test",CAT.DIAGNOSTICS,"diagnose"),
-  t("sensors.live","Live Sensor Monitor","Stream live readings from supported sensors",CAT.DIAGNOSTICS,"sensors/live"),
+  t("sensors.live","Live Sensor Monitor","Stream live readings w/ min/max/mean stats + CSV record",CAT.DIAGNOSTICS,"sensors/live"),
+  t("sensors.check","Sensor Check","Batch-verify every live-capable sensor produces events",CAT.DIAGNOSTICS,"sensors/check"),
   t("display.deadpixel","Dead Pixel Test","Full-screen color slides to spot dead pixels",CAT.DIAGNOSTICS,"display"),
   t("display.touch","Touch Test","Count simultaneous touch points",CAT.DIAGNOSTICS,"display"),
   t("display.modes","Display Modes","Current and supported display modes, refresh rates, HDR",CAT.DIAGNOSTICS,"display/modes"),
@@ -708,6 +710,7 @@ const TOOL_ICON = {
   "deviceinfo.overview":"phone_android","deviceinfo.storage":"storage",
   "battery.lab":"battery_std","sensors.lab":"sensors","sensors.orientation":"explore",
   "diagnostics.full":"monitor_heart","diagnostics.quick":"fact_check","sensors.live":"timeline",
+  "sensors.check":"fact_check",
   "display.deadpixel":"fiber_manual_record","display.touch":"touch_app","display.modes":"display_settings",
   "display.motion":"animation","audio.speaker":"volume_up","audio.microphone":"mic","audio.vibration":"vibration",
   "audio.routing":"alt_route","camera.capture":"photo_camera","camera.flash":"flash_on","camera.details":"camera_alt",
@@ -766,6 +769,7 @@ const TOOL_KW = {
   "permissions.inspector":["perms","apps","granted","declared"],"reports.compare":["diff","before after","sessions","repair"],
   "reports.export":["share","pdf","history","session","text"],"sensors.lab":["inventory","accelerometer","gyroscope","vendor","range"],
   "sensors.live":["live","stream","monitor","readings"],"sensors.orientation":["compass","heading","tilt","azimuth","pitch","roll"],
+  "sensors.check":["check","verify","batch","test","responding"],
   "usb.descriptors":["vid","pid","endpoints","interfaces","descriptors","accessory"],"usb.host":["usb","otg","host","device","connected"],
 };
 const TEST_KW = {
@@ -1259,6 +1263,7 @@ function render(){
     case "sensors":
       if(parts[1]==="orientation"){ body = scrOrientation(); title="Orientation"; }
       else if(parts[1]==="live"&&!parts[2]){ body = scrLiveSensorPicker(); title = "Live Sensor Monitor"; }
+      else if(parts[1]==="check"){ body = scrSensorCheck(); title = "Sensor Check"; }
       else if(parts[1]==="live"){ body = scrLiveSensor(parseInt(parts[2])); title = SENSORS.find(s=>s.type===parseInt(parts[2]))?.name || "Live Sensor"; }
       else { body = scrSensors(); title="Sensor Lab"; }
       break;
@@ -2007,11 +2012,36 @@ function scrAboutLicenses(){
 function scrLiveSensorPicker(){
   const live=SENSORS.filter(s=>s.live);
   if(!live.length) return `<div class="empty">No sensors on this device support live monitoring.</div>`;
-  return `<div class="pad col">${live.map(s=>`
+  return `<div class="pad col">
+    <button class="btn-outline" data-nav="sensors/check">Run batch sensor check</button>
+    ${live.map(s=>`
     <div class="card clickable" data-nav="sensors/live/${s.type}">
       <div class="t-med" style="font-weight:600">${esc(s.name)}</div>
       ${infoRow("Type",`${s.stype} (${s.type})`,false)}
       ${infoRow("Max range",`${s.range} ${s.unit}`.trim(),false)}</div>`).join("")}
+  </div>`;
+}
+/* ---------- sensor batch check ---------- */
+function scrSensorCheck(){
+  const st=S.sensorCheck;
+  const live=SENSORS.filter(s=>s.live);
+  const absent=SENSORS.filter(s=>!s.live);
+  return `<div class="pad col">
+    ${sectionCard("Batch check", `
+      <div class="t-mini sub">Streams every live-capable sensor for 4s and reports which produced events. A sensor that only fires on change (e.g. proximity) can read SILENT while working fine.</div>
+      <button class="btn-outline" style="margin-top:8px" data-act="sensor-check" ${st.running?"disabled":""}>${st.running?"Checking…":"Run check"}</button>`)}
+    ${st.done||st.running?live.map(s=>{
+      const events=st.counts[s.type]||0;
+      const v=s.live?(events>0?"RESPONDING":"SILENT"):"ABSENT";
+      const detail=v==="RESPONDING"?`${events} events · ~${(events/4).toFixed(1)} Hz`:
+        v==="SILENT"?"No events in 4s window":"Not present on this device";
+      return `<div class="row" style="padding:4px 0"><div class="grow">
+        <div class="t-body">${esc(s.name)}</div><div class="t-mini sub">${detail}</div></div>
+        <span class="t-mini" style="font-weight:700;color:${v==="RESPONDING"?"var(--primary)":v==="SILENT"?"var(--error)":"var(--sub)"}">${v}</span></div>`;
+    }).join(""):""}
+    ${st.done?absent.map(s=>`<div class="row" style="padding:4px 0"><div class="grow">
+      <div class="t-body">${esc(s.name)}</div><div class="t-mini sub">Not present on this device</div></div>
+      <span class="t-mini" style="font-weight:700;color:var(--sub)">ABSENT</span></div>`).join(""):""}
   </div>`;
 }
 /* ---------- tool info dialog ---------- */
@@ -2344,6 +2374,13 @@ function scrLiveSensor(type){
       <div class="inforow"><span class="k">${ax}</span><span class="v" id="lv${i}">—</span></div>
       <div class="sensorbar"><div id="lb${i}" style="width:0%"></div></div>`).join("")+
       `<div class="inforow"><span class="k">Updates</span><span class="v" id="lvupdates">0</span></div>`)}
+    ${sectionCard("Session stats", s.axes.map((ax,i)=>{
+        const base={x:0.4,y:9.4,z:0.8,value:320,w:0.5}[ax]??0;
+        return infoRow(`${ax} min / max / mean`,
+          `${(base-0.8).toFixed(3)} / ${(base+0.8).toFixed(3)} / ${base.toFixed(3)} ${s.unit}`.trim(),false);
+      }).join("")+
+      (s.axes.length>=2?infoRow("Magnitude now / peak",`9.41 / 9.98 ${s.unit}`.trim(),false):"")+
+      `<button class="textbtn" data-act="sensor-stats-reset">Reset stats</button>`)}
     ${sectionCard("Sensor", infoRow("Vendor",s.vendor)+infoRow("Type",s.stype,false)+infoRow("Max range",(s.range+" "+s.unit).trim(),false)+infoRow("Resolution",s.res,false))}
     ${sectionCard("Session recording", `
       <div class="t-body" id="recState">${rec.recording?`Recording… ${rec.samples} samples (cap 2000)`:"Record a short live session, then share it as CSV."}</div>
@@ -3580,6 +3617,16 @@ On Android &lt; 11 this section may be absent.</pre></div>
         S.sweep=out; const o=$("#sweepout"); if(o)o.innerHTML=out; },1400); break; }
     case "snap-capture": S.snapshots.push({id:S.snapshots.length+1,at:Date.now(),free:DEVICE.storageFree}); toast("Snapshot captured"); render(); break;
     case "snap-clear": S.snapSel={before:null,after:null}; render(); break;
+    case "sensor-check": { const c=S.sensorCheck; c.running=true; c.done=false; c.counts={};
+      render();
+      every(()=>{ if(!c.running)return;
+        SENSORS.filter(s=>s.live).forEach(s=>{ c.counts[s.type]=(c.counts[s.type]||0)+Math.floor(Math.random()*6); });
+        render(); },400);
+      later(()=>{ c.running=false; c.done=true;
+        // proximity stays silent in the mock — honest SILENT verdict
+        const prox=SENSORS.find(s=>s.type===8); if(prox) c.counts[prox.type]=0;
+        render(); },4200); break; }
+    case "sensor-stats-reset": toast("Session stats reset"); break;
     case "sensor-rec": { const r=S.sensorRec;
       if(r.recording){ r.recording=false; render(); }
       else { r.recording=true; r.samples=0; render();

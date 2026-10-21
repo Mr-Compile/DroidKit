@@ -33,6 +33,15 @@ object SensorsFeature : FeatureContribution {
             iconKey = ToolIconKeys.LIVE,
         ),
         Tool(
+            id = "sensors.check",
+            title = "Sensor Check",
+            description = "Batch-verify every live-capable sensor produces events",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/check",
+            keywords = setOf("check", "verify", "batch", "test", "responding"),
+            iconKey = ToolIconKeys.FACT_CHECK,
+        ),
+        Tool(
             id = "sensors.orientation",
             title = "Orientation Helper",
             description = "Azimuth/pitch/roll from the rotation-vector sensor",
@@ -50,6 +59,9 @@ fun NavGraphBuilder.sensorsGraph(nav: NavHostController) {
         OrientationScreen(onBack = { nav.navigateUp() })
     }
     composable("${SensorsFeature.ROUTE}/live") { LiveSensorPickerScreen(nav) }
+    composable("${SensorsFeature.ROUTE}/check") {
+        SensorCheckScreen(onBack = { nav.navigateUp() })
+    }
     composable(
         route = "${SensorsFeature.ROUTE}/live/{type}",
         arguments = listOf(navArgument("type") { type = NavType.IntType }),

@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -53,14 +54,25 @@ fun LiveSensorScreen(
     var updates by remember { mutableStateOf(0L) }
     var recording by remember { mutableStateOf(false) }
     val samples = remember { mutableListOf<Pair<Long, FloatArray>>() }
+    val axisCount = when (sensorType) {
+        Sensor.TYPE_LIGHT, Sensor.TYPE_PROXIMITY, Sensor.TYPE_PRESSURE,
+        Sensor.TYPE_AMBIENT_TEMPERATURE, Sensor.TYPE_RELATIVE_HUMIDITY -> 1
+        Sensor.TYPE_ROTATION_VECTOR -> 4
+        else -> 3
+    }
+    val stats = remember(sensor) { SensorStats(axisCount) }
+    var statsTick by remember { mutableStateOf(0L) }
     val context = LocalContext.current
 
     DisposableEffect(sensor, recording) {
         if (sensor == null) return@DisposableEffect onDispose {}
+        stats.reset()
         val listener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
                 values = event.values.copyOf()
                 updates++
+                stats.add(event.values)
+                if (stats.count % 10L == 0L) statsTick = stats.count // throttle recomposition
                 if (recording && samples.size < MAX_SAMPLES) {
                     samples += event.timestamp to event.values.copyOf()
                 }
@@ -115,6 +127,43 @@ fun LiveSensorScreen(
                                 }
                             }
                             InfoRow("Updates", updates.toString(), copyable = false)
+                        }
+                    }
+                }
+                item {
+                    SectionCard(title = "Session stats") {
+                        @Suppress("UNUSED_EXPRESSION") statsTick // recompose on stats updates
+                        if (stats.count == 0L) {
+                            Text(
+                                "Stats accumulate while readings arrive.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        } else {
+                            axes.forEachIndexed { i, axis ->
+                                val mn = stats.min(i)
+                                val mx = stats.max(i)
+                                val mean = stats.mean(i)
+                                InfoRow(
+                                    "$axis min / max / mean",
+                                    if (mn == null || mx == null || mean == null) "—"
+                                    else "%.3f / %.3f / %.3f %s".format(mn, mx, mean, unit).trim(),
+                                    copyable = false,
+                                )
+                            }
+                            if (axes.size >= 2) {
+                                InfoRow(
+                                    "Magnitude now / peak",
+                                    "%.3f / %.3f %s".format(
+                                        stats.lastMagnitude, stats.peakMagnitude, unit,
+                                    ).trim(),
+                                    copyable = false,
+                                )
+                            }
+                            TextButton(onClick = {
+                                stats.reset()
+                                statsTick = 0L
+                            }) { Text("Reset stats") }
                         }
                     }
                 }

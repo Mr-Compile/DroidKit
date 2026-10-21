@@ -20,6 +20,10 @@ class SensorsViewModel @Inject constructor(
 
     fun defaultSensor(type: Int): Sensor? = sensorManager?.getDefaultSensor(type)
 
+    /** All live-capable sensor types present on this device. */
+    fun liveSensors(): List<Pair<Int, Sensor>> =
+        LIVE_TYPES.mapNotNull { t -> defaultSensor(t)?.let { t to it } }
+
     companion object {
         /** Sensor types safe to stream live without special permissions. */
         val LIVE_TYPES: Set<Int> = setOf(

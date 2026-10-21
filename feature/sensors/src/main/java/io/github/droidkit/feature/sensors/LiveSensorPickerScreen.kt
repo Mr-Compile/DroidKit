@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +47,12 @@ fun LiveSensorPickerScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    OutlinedButton(
+                        onClick = { nav.navigate("sensors/check") { launchSingleTop = true } },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Run batch sensor check") }
+                }
                 items(sensors, key = { it.type }) { s ->
                     Card(
                         onClick = { nav.navigate("sensors/live/${s.type}") { launchSingleTop = true } },
