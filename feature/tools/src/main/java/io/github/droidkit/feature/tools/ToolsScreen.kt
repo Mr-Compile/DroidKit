@@ -51,6 +51,7 @@ import io.github.droidkit.core.ui.components.ToolIcons
 import io.github.droidkit.core.ui.components.ToolInfoDialog
 import io.github.droidkit.core.ui.components.UiProblemCard
 import io.github.droidkit.core.ui.components.openAppSettings
+import io.github.droidkit.core.ui.theme.categoryAccent
 
 /** Browse order for the grouped list — same families as the product map/mockup. */
 private val CATEGORY_ORDER = listOf(
@@ -247,7 +248,10 @@ private fun SearchResultRow(entry: SearchEntry, onClick: () -> Unit) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ToolIcon(ToolIcons.forEntry(entry), category = entry.type.accentCategory())
+            ToolIcon(
+                ToolIcons.forEntry(entry),
+                accent = entry.type.accentCategory()?.let { categoryAccent(it) },
+            )
             Column(
                 modifier = Modifier
                     .weight(1f)

@@ -6,11 +6,14 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,10 +23,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
@@ -31,6 +41,30 @@ import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
+
+/** RSSI trend — -100..-30 dBm mapped to the sparkline height. */
+@Composable
+private fun RssiSparkline(samples: List<Int>, modifier: Modifier = Modifier) {
+    val color = MaterialTheme.colorScheme.primary
+    Canvas(modifier = modifier.fillMaxWidth().height(40.dp)) {
+        if (samples.size < 2) return@Canvas
+        val padX = 4.dp.toPx()
+        val padY = 6.dp.toPx()
+        val stepX = (size.width - 2 * padX) / (samples.size - 1)
+        val offsets = samples.mapIndexed { i, v ->
+            Offset(
+                x = padX + i * stepX,
+                y = padY + (1f - (v.coerceIn(-100, -30) + 100) / 70f) * (size.height - 2 * padY),
+            )
+        }
+        val path = Path().apply {
+            moveTo(offsets.first().x, offsets.first().y)
+            offsets.drop(1).forEach { lineTo(it.x, it.y) }
+        }
+        drawPath(path, color = color, style = Stroke(2.dp.toPx()))
+        drawCircle(color = color, radius = 3.dp.toPx(), center = offsets.last())
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +78,7 @@ fun BluetoothScreen(
     val bonded by viewModel.bonded.collectAsStateWithLifecycle()
     val scanning by viewModel.scanning.collectAsStateWithLifecycle()
     val scanResults by viewModel.scanResults.collectAsStateWithLifecycle()
+    val expanded = remember { mutableStateMapOf<String, Boolean>() }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -182,31 +217,55 @@ fun BluetoothScreen(
 
             if (scanning || scanResults.isNotEmpty()) {
                 items(scanResults, key = { it.address }) { device ->
-                    Card(
-                        onClick = {
-                            if (hasPermission) {
-                                viewModel.stopScan()
-                                onOpenDevice(device.address)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    val isOpen = expanded[device.address] == true
+                    Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 device.name ?: "Unnamed advertiser",
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                             Text(
-                                "${device.address} · ${device.rssi} dBm",
+                                "${device.address} · ${device.rssi} dBm" +
+                                    (device.decoded?.beaconHint?.let { " · $it" } ?: ""),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Text(
-                                if (hasPermission) "Tap to inspect GATT services (read-only)"
-                                else "BLUETOOTH_CONNECT required to inspect services",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                            if (device.rssiHistory.size > 1) {
+                                RssiSparkline(
+                                    device.rssiHistory,
+                                    modifier = Modifier.padding(top = 6.dp),
+                                )
+                            }
+                            device.decoded?.fields?.forEach { (k, v) ->
+                                InfoRow(k, v)
+                            }
+                            if (isOpen && device.rawBytes != null) {
+                                Text(
+                                    BleAdvertiser.hex(device.rawBytes),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (device.rawBytes != null) {
+                                    TextButton(onClick = {
+                                        expanded[device.address] = !isOpen
+                                    }) { Text(if (isOpen) "Hide raw" else "Raw") }
+                                }
+                                TextButton(onClick = {
+                                    if (hasPermission) {
+                                        viewModel.stopScan()
+                                        onOpenDevice(device.address)
+                                    }
+                                }) {
+                                    Text(
+                                        if (hasPermission) "Inspect GATT"
+                                        else "GATT needs BLUETOOTH_CONNECT",
+                                    )
+                                }
+                            }
                         }
                     }
                 }

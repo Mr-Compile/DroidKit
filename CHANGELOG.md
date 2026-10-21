@@ -90,6 +90,14 @@
   (NDEF-content copy — tag UID and protected regions never copied) and
   Format ops; copyable/shareable plain-text tag report. `makeReadOnly`
   remains excluded; Tag Doctor gains a Copyable check
+- Location/GPS diagnostic upgraded to a live read (owner-approved V1 scope
+  extension): the Phone Doctor connectivity.location test now shows provider
+  state, precise-vs-approximate grant and the newest cached fix (coordinates,
+  accuracy, age), plus a "Get live fix" button that proves GNSS acquisition
+  with a 20 s timeout — timeout reports UNKNOWN, never FAIL. Runs behind the
+  standard permission gate (ACCESS_COARSE_LOCATION), so denial records
+  PERMISSION_REQUIRED; raw coordinates stay on screen and never enter notes,
+  reports or AI fields
 
 ### Fixed
 - Audio/camera/display tool entries previously opened stale placeholder

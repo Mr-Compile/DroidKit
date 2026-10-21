@@ -3,6 +3,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- COARSE gates the location test; FINE is requested in-screen for a GPS-grade fix. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- Diagnostics must still run on hardware lacking these features -->
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />

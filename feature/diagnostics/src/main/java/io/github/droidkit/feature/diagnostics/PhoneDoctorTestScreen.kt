@@ -18,6 +18,7 @@ import io.github.droidkit.feature.diagnostics.tests.ChargingCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.ConnectivityCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.DisplayColorScreen
 import io.github.droidkit.feature.diagnostics.tests.FlashTestScreen
+import io.github.droidkit.feature.diagnostics.tests.LocationCheckScreen
 import io.github.droidkit.feature.diagnostics.tests.MicrophoneTestScreen
 import io.github.droidkit.feature.diagnostics.tests.MultitouchScreen
 import io.github.droidkit.feature.diagnostics.tests.SensorTestScreen
@@ -57,6 +58,7 @@ fun PhoneDoctorTestScreen(
             PhoneDoctorRoute.CameraPreview -> CameraTestScreen(test, onResult, autoResult)
             PhoneDoctorRoute.Flash -> FlashTestScreen(test, onResult, autoResult)
             PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.LocationCheck -> LocationCheckScreen(test, onResult, autoResult)
             PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult, autoResult)
             PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult, autoResult)
             PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test, onBack)

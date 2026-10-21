@@ -14,6 +14,7 @@ enum class PhoneDoctorRoute {
     CameraPreview,
     Flash,
     ConnectivityCheck,
+    LocationCheck,
     ChargingCheck,
     Sensor,
     Unsupported,
@@ -28,6 +29,7 @@ fun routeFor(test: PhoneDoctorTest): PhoneDoctorRoute = when {
     test.id == "audio.microphone" -> PhoneDoctorRoute.Microphone
     test.id == "camera.flash" -> PhoneDoctorRoute.Flash
     test.id.startsWith("camera.") -> PhoneDoctorRoute.CameraPreview
+    test.id == "connectivity.location" -> PhoneDoctorRoute.LocationCheck
     test.capabilityKey != null -> PhoneDoctorRoute.ConnectivityCheck
     test.id == "power.charging" -> PhoneDoctorRoute.ChargingCheck
     test.sensorType != null -> PhoneDoctorRoute.Sensor

@@ -71,6 +71,9 @@ object DiagnosticsFeature : FeatureContribution {
         "power.charging" to ToolIconKeys.CHARGING,
     )
 
+    /** Icon key for a catalog test — the same key its search entry uses. */
+    fun testIconKey(testId: String): String = testIcons.getValue(testId)
+
     private val testKeywords: Map<String, Set<String>> = mapOf(
         "display.color" to setOf("screen", "color", "banding", "tint"),
         "display.dead_pixel" to setOf("pixel", "stuck", "screen", "dot"),

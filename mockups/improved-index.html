@@ -669,6 +669,7 @@ const S = {
     "android.permission.POST_NOTIFICATIONS": true, "android.permission.CAMERA": true,
     "android.permission.RECORD_AUDIO": false, "android.permission.BLUETOOTH_CONNECT": false,
     "android.permission.BLUETOOTH_SCAN": false, "android.permission.ACCESS_FINE_LOCATION": true,
+    "android.permission.ACCESS_COARSE_LOCATION": true,
     "android.permission.CHANGE_WIFI_MULTICAST_STATE": true,
     "android.permission.READ_PHONE_STATE": false, "android.permission.READ_BASIC_PHONE_STATE": true,
   },
@@ -719,6 +720,7 @@ const P = {
   REC:"android.permission.RECORD_AUDIO", CAM:"android.permission.CAMERA",
   VIB:"android.permission.VIBRATE", NFC:"android.permission.NFC",
   BTC:"android.permission.BLUETOOTH_CONNECT", BTS:"android.permission.BLUETOOTH_SCAN",
+  ACL:"android.permission.ACCESS_COARSE_LOCATION", AFL:"android.permission.ACCESS_FINE_LOCATION",
 };
 const NETP = [P.INTERNET, P.ANS];
 const TOOLS = [
@@ -1033,7 +1035,7 @@ const TESTS = [
   {id:"camera.flash",title:"Flash",cat:"Camera",instr:"Toggle the torch on and off while watching the rear of the device. The LED should light clearly.",perm:P.CAM},
   {id:"connectivity.wifi",title:"Wi-Fi",cat:"Connectivity",instr:"Checks Wi-Fi hardware capability and whether the radio is enabled. The capability result records automatically.",capKey:"wifi"},
   {id:"connectivity.bluetooth",title:"Bluetooth",cat:"Connectivity",instr:"Checks Bluetooth hardware capability and adapter state. The capability result records automatically.",capKey:"bluetooth"},
-  {id:"connectivity.location",title:"Location / GPS",cat:"Connectivity",instr:"Checks GNSS location capability and whether location is enabled. The capability result records automatically.",capKey:"location"},
+  {id:"connectivity.location",title:"Location / GPS",cat:"Connectivity",instr:"Checks GNSS capability, provider state and the cached fix. Tap Get live fix to prove GNSS acquires a position. Needs location permission; the capability result records automatically.",capKey:"location",perm:P.ACL},
   {id:"connectivity.nfc",title:"NFC",cat:"Connectivity",instr:"Checks NFC hardware capability and adapter state. The capability result records automatically.",capKey:"nfc"},
   {id:"connectivity.usb",title:"USB",cat:"Connectivity",instr:"Checks USB host/accessory capability. The capability result records automatically.",capKey:"usb"},
   {id:"power.charging",title:"Charging / battery",cat:"Power",instr:"Review the battery readings. Plug in a charger and confirm the charging state changes to charging and the plug source appears."},
@@ -1757,6 +1759,23 @@ function testBody(test, mode){
     case test.id==="camera.flash":
       return std(test, `<button class="btn full" data-act="torch" id="torchbtn">Turn torch ON</button>
         <div class="t-mini" id="torchstate" style="margin-top:8px"></div>`);
+    case test.id==="connectivity.location": {
+      const verdict = mode==="guided" ? "Result recorded: PASS" : "Result: PASS";
+      return `<div style="padding:16px"><div class="t-med" style="font-weight:600">${test.title}</div>
+        <div class="t-body" style="margin-top:4px">${test.instr}</div>
+        <div class="card" style="margin-top:16px">
+          <div class="row"><span class="grow t-body">Hardware capability</span><span class="t-body">Present</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Location enabled</span><span class="t-body">yes</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">GPS provider</span><span class="t-body">on</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Network provider</span><span class="t-body">on</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Fused provider</span><span class="t-body">on</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Precise location</span><span class="t-body">granted</span></div>
+          <div class="row" style="margin-top:8px"><span class="grow t-body">Cached fix</span><span class="t-body">gps: 42.69771, 23.32187, ±14 m, 40s ago</span></div>
+          <div class="row" id="loclive" style="margin-top:8px;display:none"><span class="grow t-body">Live fix</span><span class="t-body" id="locliveval"></span></div>
+          <div class="t-mini sub" style="margin-top:8px">${verdict}</div>
+        </div>
+        <button class="btn full" id="locfix" style="margin-top:12px">Get live fix</button></div>`;
+    }
     case test.capKey!==undefined: {
       const r = capReading(test.capKey);
       const verdict = mode==="guided"
@@ -1879,9 +1898,21 @@ function bindTest(test, mode){
       S.sensorLast = () => `Last reading: ${vals.join(", ")}`;
     },300);
   }
+  if(test.id==="connectivity.location"){
+    $("#locfix")?.addEventListener("click",()=>{
+      const row=$("#loclive"), val=$("#locliveval"), btn=$("#locfix");
+      row.style.display=""; val.textContent="Requesting (up to 20 s)…"; btn.disabled=true;
+      later(()=>{ val.textContent="gps: 42.69776, 23.32181, ±9 m, 1s ago"; },1500);
+    });
+  }
   if(test.capKey && mode==="guided"){
     const r=capReading(test.capKey);
-    later(()=>emitResult(test, r.supported?"PASS":"NOT_SUPPORTED", r.supported?`${r.label}: ${r.value}`:r.label),1100);
+    const locNoPerm = test.id==="connectivity.location" && !S.perms["android.permission.ACCESS_COARSE_LOCATION"];
+    const state = locNoPerm ? "PERMISSION_REQUIRED" : (r.supported?"PASS":"NOT_SUPPORTED");
+    const note = locNoPerm ? "ACCESS_COARSE_LOCATION denied"
+      : test.id==="connectivity.location" ? "Location enabled: yes · last fix: gps, ~14 m, 40s ago"
+      : (r.supported?`${r.label}: ${r.value}`:r.label);
+    later(()=>emitResult(test, state, note),1100);
   }
 }
 function emitResult(test, state, auto){

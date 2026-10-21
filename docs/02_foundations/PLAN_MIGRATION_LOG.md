@@ -141,6 +141,6 @@ Repository reality: `ConnectivityCheckScreen` reads capability synchronously and
 Conflict classification: scope extension beyond frozen V1 diagnostic behavior — adds a runtime permission and an async location read to a previously synchronous check
 Decision: extension wins — dedicated `LocationCheckScreen` behind a new `PhoneDoctorRoute.LocationCheck`; guided-runner emit stays instant and capability-based; the live fix is user-triggered only; raw coordinates stay on screen (report/share/AI notes carry provider/accuracy/age only, matching the identifier-exclusion decision)
 Owner approval required?: yes — given in session (design presented, approved "sure ok")
-Files/docs updated: `docs/01_plans/2026-10-21-location-gps-fix.md` (spec); implementation files pending
-Migration completed? [ ]
-Notes: checkbox closes when the screen ships; `mockups/index.html` updates in the same commit per AGENTS.md.
+Files/docs updated: `docs/01_plans/2026-10-21-location-gps-fix.md` (spec), `feature/diagnostics/.../tests/LocationCheckScreen.kt` (new), `PhoneDoctorRoute.kt`, `PhoneDoctorTestScreen.kt`, `PhoneDoctorTest.kt`, `feature/diagnostics/src/main/AndroidManifest.xml`, `mockups/{index,improved-index}.html`, `CHANGELOG.md`, master checklist J09
+Migration completed? [x]
+Notes: guided-runner emit stays instant and capability-based; raw coordinates never leave the screen.

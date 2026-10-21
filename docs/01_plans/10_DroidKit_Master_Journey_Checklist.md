@@ -346,7 +346,7 @@ Release gate:
 - [x] Flash — torch toggle; no flash unit → NOT_SUPPORTED
 - [x] Wi-Fi capability check — auto-recorded (capability + enabled state in note)
 - [x] Bluetooth capability check
-- [x] Location/GPS capability check
+- [x] Location/GPS capability check — extended past V1: provider state, cached fix with coordinates, on-demand live fix behind permission gate (see `01_plans/2026-10-21-location-gps-fix.md`)
 - [x] NFC capability check
 - [x] USB capability check
 - [x] Charging/battery diagnostic — live level/status/plug readings

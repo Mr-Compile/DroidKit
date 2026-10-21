@@ -24,6 +24,7 @@ import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.BlockedReason
 import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.privileges.ToolResolution
+import io.github.droidkit.core.ui.theme.categoryAccent
 
 /**
  * Reason-aware availability badge (UI v6 plan files 11/22): the label names
@@ -92,7 +93,7 @@ fun ToolCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ToolIcon(ToolIcons.forTool(tool), category = tool.category)
+            ToolIcon(ToolIcons.forTool(tool), accent = categoryAccent(tool.category))
             Column(
                 modifier = Modifier
                     .weight(1f)

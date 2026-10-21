@@ -159,8 +159,9 @@ object PhoneDoctorTests {
             id = "connectivity.location",
             title = "Location / GPS",
             category = "Connectivity",
-            instructions = "Checks GNSS location capability and whether location is enabled. " +
-                "The capability result records automatically.",
+            instructions = "Checks GNSS capability, provider state and the cached fix. " +
+                "Tap Get live fix to prove GNSS acquires a position. Needs location permission; " +
+                "the capability result records automatically.",
             capabilityKey = "location",
         ),
         PhoneDoctorTest(

@@ -63,7 +63,28 @@ class BluetoothViewModel @Inject constructor(
         val name: String?,
         val rssi: Int,
         val lastSeenNanos: Long,
-    )
+        /** Raw scan-record bytes for the advertisement decoder. */
+        val rawBytes: ByteArray?,
+        /** Last [RSSI_HISTORY_CAP] readings, oldest → newest. */
+        val rssiHistory: List<Int>,
+        val decoded: AdvertisementInfo? = null,
+    ) {
+        // ByteArray in a data class — explicit equality so diffing works.
+        override fun equals(other: Any?): Boolean =
+            other is ScanResultEntry && address == other.address &&
+                name == other.name && rssi == other.rssi &&
+                rssiHistory == other.rssiHistory &&
+                rawBytes.contentEqualsOrNull(other.rawBytes) && decoded == other.decoded
+
+        override fun hashCode(): Int =
+            31 * address.hashCode() + rssi +
+                (rssiHistory.hashCode() * 7) + rawBytes.contentHashCodeOr0()
+    }
+
+    private fun ByteArray?.contentEqualsOrNull(o: ByteArray?) =
+        this?.contentEquals(o) ?: (o == null)
+
+    private fun ByteArray?.contentHashCodeOr0() = this?.contentHashCode() ?: 0
 
     private val _scanning = MutableStateFlow(false)
     val scanning: StateFlow<Boolean> = _scanning.asStateFlow()
@@ -75,15 +96,22 @@ class BluetoothViewModel @Inject constructor(
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
+            val raw = runCatching { result.scanRecord?.bytes }.getOrNull()
             val name = runCatching { result.scanRecord?.deviceName ?: result.device.name }.getOrNull()
+            val decoded = runCatching { BleAdvertiser.decode(raw) }.getOrNull()
+            val current = _scanResults.value.toMutableList()
+            val idx = current.indexOfFirst { it.address == result.device.address }
+            val history = ((current.getOrNull(idx)?.rssiHistory ?: emptyList()) + result.rssi)
+                .takeLast(RSSI_HISTORY_CAP)
             val entry = ScanResultEntry(
                 address = result.device.address,
                 name = name,
                 rssi = result.rssi,
                 lastSeenNanos = System.nanoTime(),
+                rawBytes = raw,
+                rssiHistory = history,
+                decoded = decoded,
             )
-            val current = _scanResults.value.toMutableList()
-            val idx = current.indexOfFirst { it.address == entry.address }
             if (idx >= 0) current[idx] = entry else current += entry
             _scanResults.value = current.sortedBy { it.address }
         }
@@ -193,5 +221,6 @@ class BluetoothViewModel @Inject constructor(
 
     companion object {
         const val SCAN_WINDOW_MS = 15_000L
+        const val RSSI_HISTORY_CAP = 24
     }
 }

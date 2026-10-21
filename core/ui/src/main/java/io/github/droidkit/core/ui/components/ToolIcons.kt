@@ -69,12 +69,12 @@ import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Usb
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material.icons.outlined.Wifi
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.common.SearchEntry
@@ -82,7 +82,6 @@ import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolIconKeys
-import io.github.droidkit.core.ui.theme.DroidKitCategoryColors
 
 /**
  * UI v6 icon registry (plan files 06/07): the single mapping from semantic
@@ -192,22 +191,18 @@ object ToolIcons {
     }
 }
 
-/** Relative luminance of the scheme background — tracks the resolved theme, not the OS. */
-private fun ColorScheme.isDark(): Boolean =
-    background.red * 0.2126f + background.green * 0.7152f + background.blue * 0.0722f < 0.5f
-
 /**
  * Canonical icon container: tonal rounded square, fixed 24dp glyph, decorative
  * by default so the labeled row/card announces once (plan file 19).
- * [category] tints the glyph with the per-category accent — grouping only,
- * never status; null keeps the default onSecondaryContainer.
+ * [accent] tints the glyph — resolve it through `categoryAccent`/`testAccent`
+ * in the theme package; null keeps the default onSecondaryContainer.
  */
 @Composable
 fun ToolIcon(
     icon: ImageVector,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    category: ToolCategory? = null,
+    accent: Color? = null,
 ) {
     Surface(
         shape = MaterialTheme.shapes.medium,
@@ -217,9 +212,7 @@ fun ToolIcon(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = category?.let {
-                DroidKitCategoryColors.accent(it, darkTheme = MaterialTheme.colorScheme.isDark())
-            } ?: MaterialTheme.colorScheme.onSecondaryContainer,
+            tint = accent ?: MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(8.dp).size(24.dp),
         )
     }
