@@ -732,7 +732,7 @@ const S = {
   files: { path:"/sdcard/Android/data", copying:null, sel:new Set(), q:"", saf:false, safPath:["DCIM"] },
   appopsQuery: "", appopsSel: null, appopsOps: {},
   pkgQuery: "", pkgRestore: "", pkgSel: new Set(),
-  devProps: null, devPropsQ: "",
+  devProps: null, devPropsQ: "", codecQ: "", codecRole: "all",
   nsd: null, ports: null,
   cmp: { before:null, after:null, done:false },
   obPage: 0, upd: "idle",
@@ -753,6 +753,7 @@ const NETP = [P.INTERNET, P.ANS];
 const TOOLS = [
   t("deviceinfo.overview","Device Overview","About-phone style device identity, status, SIM, OS, hardware and capabilities",CAT.DEVICE,"deviceinfo"),
   t("deviceinfo.storage","Storage Lab","Volumes, capacity, free space, storage warnings",CAT.DEVICE,"deviceinfo/storage"),
+  t("deviceinfo.codecs","Codec Inventory","All MediaCodecList decoders/encoders with MIME types and acceleration flags",CAT.DEVICE,"deviceinfo/codecs"),
   t("battery.lab","Battery Lab","Charge level, status, temperature, voltage, power draw",CAT.DEVICE,"battery"),
   t("sensors.lab","Sensor Lab","Full sensor inventory with vendor, power and range details",CAT.DEVICE,"sensors"),
   t("sensors.orientation","Orientation Helper","Azimuth/pitch/roll from the rotation-vector sensor",CAT.DEVICE,"sensors/orientation"),
@@ -899,7 +900,7 @@ const ICONS = {
 };
 /* tool.id → icon name, mirroring Tool.iconKey in the feature graphs. */
 const TOOL_ICON = {
-  "deviceinfo.overview":"phone_android","deviceinfo.storage":"storage",
+  "deviceinfo.overview":"phone_android","deviceinfo.storage":"storage","deviceinfo.codecs":"tune",
   "battery.lab":"battery_std","sensors.lab":"sensors","sensors.orientation":"explore",
   "diagnostics.full":"monitor_heart","diagnostics.quick":"fact_check","sensors.live":"timeline",
   "sensors.check":"fact_check",
@@ -950,6 +951,7 @@ const TOOL_KW = {
   "developer.display":["resolution","density","dpi","refresh","hdr"],"developer.intents":["intent","launch","developer options","activity"],
   "developer.logs":["logcat","logs","read"],"deviceinfo.overview":["phone info","build","hardware","specs","model","about phone","device name","imei","sim","status","serial"],
   "deviceinfo.storage":["disk","space","memory","volumes","free"],"diagnostics.full":["phone doctor","checkup","health check","all tests"],
+  "deviceinfo.codecs":["codec","decoder","encoder","h264","h265","av1","aac","media","video decode","mime"],
   "diagnostics.quick":["single test","check","test"],"display.deadpixel":["pixel","screen","stuck","colors"],
   "display.modes":["refresh","resolution","hdr","hz"],"display.motion":["judder","motion","animation","pattern"],
   "display.patterns":["pattern","banding","uniformity","checker","bars"],
@@ -1470,6 +1472,7 @@ function render(){
     /* ---------- device labs ---------- */
     case "deviceinfo":
       if(parts[1]==="storage"){ body=scrStorage(); title="Storage Lab"; }
+      else if(parts[1]==="codecs"){ body=scrCodecs(); title="Codec inventory"; }
       else { body=scrDeviceInfo(); title="Device Overview"; actions=`<span class="iconbtn" data-act="share-device" title="Share summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2 .8L8.9 12.7a3.2 3.2 0 0 0 0-1.4l7-4a3 3 0 1 0-.9-1.7l-7 4a3 3 0 1 0 0 4.8l7.1 4.1A3 3 0 1 0 18 16z"/></svg></span>`; }
       break;
     case "battery": body = scrBattery(); title="Battery Lab"; break;
@@ -2520,11 +2523,15 @@ function scrDeviceInfo(){
       infoRow("Base OS",elev(DEVICE.baseOs),false)+infoRow("First API level",elev(DEVICE.firstApi),false)+
       copyBar("Security"))}
     ${sectionCard("Hardware", infoRow("SoC",DEVICE.soc)+infoRow("Board / hardware",DEVICE.boardHardware)+
-      infoRow("CPU cores","9")+infoRow("Supported ABIs",DEVICE.abis)+infoRow("OpenGL ES",DEVICE.glEs)+
+      infoRow("CPU cores (app-visible)","9")+infoRow("Supported ABIs",DEVICE.abis)+infoRow("OpenGL ES",DEVICE.glEs)+
+      infoRow("Vulkan API","1.1.128")+infoRow("Vulkan HW level","1.1.128")+infoRow("Vulkan compute","Yes")+
+      infoRow("dEQP level","2020-03-01")+
+      infoRow("Memory class / large heap","256 MB / 512 MB")+infoRow("Low-RAM device","No")+
       infoRow("Screen size",DEVICE.screenIn)+infoRow("Baseband",DEVICE.baseband)+
-      infoRow("Bootloader",DEVICE.bootloader)+infoRow("Media codecs","68 decoders / 24 encoders")+
+      infoRow("Bootloader",DEVICE.bootloader)+
       infoRow("Widevine security level","L1")+
       infoRow("Cameras",`${DEVICE.cameras.total} (back ${DEVICE.cameras.back}, front ${DEVICE.cameras.front}, external ${DEVICE.cameras.external})`)+infoRow("Sensors",SENSORS.length)+copyBar("Hardware","sensors","Sensor inventory"))}
+    ${sectionCard("Media codecs", infoRow("Registered codecs","68 decoders / 24 encoders")+copyBar("Media codecs","deviceinfo/codecs","Codec inventory"))}
     ${sectionCard("Identifiers (restricted)",
       `<div class="t-mini sub" style="margin-bottom:4px">Blocked for regular apps since Android 10 — shown only when an elevated provider can read them. Never sent to AI or shared.</div>`+
       infoRow("IMEI",elev(DEVICE.imei),false)+infoRow("Serial number",elev(DEVICE.serial),false)+
@@ -2584,6 +2591,42 @@ function scrStorage(){
         const d=(v.free - 2147483648); // deterministic mock delta
         return sectionCard(v.name, infoRow("Free space",`−${fmtBytes(Math.abs(d))}`,false));}).join("")}
       <button class="textbtn" data-act="snap-clear">Clear comparison</button>`:""}
+  </div>`;
+}
+const CODECS_MOCK=[
+  ["c2.qti.avc.decoder",0,["video/avc"],["Hardware","Vendor"]],
+  ["c2.qti.hevc.decoder",0,["video/hevc"],["Hardware","Vendor"]],
+  ["c2.qti.av1.decoder",0,["video/av01"],["Hardware","Vendor"]],
+  ["c2.qti.aac.decoder",0,["audio/mp4a-latm"],["Hardware","Vendor"]],
+  ["OMX.google.aac.decoder",0,["audio/mp4a-latm"],["Not hardware","Software"]],
+  ["OMX.google.h264.decoder",0,["video/avc"],["Not hardware","Software"]],
+  ["OMX.google.vp9.decoder",0,["video/x-vnd.on2.vp9"],["Not hardware","Software"]],
+  ["c2.qti.avc.encoder",1,["video/avc"],["Hardware","Vendor"]],
+  ["c2.qti.heic.encoder",1,["image/vnd.android.heic"],["Hardware","Vendor"]],
+  ["OMX.google.aac.encoder",1,["audio/mp4a-latm"],["Not hardware","Software"]],
+  ["OMX.google.h264.encoder",1,["video/avc"],["Not hardware","Software"]],
+];
+function codecSrc(n){ return n.startsWith("c2.")?"Codec 2.0":n.startsWith("OMX.google.")?"Android platform (SW)":n.startsWith("OMX.")?"OMX vendor":"Other"; }
+function codecsListHtml(){
+  const q=(S.codecQ||"").trim().toLowerCase(), role=S.codecRole||"all";
+  const shown=CODECS_MOCK.filter(([n,enc,types])=>
+    (role==="all"||(role==="encoders"?enc:!enc))&&
+    (!q||n.toLowerCase().includes(q)||types.some(t=>t.includes(q))));
+  return `<div class="t-mini sub">${shown.length} of ${CODECS_MOCK.length} codecs</div>`+
+    (shown.map(([n,enc,types,flags])=>`<div class="card"><div class="t-small mono">${n}</div>
+      <div class="t-mini sub">${enc?"Encoder":"Decoder"} · ${codecSrc(n)}</div>
+      ${types.map(t=>`<div class="t-mini">${t}</div>`).join("")}
+      <div class="t-mini" style="color:var(--accent)">${flags.join(" · ")}</div></div>`).join("")||
+      `<div class="empty">No codecs match the filter.</div>`);
+}
+function scrCodecs(){
+  const role=S.codecRole||"all";
+  return `<div class="pad col">
+    <div class="t-body">Every decoder/encoder registered with MediaCodecList, with its MIME types and acceleration flags. Software codecs work on any device; hardware codecs are vendor-supplied.</div>
+    <input class="field" id="codecQ" placeholder="Filter name or MIME type" value="${esc(S.codecQ||"")}">
+    <div class="chiprow">${[["all","All"],["decoders","Decoders"],["encoders","Encoders"]].map(([k,l])=>
+      `<button class="fchip ${role===k?"sel":""}" data-codecrole="${k}">${l}</button>`).join("")}</div>
+    <div id="codecsList">${codecsListHtml()}</div>
   </div>`;
 }
 function scrBattery(){
@@ -3984,6 +4027,7 @@ document.addEventListener("click", e => {
     else { S.snapSel.before=id; S.snapSel.after=null; }
     render(); return; }
   const aof = e.target.closest("[data-appopfilter]"); if(aof){ S.appopsFilter=aof.dataset.appopfilter==="all"?null:aof.dataset.appopfilter; render(); return; }
+  const cr = e.target.closest("[data-codecrole]"); if(cr){ S.codecRole=cr.dataset.codecrole; render(); return; }
   const ao = e.target.closest("[data-appop]"); if(ao){ const [op,m]=ao.dataset.appop.split(":");
     const conseq={allow:"lets the app use it normally.",ignore:"makes the operation silently fail — the app sees no error, it just gets nothing.",deny:"denies the operation — the app may crash or show a permission error.",default:"restores Android's default decision for this op."};
     dialog({title:`Set ${op}?`,text:`This changes how Android treats ${S.appopsSel} for the “${op}” operation. Setting ${op} to ${m} ${conseq[m]} The change applies immediately and persists until you change it back.`,
@@ -4487,6 +4531,7 @@ document.addEventListener("input", e=>{
   if(e.target.id==="appopsQuery"){ S.appopsQuery=e.target.value; const l=$("#appopsList"); if(l)l.innerHTML=appopsListHtml(); }
   if(e.target.id==="pkgQuery"){ S.pkgQuery=e.target.value; const l=$("#pkgList"); if(l)l.innerHTML=pkgListHtml(); }
   if(e.target.id==="filesQuery"){ S.files.q=e.target.value; const l=$("#filesList"); if(l)l.innerHTML=filesListHtml(); }
+  if(e.target.id==="codecQ"){ S.codecQ=e.target.value; const l=$("#codecsList"); if(l)l.innerHTML=codecsListHtml(); }
   if(e.target.id==="propsQ"){ S.devPropsQ=e.target.value; const l=$("#propsList"); if(l)l.innerHTML=propsListHtml();
     const c=$("#propsCount"); if(c)c.textContent=propCount(); }
   if(e.target.id==="pkgRestore"){ S.pkgRestore=e.target.value;

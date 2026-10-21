@@ -105,6 +105,7 @@ class SimStatusReader @Inject constructor(
             @Suppress("DEPRECATION") "${sub.mcc}/${sub.mnc}"
         }
 
+    @SuppressLint("MissingPermission") // gated by phonePermissionGranted() in read()
     private fun phoneNumber(sub: SubscriptionInfo, tm: TelephonyManager): String? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             runCatching { sub.number }.getOrNull()?.takeIf { it.isNotBlank() }

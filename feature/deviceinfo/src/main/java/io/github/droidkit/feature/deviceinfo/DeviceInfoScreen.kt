@@ -384,18 +384,34 @@ private fun buildSections(
             "SoC" to listOfNotNull(probe.socManufacturer, probe.socModel)
                 .joinToString(" ").ifBlank { null },
             "Board / hardware" to "${probe.board} / ${probe.hardware}",
-            "CPU cores" to probe.cpuCoreCount.toString(),
+            "CPU cores (app-visible)" to probe.cpuCoreCount.toString(),
             "Supported ABIs" to probe.supportedAbis.joinToString(),
             "OpenGL ES" to probe.glEsVersion,
+            "Vulkan API" to (probe.vulkanInfo?.apiVersionBits
+                ?.takeIf { it > 0 }
+                ?.let { DeviceInfoExtras.vulkanVersionName(it) }
+                ?: "Not declared"),
+            "Vulkan HW level" to probe.vulkanInfo?.levelBits
+                ?.takeIf { it > 0 }
+                ?.let { DeviceInfoExtras.vulkanVersionName(it) },
+            "Vulkan compute" to probe.vulkanInfo?.hasCompute?.let { if (it) "Yes" else "No" },
+            "dEQP level" to probe.vulkanInfo?.deqpLevelBits
+                ?.takeIf { it > 0 }
+                ?.let { DeviceInfoExtras.deqpDateName(it) },
+            "Memory class / large heap" to
+                "${probe.memoryClassMb} MB / ${probe.largeMemoryClassMb} MB",
+            "Low-RAM device" to probe.isLowRamDevice.let { if (it) "Yes" else "No" },
             "Screen size" to probe.screenSizeInches?.let { formatInches(it) },
             "Baseband" to probe.radioVersion,
             "Bootloader" to probe.bootloader,
-            "Media codecs" to probe.codecSummary
-                ?.let { "${it.decoders} decoders / ${it.encoders} encoders" },
             "Widevine security level" to probe.widevineSecurityLevel,
             "Cameras" to "${cameras.total} (back ${cameras.backFacing}, front ${cameras.frontFacing}, external ${cameras.external})",
             "Sensors" to probe.sensors.size.toString(),
         ), labRoute = "sensors", labLabel = "Sensor inventory"),
+        Section("Media codecs", listOf(
+            "Registered codecs" to probe.codecSummary
+                ?.let { "${it.decoders} decoders / ${it.encoders} encoders" },
+        ), labRoute = "deviceinfo/codecs", labLabel = "Codec inventory"),
         Section("Identifiers (restricted)", listOf(
             "IMEI" to elevatedOr(advanced?.imeiHint),
             "Serial number" to elevatedOr(

@@ -33,6 +33,18 @@ object DeviceInfoFeature : FeatureContribution {
             keywords = setOf("disk", "space", "memory", "volumes", "free"),
             iconKey = ToolIconKeys.STORAGE,
         ),
+        Tool(
+            id = "deviceinfo.codecs",
+            title = "Codec Inventory",
+            description = "All MediaCodecList decoders/encoders with MIME types and acceleration flags",
+            category = ToolCategory.DEVICE,
+            route = "$ROUTE/codecs",
+            keywords = setOf(
+                "codec", "decoder", "encoder", "h264", "h265", "av1", "aac",
+                "media", "video decode", "mime",
+            ),
+            iconKey = ToolIconKeys.TUNE,
+        ),
     )
 }
 
@@ -40,5 +52,8 @@ fun NavGraphBuilder.deviceInfoGraph(nav: NavHostController) {
     composable(DeviceInfoFeature.ROUTE) { DeviceInfoScreen(nav) }
     composable("${DeviceInfoFeature.ROUTE}/storage") {
         StorageLabScreen(onBack = { nav.navigateUp() })
+    }
+    composable("${DeviceInfoFeature.ROUTE}/codecs") {
+        CodecListScreen(onBack = { nav.navigateUp() })
     }
 }

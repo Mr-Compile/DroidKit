@@ -230,6 +230,33 @@ class DeviceSystemProbe @Inject constructor(
 
     data class CodecSummary(val decoders: Int, val encoders: Int)
 
+    /** Per-codec inventory from [MediaCodecList]. Flag fields are API-29+ and stay null on API 28. */
+    data class CodecEntry(
+        val name: String,
+        val isEncoder: Boolean,
+        val isHardwareAccelerated: Boolean?,
+        val isSoftwareOnly: Boolean?,
+        val isVendor: Boolean?,
+        val isAlias: Boolean?,
+        val types: List<String>,
+    )
+
+    val codecs: List<CodecEntry> by lazy {
+        runCatching {
+            MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos.map { info ->
+                CodecEntry(
+                    name = info.name,
+                    isEncoder = info.isEncoder,
+                    isHardwareAccelerated = if (Build.VERSION.SDK_INT >= 29) info.isHardwareAccelerated else null,
+                    isSoftwareOnly = if (Build.VERSION.SDK_INT >= 29) info.isSoftwareOnly else null,
+                    isVendor = if (Build.VERSION.SDK_INT >= 29) info.isVendor else null,
+                    isAlias = if (Build.VERSION.SDK_INT >= 29) info.isAlias else null,
+                    types = info.supportedTypes.toList(),
+                )
+            }
+        }.getOrNull().orEmpty()
+    }
+
     val codecSummary: CodecSummary? by lazy {
         runCatching {
             val infos = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
@@ -258,6 +285,42 @@ class DeviceSystemProbe @Inject constructor(
 
     val displayWideColorGamut: Boolean?
         get() = defaultDisplay()?.isWideColorGamut
+
+    /**
+     * Vulkan feature flags from `PackageManager.systemAvailableFeatures`.
+     * `*Bits` fields carry the raw `FeatureInfo.version` value (VK-style
+     * major/minor/patch encoding); 0 means the feature isn't declared.
+     */
+    data class VulkanInfo(
+        val apiVersionBits: Int,
+        val levelBits: Int,
+        val deqpLevelBits: Int,
+        val hasCompute: Boolean,
+    )
+
+    val vulkanInfo: VulkanInfo? by lazy {
+        runCatching {
+            val feats = context.packageManager.systemAvailableFeatures
+            fun bits(name: String) = feats.firstOrNull { it.name == name }?.version ?: 0
+            VulkanInfo(
+                apiVersionBits = bits(PackageManager.FEATURE_VULKAN_HARDWARE_VERSION),
+                levelBits = bits(PackageManager.FEATURE_VULKAN_HARDWARE_LEVEL),
+                deqpLevelBits = bits(PackageManager.FEATURE_VULKAN_DEQP_LEVEL),
+                hasCompute = feats.any { it.name == PackageManager.FEATURE_VULKAN_HARDWARE_COMPUTE },
+            )
+        }.getOrNull()
+    }
+
+    /** Per-app Java heap class in MB (what `Runtime.maxMemory()` roughly follows). */
+    val memoryClassMb: Int
+        get() = (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).memoryClass
+
+    /** Heap class when the app requests `largeHeap=true`. */
+    val largeMemoryClassMb: Int
+        get() = (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).largeMemoryClass
+
+    val isLowRamDevice: Boolean
+        get() = (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).isLowRamDevice
 
     val appVersionName: String by lazy {
         try {
