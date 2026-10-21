@@ -39,6 +39,28 @@ object PermissionsFeature : FeatureContribution {
             keywords = setOf("perms", "apps", "granted", "declared"),
             iconKey = ToolIconKeys.APP_PERMS,
         ),
+        Tool(
+            id = "permissions.byapp",
+            title = "Apps by Permission",
+            description = "Which installed apps declare each dangerous permission",
+            category = ToolCategory.APPS,
+            route = "$ROUTE/byapp",
+            safetyLevel = SafetyLevel.SAFE,
+            phase = ToolPhase.V2,
+            keywords = setOf("reverse", "who has", "dangerous", "audit"),
+            iconKey = ToolIconKeys.APP_PERMS,
+        ),
+        Tool(
+            id = "permissions.special",
+            title = "Special Access Matrix",
+            description = "Overlay, all-files, install-unknown and usage-access grants",
+            category = ToolCategory.APPS,
+            route = "$ROUTE/special",
+            safetyLevel = SafetyLevel.SAFE,
+            phase = ToolPhase.V2,
+            keywords = setOf("overlay", "appops", "usage access", "special"),
+            iconKey = ToolIconKeys.SECURITY,
+        ),
     )
 }
 
@@ -48,5 +70,11 @@ fun NavGraphBuilder.permissionsGraph(nav: NavHostController, resolve: (Tool) -> 
             onOpenSettings = { nav.navigateTopLevel("settings") },
             onBack = { nav.navigateUp() },
         )
+    }
+    composable("${PermissionsFeature.ROUTE}/byapp") {
+        AppsByPermissionScreen(onBack = { nav.navigateUp() })
+    }
+    composable("${PermissionsFeature.ROUTE}/special") {
+        SpecialAccessScreen(onBack = { nav.navigateUp() })
     }
 }

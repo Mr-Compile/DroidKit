@@ -778,6 +778,8 @@ const TOOLS = [
   t("apps.permissions","Permission Inspector","Requested permissions grouped by grant state",CAT.APPS,"apps"),
   t("permissions.center","Permission Center","DroidKit's own declared and runtime permissions",CAT.APPS,"permissions"),
   t("permissions.inspector","Permission Inspector","Per-app granted/declared permissions and runtime state",CAT.APPS,"permissions",{caps:[CAP.ELEV],phase:"V2"}),
+  t("permissions.byapp","Apps by Permission","Which installed apps declare each dangerous permission",CAT.APPS,"permissions/byapp",{phase:"V2"}),
+  t("permissions.special","Special Access Matrix","Overlay, all-files, install-unknown and usage-access grants",CAT.APPS,"permissions/special",{phase:"V2"}),
   t("appops.view","AppOps Viewer","Per-app AppOps modes (usage access, overlays, background)",CAT.APPS,"appops",{caps:[CAP.ELEV],phase:"V2"}),
   t("appops.set","AppOps Controls","Change AppOps modes — modifies system permission state",CAT.APPS,"appops",{safety:SYSCHG,caps:[CAP.ELEV],phase:"V2"}),
   t("packages.disable","Disable Package","Enable/disable packages — bloatware control",CAT.APPS,"packages",{safety:HIGH,caps:[CAP.ELEV],phase:"V2"}),
@@ -904,7 +906,8 @@ const TOOL_ICON = {
   "display.motion":"animation","display.patterns":"palette","audio.speaker":"volume_up","audio.microphone":"mic","audio.vibration":"vibration",
   "audio.routing":"alt_route","audio.lab":"volume_up","camera.capture":"photo_camera","camera.flash":"flash_on","camera.details":"camera_alt",
   "apps.installed":"apps","apps.components":"account_tree","apps.permissions":"policy",
-  "permissions.center":"security","permissions.inspector":"policy","appops.view":"app_settings_alt","appops.set":"tune",
+  "permissions.center":"security","permissions.inspector":"policy","permissions.byapp":"policy","permissions.special":"security",
+  "appops.view":"app_settings_alt","appops.set":"tune",
   "packages.disable":"block","packages.clear":"delete_sweep","packages.uninstall":"delete",
   "network.inspector":"hub","network.ping":"network_ping","network.dns":"dns","network.diagnostics":"troubleshoot",
   "network.ports":"settings_ethernet","network.discovery":"radar","network.interfaces":"lan",
@@ -957,7 +960,8 @@ const TOOL_KW = {
   "nfc.read":["nfc","tag","ndef","scan","reader","contactless","mifare","isodep"],"nfc.write":["write","erase","ndef","tag","format","duplicate","wifi","vcard","composer"],
   "packages.clear":["wipe","data","reset","clear"],"packages.disable":["bloatware","enable","disable","freeze"],
   "packages.uninstall":["remove","uninstall","delete"],"permissions.center":["runtime","granted","denied","declared"],
-  "permissions.inspector":["perms","apps","granted","declared"],"reports.compare":["diff","before after","sessions","repair"],
+  "permissions.inspector":["perms","apps","granted","declared"],"permissions.byapp":["reverse","who has","dangerous","audit"],
+  "permissions.special":["overlay","appops","usage access","special"],"reports.compare":["diff","before after","sessions","repair"],
   "reports.export":["share","pdf","history","session","text"],"sensors.lab":["inventory","accelerometer","gyroscope","vendor","range"],
   "sensors.live":["live","stream","monitor","readings"],"sensors.orientation":["compass","heading","tilt","azimuth","pitch","roll"],
   "sensors.check":["check","verify","batch","test","responding"],
@@ -1493,7 +1497,10 @@ function render(){
       if(parts[1]==="detail"){ body=scrAppDetail(parts.slice(2).join("/")); title="App detail"; }
       else { body=scrApps(); title="App Inspector"; }
       break;
-    case "permissions": body = scrPermCenter(); title="Permission Center"; back=true; break;
+    case "permissions":
+      if(parts[1]==="byapp"){ body = scrAppsByPerm(); title="Apps by permission"; }
+      else if(parts[1]==="special"){ body = scrSpecialAccess(); title="Special access"; }
+      else { body = scrPermCenter(); title="Permission Center"; } back=true; break;
     case "appops": body = scrAppOps(); title = S.appopsSel || "AppOps"; back=true; break;
     case "packages": body = scrPackages(); title="Package Controls"; back=true; break;
     case "adb": body = scrAdb(); title="Wireless ADB"; back=true; break;
@@ -3002,6 +3009,45 @@ function scrPermCenter(){
     <button class="btn-outline full" style="display:block;width:100%;margin-top:8px" data-act="app-settings" data-app="DroidKit">Open system app settings</button>
   </div>`;
 }
+function scrAppsByPerm(){
+  const groups=[["CAMERA",[["AlphaCam","com.alpha.cam",1],["SocialApp","com.social.app",1],["Scanner","com.scan.tool",0]]],
+    ["RECORD_AUDIO",[["SocialApp","com.social.app",1],["VoiceRec","com.voice.rec",1]]],
+    ["ACCESS_FINE_LOCATION",[["Maps","com.maps.nav",1],["Weather","com.weather",1],["SocialApp","com.social.app",0]]],
+    ["READ_CONTACTS",[["SocialApp","com.social.app",1]]],
+    ["POST_NOTIFICATIONS",[["SocialApp","com.social.app",1],["Maps","com.maps.nav",1],["Weather","com.weather",1],["AlphaCam","com.alpha.cam",1]]]];
+  return `<div class="pad col">
+    <div class="t-mini sub">Dangerous permissions declared by installed apps — most-granted first. Tap a row to see which apps hold it.</div>
+    ${groups.map(([p,apps])=>{
+      const open=S.permOpen===p, g=apps.filter(a=>a[2]).length;
+      return `<div class="card clickable" data-permopen="${p}"><div class="row"><div class="grow">
+        <div class="t-med">${p}</div><div class="t-mini sub">android.permission.${p}</div></div>
+        <span class="t-small pri">${g}/${apps.length}</span></div>
+        ${open?apps.map(([l,pk,gd])=>`<div class="row" style="margin-top:6px"><div class="grow"><div class="t-small">${l}</div>
+          <div class="t-mini sub">${pk}</div></div><span class="t-mini ${gd?"pri":"sub"}">${gd?"Granted":"Denied"}</span></div>`).join(""):""}
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+function scrSpecialAccess(){
+  const ops=[["Display over other apps","Can draw overlays on top of other apps.",2,[["SocialApp","com.social.app"],["ScreenTools","com.tools.screen"]]],
+    ["Modify system settings","Can change system-level settings like brightness and timeout.",1,[["BatteryGuru","com.batt.guru"]]],
+    ["Install unknown apps","Can sideload packages without Play.",2,[["FilesApp","com.files.mgr"],["Browser","com.browser"]]],
+    ["Picture-in-picture","Can float a video window over other apps.",4,[["TubePlay","com.tube"],["Maps","com.maps.nav"],["SocialApp","com.social.app"],["VideoCall","com.call"]]],
+    ["All files access","Broad storage access beyond scoped storage.",1,[["FilesApp","com.files.mgr"]]],
+    ["Usage access","Can read which apps you use and when.",0,[]],
+    ["Alarms & reminders","Can schedule exact alarms that wake the device.",3,[["Clock","com.clock"],["Calendar","com.cal"],["Tasks","com.tasks"]]]];
+  return `<div class="pad col">
+    <div class="t-mini sub">AppOps checks report the effective mode — "default" for overlay-style ops counts as allowed, matching what the system shows in Special app access.</div>
+    ${ops.map(([l,b,n,apps])=>{
+      const open=S.specOpen===l;
+      return `<div class="card clickable" data-specopen="${l}"><div class="row"><div class="grow">
+        <div class="t-med">${l}</div><div class="t-mini sub">${b}</div></div>
+        <span class="t-small ${n?"pri":"sub"}">${n}</span></div>
+        ${open?apps.map(([a,pk])=>`<div style="margin-top:6px"><div class="t-small">${a}</div><div class="t-mini sub">${pk}</div></div>`).join(""):""}
+      </div>`;
+    }).join("")}
+  </div>`;
+}
 /* ---------- stub screens ---------- */
 /* ---------- developer lab ---------- */
 function scrDeveloper(){
@@ -3826,6 +3872,8 @@ document.addEventListener("click", e => {
   const mps = e.target.closest("[data-mpspeed]"); if(mps){ S.motionSpeed=+mps.dataset.mpspeed; render(); return; }
   const dp = e.target.closest("[data-pat]"); if(dp){ S.dispPattern=dp.dataset.pat; render(); return; }
   const afr = e.target.closest("[data-afreq]"); if(afr){ S.audioFreq=+afr.dataset.afreq; render(); return; }
+  const po = e.target.closest("[data-permopen]"); if(po){ const p=po.dataset.permopen; S.permOpen=(S.permOpen===p?null:p); render(); return; }
+  const so = e.target.closest("[data-specopen]"); if(so){ const s=so.dataset.specopen; S.specOpen=(S.specOpen===s?null:s); render(); return; }
   const ach = e.target.closest("[data-achan]"); if(ach){ S.audioChan=+ach.dataset.achan; render(); return; }
   const np = e.target.closest("[data-nfcpreset]"); if(np){
     const k=S.nfcKind||"TEXT", F=(S.nfc.nfcF[k]=S.nfc.nfcF[k]||{});
