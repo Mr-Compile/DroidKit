@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.droidkit.core.common.TestResultState
@@ -40,19 +41,26 @@ fun PhoneDoctorTestScreen(
     onBack: (() -> Unit)? = null,
     autoResult: Boolean = true,
 ) {
-    when (routeFor(test)) {
-        PhoneDoctorRoute.DisplayColor -> DisplayColorScreen(test, onResult)
-        PhoneDoctorRoute.TouchGrid -> TouchGridScreen(test, onResult)
-        PhoneDoctorRoute.Multitouch -> MultitouchScreen(test, onResult)
-        PhoneDoctorRoute.Vibration -> VibrationScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.Speaker -> SpeakerTestScreen(test, onResult)
-        PhoneDoctorRoute.Microphone -> MicrophoneTestScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.CameraPreview -> CameraTestScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.Flash -> FlashTestScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult, autoResult)
-        PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test, onBack)
+    // Several routes serve multiple tests (CameraPreview: front/rear, Sensor: 5
+    // types, ConnectivityCheck: 5 radios, DisplayColor: color/dead-pixel). In the
+    // guided runner the same call site recomposes with a new [test], so key on
+    // test.id — without it, remembered state and Unit-keyed effects leak across
+    // tests (e.g. the rear camera test kept showing the front preview).
+    key(test.id) {
+        when (routeFor(test)) {
+            PhoneDoctorRoute.DisplayColor -> DisplayColorScreen(test, onResult)
+            PhoneDoctorRoute.TouchGrid -> TouchGridScreen(test, onResult)
+            PhoneDoctorRoute.Multitouch -> MultitouchScreen(test, onResult)
+            PhoneDoctorRoute.Vibration -> VibrationScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.Speaker -> SpeakerTestScreen(test, onResult)
+            PhoneDoctorRoute.Microphone -> MicrophoneTestScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.CameraPreview -> CameraTestScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.Flash -> FlashTestScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.ConnectivityCheck -> ConnectivityCheckScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.ChargingCheck -> ChargingCheckScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.Sensor -> SensorTestScreen(test, onResult, autoResult)
+            PhoneDoctorRoute.Unsupported -> UnsupportedTestPlaceholder(test, onBack)
+        }
     }
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,7 +51,9 @@ private fun CameraContent(
     var initError by remember { mutableStateOf<String?>(null) }
     var cameraAvailable by remember { mutableStateOf<Boolean?>(null) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(test.lensFacing) {
+        initError = null
+        cameraAvailable = null
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener(
             {
@@ -75,7 +78,7 @@ private fun CameraContent(
         )
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(provider) {
         onDispose { provider?.unbindAll() }
     }
 
@@ -97,25 +100,31 @@ private fun CameraContent(
             }
         }
         if (cameraAvailable == true && provider != null) {
-            AndroidView(
-                factory = { ctx ->
-                    PreviewView(ctx).apply {
-                        val preview = Preview.Builder().build()
-                        preview.surfaceProvider = surfaceProvider
-                        provider?.bindToLifecycle(
-                            lifecycleOwner,
-                            CameraSelector.Builder()
-                                .requireLensFacing(test.lensFacing!!)
-                                .build(),
-                            preview,
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
-            )
+            // key on lensFacing: AndroidView's factory runs once, so without it a
+            // new test reusing this composable keeps the previously bound lens.
+            // unbindAll() drops the stale Preview use case before the rebind.
+            key(test.lensFacing) {
+                AndroidView(
+                    factory = { ctx ->
+                        PreviewView(ctx).apply {
+                            val preview = Preview.Builder().build()
+                            preview.surfaceProvider = surfaceProvider
+                            provider?.unbindAll()
+                            provider?.bindToLifecycle(
+                                lifecycleOwner,
+                                CameraSelector.Builder()
+                                    .requireLensFacing(test.lensFacing!!)
+                                    .build(),
+                                preview,
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                )
+            }
         } else {
             Column(modifier = Modifier.weight(1f).fillMaxWidth().padding(16.dp)) {
                 Text(
