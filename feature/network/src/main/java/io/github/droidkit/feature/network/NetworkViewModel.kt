@@ -1,6 +1,8 @@
 package io.github.droidkit.feature.network
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
@@ -15,6 +17,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.droidkit.core.common.DLog
 import io.github.droidkit.core.privileges.ElevatedOps
 import io.github.droidkit.core.privileges.ProviderKind
+import java.net.Inet4Address
 import java.net.NetworkInterface
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
@@ -75,9 +79,87 @@ class NetworkViewModel @Inject constructor(
     private val _ports = MutableStateFlow<ToolState<List<NetTools.PortResult>>>(ToolState.Idle)
     val ports: StateFlow<ToolState<List<NetTools.PortResult>>> = _ports.asStateFlow()
 
+    private val _wol = MutableStateFlow<ToolState<String>>(ToolState.Idle)
+    val wol: StateFlow<ToolState<String>> = _wol.asStateFlow()
+
+    private val _sweep = MutableStateFlow<ToolState<SweepSummary>>(ToolState.Idle)
+    val sweep: StateFlow<ToolState<SweepSummary>> = _sweep.asStateFlow()
+
+    data class SweepSummary(
+        val subnet: String,
+        val hostsScanned: Int,
+        val results: List<NetTools.SweepResult>,
+        val elapsedMs: Long,
+    )
+
     /** True once a ROOT executor is live — gates the "saved networks" hint text. */
     private val _rootReady = MutableStateFlow<Boolean?>(null)
     val rootReady: StateFlow<Boolean?> = _rootReady.asStateFlow()
+
+    // ---- Wi-Fi link details ----
+
+    /**
+     * Live Wi-Fi link fields. SSID/BSSID are only populated when the caller
+     * holds ACCESS_FINE_LOCATION — [needsLocation] marks the gated case so the
+     * UI can offer a grant instead of silently showing placeholders.
+     */
+    data class WifiLink(
+        val ssid: String?,
+        val bssid: String?,
+        val rssiDbm: Int?,
+        val linkSpeedMbps: Int?,
+        val frequencyMhz: Int?,
+        val band: String?,
+        val ipAddress: String?,
+        val gateway: String?,
+        val needsLocation: Boolean,
+    )
+
+    private val _wifiLink = MutableStateFlow<WifiLink?>(null)
+    val wifiLink: StateFlow<WifiLink?> = _wifiLink.asStateFlow()
+
+    private fun readWifiLink(): WifiLink? {
+        val snap = _snapshot.value ?: return null
+        if (!snap.transports.contains("Wi-Fi")) return null
+        val wm = context.applicationContext
+            .getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return null
+        val info = runCatching { wm.connectionInfo }.getOrNull() ?: return null
+        val locationGranted = context.checkSelfPermission(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        // UNKNOWN_SSID ("<unknown ssid>") is API-30+; the literal is identical
+        // and the hidden-SSID value was the same on earlier releases.
+        val ssid = info.ssid
+            ?.takeIf { locationGranted && it != "<unknown ssid>" }
+            ?.removeSurrounding("\"")
+        val bssid = info.bssid
+            ?.takeIf { locationGranted && it != "02:00:00:00:00:00" }
+        val freq = runCatching { info.frequency }.getOrNull()?.takeIf { it > 0 }
+        val dhcp = runCatching { wm.dhcpInfo }.getOrNull()
+        return WifiLink(
+            ssid = ssid,
+            bssid = bssid,
+            // INVALID_RSSI sentinel is -127; literal avoids an API-33 NewApi hit.
+            rssiDbm = info.rssi.takeIf { it != -127 },
+            linkSpeedMbps = info.linkSpeed.takeIf { it > 0 },
+            frequencyMhz = freq,
+            band = freq?.let {
+                when {
+                    it in 2400..2500 -> "2.4 GHz"
+                    it in 5000..5900 -> "5 GHz"
+                    it in 5925..7125 -> "6 GHz"
+                    else -> null
+                }
+            },
+            ipAddress = dhcp?.ipAddress?.takeIf { it != 0 }?.let(::intToIpv4)
+                ?: snap.addresses.firstOrNull(),
+            gateway = dhcp?.gateway?.takeIf { it != 0 }?.let(::intToIpv4),
+            needsLocation = !locationGranted,
+        )
+    }
+
+    private fun intToIpv4(v: Int): String =
+        "${v and 0xFF}.${(v shr 8) and 0xFF}.${(v shr 16) and 0xFF}.${(v shr 24) and 0xFF}"
 
     // ---- Interfaces + local service discovery ----
 
@@ -236,6 +318,100 @@ class NetworkViewModel @Inject constructor(
 
     private fun refreshSnapshot() {
         _snapshot.value = readSnapshot()
+        _wifiLink.value = readWifiLink()
+    }
+
+    // ---- Wake-on-LAN ----
+
+    /** Broadcasts a magic packet to wake a configured host on the local segment. */
+    fun sendWol(macText: String, portText: String) {
+        val mac = NetTools.parseMacAddress(macText)
+        if (mac == null) {
+            _wol.value = ToolState.Failed(
+                "Invalid MAC — expected aa:bb:cc:dd:ee:ff",
+            )
+            return
+        }
+        val port = portText.trim().toIntOrNull()
+        if (portText.isNotBlank() && (port == null || port !in 1..65535)) {
+            _wol.value = ToolState.Failed("Invalid port (1–65535, blank = 9)")
+            return
+        }
+        _wol.value = ToolState.Running
+        viewModelScope.launch {
+            val ok = NetTools.sendMagicPacket(mac, port ?: NetTools.WOL_DEFAULT_PORT)
+            _wol.value = if (ok) {
+                ToolState.Done(
+                    "Magic packet broadcast for " +
+                        mac.joinToString(":") { "%02X".format(it) } +
+                        " on UDP port ${port ?: NetTools.WOL_DEFAULT_PORT}",
+                )
+            } else {
+                ToolState.Failed("Broadcast send failed — check Wi-Fi is up")
+            }
+        }
+    }
+
+    // ---- LAN sweep ----
+
+    /**
+     * Time-boxed reachability sweep of the interface's own subnet (max /24).
+     * Derived from the active link's IPv4/prefix — falls back to DHCP info.
+     */
+    fun startLanSweep() {
+        val network = cm?.activeNetwork
+        val link = network?.let { cm?.getLinkProperties(it) }
+        var target = link?.linkAddresses?.firstOrNull {
+            it.address is Inet4Address && it.prefixLength in 8..30
+        }
+        var prefix = target?.prefixLength
+        var addr = target?.address
+        if (addr == null) {
+            // DHCP fallback: dhcpInfo exposes ip + netmask as little-endian ints.
+            val wm = context.applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            val dhcp = runCatching { wm?.dhcpInfo }.getOrNull()
+            val ip = dhcp?.ipAddress?.takeIf { it != 0 }
+            val mask = dhcp?.netmask?.takeIf { it != 0 }
+            if (ip != null && mask != null) {
+                addr = Inet4Address.getByAddress(
+                    byteArrayOf(
+                        (ip and 0xFF).toByte(),
+                        ((ip shr 8) and 0xFF).toByte(),
+                        ((ip shr 16) and 0xFF).toByte(),
+                        ((ip shr 24) and 0xFF).toByte(),
+                    ),
+                )
+                prefix = Integer.bitCount(mask)
+            }
+        }
+        val hosts = addr?.let { NetTools.subnetHosts(it, prefix ?: 24) }.orEmpty()
+        if (addr == null || hosts.isEmpty()) {
+            _sweep.value = ToolState.Failed(
+                "No usable IPv4 subnet on the active network",
+            )
+            return
+        }
+        val subnetLabel = hosts.first().hostAddress
+            ?.substringBeforeLast('.') + ".0/${(prefix ?: 24).coerceAtLeast(24)}"
+        _sweep.value = ToolState.Running
+        viewModelScope.launch {
+            val start = System.nanoTime()
+            val results = withTimeoutOrNull(SWEEP_TIME_BOX_MS) {
+                NetTools.sweepSubnet(hosts)
+            }.orEmpty()
+            _sweep.value = ToolState.Done(
+                SweepSummary(
+                    subnet = subnetLabel,
+                    hostsScanned = hosts.size,
+                    results = results.sortedBy {
+                        it.address.split('.').mapNotNull(String::toIntOrNull)
+                            .fold(0) { acc, o -> acc * 256 + o }
+                    },
+                    elapsedMs = (System.nanoTime() - start) / 1_000_000,
+                ),
+            )
+        }
     }
 
     private fun readSnapshot(): ConnectionSnapshot {
@@ -379,5 +555,6 @@ class NetworkViewModel @Inject constructor(
 
     companion object {
         private const val DNS_PROBE_HOST = "dns.google"
+        private const val SWEEP_TIME_BOX_MS = 20_000L
     }
 }

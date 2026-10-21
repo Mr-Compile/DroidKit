@@ -1,5 +1,6 @@
 package io.github.droidkit.feature.network
 
+import android.Manifest
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,6 +32,7 @@ import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
+import io.github.droidkit.core.ui.components.rememberRuntimePermission
 import io.github.droidkit.feature.network.NetworkViewModel.LayerResult
 import io.github.droidkit.feature.network.NetworkViewModel.LayerState
 import io.github.droidkit.feature.network.NetworkViewModel.ToolState
@@ -47,6 +49,9 @@ fun NetworkScreen(
     val ping by viewModel.ping.collectAsStateWithLifecycle()
     val dns by viewModel.dns.collectAsStateWithLifecycle()
     val ports by viewModel.ports.collectAsStateWithLifecycle()
+    val wifiLink by viewModel.wifiLink.collectAsStateWithLifecycle()
+    val wol by viewModel.wol.collectAsStateWithLifecycle()
+    val sweep by viewModel.sweep.collectAsStateWithLifecycle()
     var pingHost by remember { mutableStateOf("") }
     var dnsHost by remember { mutableStateOf("") }
     var portHost by remember { mutableStateOf("") }
@@ -83,12 +88,133 @@ fun NetworkScreen(
                         InfoRow("MTU", s.mtu?.toString(), copyable = false)
                         InfoRow("Private DNS", s.privateDns, copyable = false)
                         InfoRow("Captive portal", s.captivePortal?.toString(), copyable = false)
-                        Text(
-                            "SSID/BSSID/MAC require location permission and are not read here.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    }
+                }
+            }
+
+            item {
+                val wl = wifiLink
+                if (wl != null) {
+                    SectionCard(title = "Wi-Fi link") {
+                        InfoRow("SSID", wl.ssid)
+                        InfoRow("BSSID", wl.bssid)
+                        InfoRow("Signal", wl.rssiDbm?.let { "$it dBm" }, copyable = false)
+                        InfoRow("Link speed", wl.linkSpeedMbps?.let { "$it Mbps" }, copyable = false)
+                        InfoRow(
+                            "Frequency",
+                            wl.frequencyMhz?.let { f ->
+                                "$f MHz" + (wl.band?.let { " · $it" } ?: "")
+                            },
+                            copyable = false,
+                        )
+                        InfoRow("IP address", wl.ipAddress)
+                        InfoRow("Gateway", wl.gateway)
+                        if (wl.needsLocation) {
+                            val locPerm = rememberRuntimePermission(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                            )
+                            Text(
+                                "SSID and BSSID are hidden behind Location permission " +
+                                    "(Android treats them as location data).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                            TextButton(onClick = { locPerm.request() }) {
+                                Text("Grant location to reveal")
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "Wake-on-LAN") {
+                    var wolMac by remember { mutableStateOf("") }
+                    var wolPort by remember { mutableStateOf("") }
+                    Text(
+                        "Broadcasts a magic packet to wake a configured machine " +
+                            "on this network segment.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = wolMac,
+                        onValueChange = { wolMac = it },
+                        label = { Text("Target MAC (aa:bb:cc:dd:ee:ff)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    )
+                    OutlinedTextField(
+                        value = wolPort,
+                        onValueChange = { wolPort = it },
+                        label = { Text("Port (blank = 9)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.sendWol(wolMac, wolPort) },
+                        enabled = wolMac.isNotBlank(),
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) { Text("Send magic packet") }
+                    when (val w = wol) {
+                        is ToolState.Running -> Text("Sending…", modifier = Modifier.padding(top = 8.dp))
+                        is ToolState.Failed -> Text(
+                            w.message,
+                            color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(top = 8.dp),
                         )
+                        is ToolState.Done -> Text(
+                            w.result,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        else -> {}
+                    }
+                }
+            }
+
+            item {
+                SectionCard(title = "LAN sweep") {
+                    Text(
+                        "Pings every host in this interface's subnet (max /24, " +
+                            "20s time-box). Hosts ignoring ping won't appear — " +
+                            "absence isn't proof a device is down.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.startLanSweep() },
+                        enabled = sweep !is ToolState.Running,
+                        modifier = Modifier.padding(top = 8.dp),
+                    ) { Text("Sweep subnet") }
+                    when (val s = sweep) {
+                        is ToolState.Running -> Text(
+                            "Sweeping… (up to 20s)",
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        is ToolState.Failed -> Text(
+                            s.message,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        is ToolState.Done -> Column(modifier = Modifier.padding(top = 8.dp)) {
+                            InfoRow("Subnet", s.result.subnet, copyable = false)
+                            InfoRow(
+                                "Hosts up",
+                                "${s.result.results.size} of ${s.result.hostsScanned} probed " +
+                                    "in ${s.result.elapsedMs} ms",
+                                copyable = false,
+                            )
+                            s.result.results.forEach { r ->
+                                InfoRow(
+                                    r.address,
+                                    NetTools.formatMs(r.elapsedMs),
+                                    copyable = false,
+                                )
+                            }
+                        }
+                        else -> {}
                     }
                 }
             }
@@ -352,6 +478,14 @@ fun NetworkScreen(
                         "Ports ${done.result.firstOrNull()?.host}",
                         done.result.joinToString { "${it.port}:${if (it.open) "open" else "closed"}" },
                     )
+                }
+                wifiLink?.let { w ->
+                    put("Wi-Fi SSID", w.ssid ?: if (w.needsLocation) "location-gated" else null)
+                    put("Wi-Fi signal", w.rssiDbm?.let { "$it dBm" })
+                    put("Wi-Fi link speed", w.linkSpeedMbps?.let { "$it Mbps" })
+                }
+                (sweep as? ToolState.Done)?.let {
+                    put("LAN sweep", "${it.result.results.size}/${it.result.hostsScanned} hosts up")
                 }
             }
             item {

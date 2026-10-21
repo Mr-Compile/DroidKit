@@ -598,6 +598,8 @@ const TOOLS = [
   t("network.ports","Port Reachability","TCP connect probes on user-specified host and ports",CAT.CONNECTIVITY,"network",{perms:NETP}),
   t("network.discovery","Service Discovery","Bounded mDNS/NSD browse of local services",CAT.CONNECTIVITY,"network",{safety:MINOR,perms:[...NETP,"android.permission.CHANGE_WIFI_MULTICAST_STATE"]}),
   t("network.interfaces","Interface Detail","Every network interface: MTU, flags, addresses",CAT.CONNECTIVITY,"network"),
+  t("network.wol","Wake-on-LAN","Broadcast a magic packet to wake a configured host",CAT.CONNECTIVITY,"network",{safety:MINOR,perms:NETP}),
+  t("network.lanscan","LAN Sweep","Time-boxed reachability sweep of the local subnet",CAT.CONNECTIVITY,"network",{perms:NETP}),
   t("network.saved","Saved Wi-Fi Networks","Saved SSIDs and passwords read from the system store — root only",CAT.CONNECTIVITY,"network/saved",{safety:ADV,caps:[CAP.ROOT],phase:"V2"}),
   t("bluetooth.status","Bluetooth Status","Adapter state, classic/LE capability, bonded devices",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTC],feats:["android.hardware.bluetooth"],minSdk:31}),
   t("bluetooth.scan","BLE Scan","Bounded scan w/ decoded advertisements, beacon detection, RSSI trend",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTS],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
@@ -713,6 +715,7 @@ const TOOL_ICON = {
   "packages.disable":"block","packages.clear":"delete_sweep","packages.uninstall":"delete",
   "network.inspector":"hub","network.ping":"network_ping","network.dns":"dns","network.diagnostics":"troubleshoot",
   "network.ports":"settings_ethernet","network.discovery":"radar","network.interfaces":"lan",
+  "network.wol":"wifi","network.lanscan":"lan",
   "bluetooth.status":"bluetooth","bluetooth.scan":"bluetooth_searching","bluetooth.gatt":"bluetooth_connected",
   "nfc.read":"nfc","nfc.write":"tap_and_play","usb.host":"usb","usb.descriptors":"memory",
   "developer.intents":"send","developer.display":"straighten","developer.deeplink":"link","developer.logs":"article",
@@ -755,6 +758,7 @@ const TOOL_KW = {
   "network.discovery":["mdns","nsd","browse","services","local"],"network.dns":["resolve","hostname","lookup","resolver"],
   "network.inspector":["connection","transport","wifi","cellular","ip"],"network.interfaces":["mtu","interface","address","flags","lan"],
   "network.ping":["latency","icmp","reachability","echo"],"network.ports":["tcp","port","connect","open"],
+  "network.wol":["wol","wake","magic packet","power on","lan"],"network.lanscan":["lan","sweep","hosts","subnet","discover"],
   "nfc.read":["nfc","tag","ndef","scan","reader","contactless","inspect","mifare","ultralight","isodep"],"nfc.write":["write","erase","ndef","tag","format","duplicate","copy","clone","vcard","wifi","contact","link"],
   "packages.clear":["wipe","data","reset","clear"],"packages.disable":["bloatware","enable","disable","freeze"],
   "packages.uninstall":["remove","uninstall","delete"],"permissions.center":["runtime","granted","denied","declared"],
@@ -2356,8 +2360,12 @@ function scrNetwork(){
       infoRow("Metered","false",false)+infoRow("Downstream","866666 kbps",false)+infoRow("Upstream","866666 kbps",false)+
       infoRow("Interface","wlan0")+infoRow("Local addresses","192.168.1.37/24, fe80::a41f:72ff:fe2a:9c31/64")+
       infoRow("DNS servers","192.168.1.1, 8.8.8.8")+infoRow("Routes","0.0.0.0/0 -> 192.168.1.1",false)+
-      infoRow("MTU","1500",false)+infoRow("Private DNS","off",false)+infoRow("Captive portal","false",false)+
-      `<div class="t-mini sub" style="margin-top:8px">SSID/BSSID/MAC require location permission and are not read here.</div>`)}
+      infoRow("MTU","1500",false)+infoRow("Private DNS","off",false)+infoRow("Captive portal","false",false))}
+    ${sectionCard("Wi-Fi link",
+      infoRow("SSID","HomeWifi")+infoRow("BSSID","A4:11:62:0F:2A:8C")+
+      infoRow("Signal","-52 dBm",false)+infoRow("Link speed","866 Mbps",false)+
+      infoRow("Frequency","5180 MHz · 5 GHz",false)+infoRow("IP address","192.168.1.37")+
+      infoRow("Gateway","192.168.1.1"))}
     ${sectionCard("Diagnostics", `<div id="netdiag">${netLayers()}</div>
       <button class="btn-outline" style="margin-top:8px" data-act="netdiag">Re-run</button>`)}
     ${sectionCard("Saved networks",
@@ -2376,6 +2384,16 @@ function scrNetwork(){
       <input class="field" id="portlist" placeholder="Ports (comma or space separated)" style="margin-top:8px">
       <button class="btn-outline" style="margin-top:8px" data-act="port-probe">Probe</button>
       <div id="portsout" style="margin-top:8px">${S.ports||""}</div>`)}
+    ${sectionCard("Wake-on-LAN", `
+      <div class="t-mini sub">Broadcasts a magic packet to wake a configured machine on this network segment.</div>
+      <input class="field" id="wolmac" placeholder="Target MAC (aa:bb:cc:dd:ee:ff)" style="margin-top:8px">
+      <input class="field" id="wolport" placeholder="Port (blank = 9)" style="margin-top:8px">
+      <button class="btn-outline" style="margin-top:8px" data-act="wol-send">Send magic packet</button>
+      <div id="wolout" style="margin-top:8px">${S.wol||""}</div>`)}
+    ${sectionCard("LAN sweep", `
+      <div class="t-mini sub">Pings every host in this interface's subnet (max /24, 20s time-box). Hosts ignoring ping won't appear — absence isn't proof a device is down.</div>
+      <button class="btn-outline" style="margin-top:8px" data-act="lan-sweep">Sweep subnet</button>
+      <div id="sweepout" style="margin-top:8px">${S.sweep||""}</div>`)}
     ${sectionCard("Interfaces", `
       <div style="padding:6px 0"><div class="t-body">lo</div><div class="t-mini sub">up · loopback · mtu 65536</div><div class="t-mini sub">  127.0.0.1/8 · ::1/128</div></div>
       <div style="padding:6px 0"><div class="t-body">wlan0</div><div class="t-mini sub">up · multicast · mtu 1500</div><div class="t-mini sub">  192.168.1.37/24 · fe80::a41f:72ff:fe2a:9c31/64</div></div>
@@ -3538,6 +3556,17 @@ On Android &lt; 11 this section may be absent.</pre></div>
         <div class="t-mini sub">Resolve on demand to get host/port.</div>`;
         S.nsd=out; const o=$("#nsdout"); if(o)o.innerHTML=out; },1200); break; }
     case "nsd-preset": { const f=$("#nsdtype"); if(f)f.value=el.dataset.t; break; }
+    case "wol-send": { const m=$("#wolmac")?.value.trim(), p=$("#wolport")?.value.trim();
+      const mac=/^([0-9a-fA-F]{2}[:\-]){5}[0-9a-fA-F]{2}$|^[0-9a-fA-F]{12}$/.test(m||"");
+      const out = !m ? "" :
+        !mac ? `<div class="t-body" style="color:var(--err)">Invalid MAC — expected aa:bb:cc:dd:ee:ff</div>`
+        : `<div class="t-body">Magic packet broadcast for ${esc(m.toUpperCase().replace(/-/g,":"))} on UDP port ${esc(p)||9}</div>`;
+      S.wol=out; const o=$("#wolout"); if(o)o.innerHTML=out; break; }
+    case "lan-sweep": { $("#sweepout").innerHTML=`<div class="t-body">Sweeping… (up to 20s)</div>`;
+      later(()=>{ const hosts=[["192.168.1.1","2.1 ms"],["192.168.1.37","0.3 ms"],["192.168.1.52","6.4 ms"],["192.168.1.83","11.7 ms"]];
+        const out=infoRow("Subnet","192.168.1.0/24",false)+infoRow("Hosts up","4 of 254 probed in 3201 ms",false)+
+          hosts.map(h=>infoRow(h[0],h[1],false)).join("");
+        S.sweep=out; const o=$("#sweepout"); if(o)o.innerHTML=out; },1400); break; }
     case "snap-capture": S.snapshots.push({id:S.snapshots.length+1,at:Date.now(),free:DEVICE.storageFree}); toast("Snapshot captured"); render(); break;
     case "snap-clear": S.snapSel={before:null,after:null}; render(); break;
     case "sensor-rec": { const r=S.sensorRec;
