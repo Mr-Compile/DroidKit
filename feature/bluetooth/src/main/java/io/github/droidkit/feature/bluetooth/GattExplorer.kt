@@ -6,9 +6,11 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothStatusCodes
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -31,6 +33,9 @@ data class GattCharacteristicInfo(
     val descriptors: List<String>,
     val readValueHex: String? = null,
     val readError: String? = null,
+    /** Latest notify/indicate value while subscribed. */
+    val notifyValueHex: String? = null,
+    val subscribed: Boolean = false,
 )
 
 data class GattServiceInfo(
@@ -40,9 +45,10 @@ data class GattServiceInfo(
 )
 
 /**
- * Read-only GATT explorer. Connects to a discovered device on explicit user
- * action, discovers services, and reads characteristics only where the
- * characteristic advertises PROPERTY_READ. Never writes, never subscribes.
+ * GATT explorer. Connects to a discovered device on explicit user action,
+ * discovers services, and reads characteristics where PROPERTY_READ is
+ * advertised. Notify/indicate subscription is a user toggle; characteristic
+ * writes only happen behind an explicit confirmation in the UI.
  */
 @HiltViewModel
 class GattExplorerViewModel @Inject constructor(
@@ -113,6 +119,46 @@ class GattExplorerViewModel @Inject constructor(
         ) {
             applyReadResult(characteristic, value, status)
         }
+
+        @Suppress("DEPRECATION")
+        override fun onCharacteristicChanged(
+            g: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+        ) {
+            applyNotifyValue(characteristic, characteristic.value)
+        }
+
+        // API 33+ typed overload
+        override fun onCharacteristicChanged(
+            g: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray,
+        ) {
+            applyNotifyValue(characteristic, value)
+        }
+    }
+
+    private fun applyNotifyValue(characteristic: BluetoothGattCharacteristic, value: ByteArray?) {
+        val hex = value?.joinToString(" ") { "%02X".format(it) } ?: "(empty)"
+        mutateCharacteristic(characteristic.uuid.toString()) {
+            it.copy(notifyValueHex = hex, subscribed = true)
+        }
+    }
+
+    private fun mutateCharacteristic(
+        characteristicUuid: String,
+        transform: (GattCharacteristicInfo) -> GattCharacteristicInfo,
+    ) {
+        val current = _state.value as? State.Connected ?: return
+        _state.value = current.copy(
+            services = current.services.map { svc ->
+                svc.copy(
+                    characteristics = svc.characteristics.map { c ->
+                        if (c.uuid == characteristicUuid) transform(c) else c
+                    },
+                )
+            },
+        )
     }
 
     private fun applyReadResult(
@@ -121,21 +167,12 @@ class GattExplorerViewModel @Inject constructor(
         status: Int,
     ) {
         val hex = value?.joinToString(" ") { "%02X".format(it) }
-        val current = _state.value as? State.Connected ?: return
-        _state.value = current.copy(
-            services = current.services.map { svc ->
-                svc.copy(
-                    characteristics = svc.characteristics.map { c ->
-                        if (c.uuid == characteristic.uuid.toString()) {
-                            c.copy(
-                                readValueHex = if (status == BluetoothGatt.GATT_SUCCESS) hex ?: "(empty)" else null,
-                                readError = if (status == BluetoothGatt.GATT_SUCCESS) null else "read failed ($status)",
-                            )
-                        } else c
-                    },
-                )
-            },
-        )
+        mutateCharacteristic(characteristic.uuid.toString()) { c ->
+            c.copy(
+                readValueHex = if (status == BluetoothGatt.GATT_SUCCESS) hex ?: "(empty)" else null,
+                readError = if (status == BluetoothGatt.GATT_SUCCESS) null else "read failed ($status)",
+            )
+        }
     }
 
     fun hasConnectPermission(): Boolean =
@@ -184,6 +221,94 @@ class GattExplorerViewModel @Inject constructor(
         }
     }
 
+    private fun findCharacteristic(
+        serviceUuid: String,
+        characteristicUuid: String,
+    ): BluetoothGattCharacteristic? {
+        val g = gatt ?: return null
+        val svc = runCatching {
+            g.getService(java.util.UUID.fromString(serviceUuid))
+        }.getOrNull() ?: return null
+        return runCatching {
+            svc.getCharacteristic(java.util.UUID.fromString(characteristicUuid))
+        }.getOrNull()
+    }
+
+    /**
+     * Toggle notify/indicate subscription via the CCCD descriptor — the
+     * standard BLE mechanism, reversed on unsubscribe or disconnect.
+     */
+    @SuppressLint("MissingPermission")
+    fun toggleSubscription(serviceUuid: String, characteristicUuid: String) {
+        val g = gatt ?: return
+        if (!hasConnectPermission()) return
+        val ch = findCharacteristic(serviceUuid, characteristicUuid) ?: return
+        val canNotify = ch.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0
+        val canIndicate = ch.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0
+        if (!canNotify && !canIndicate) return
+        val cccd = ch.getDescriptor(CCCD_UUID) ?: return
+        val nowSubscribed = (_state.value as? State.Connected)
+            ?.services?.flatMap { it.characteristics }
+            ?.firstOrNull { it.uuid == characteristicUuid }?.subscribed == true
+        val enable = !nowSubscribed
+        runCatching { g.setCharacteristicNotification(ch, enable) }
+        val value = when {
+            !enable -> BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+            canNotify -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            else -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+        }
+        viewModelScope.launch {
+            delay(50)
+            runCatching {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    g.writeDescriptor(cccd, value)
+                } else {
+                    @Suppress("DEPRECATION")
+                    cccd.value = value
+                    @Suppress("DEPRECATION")
+                    g.writeDescriptor(cccd)
+                }
+            }.onSuccess {
+                if (!enable) mutateCharacteristic(characteristicUuid) {
+                    it.copy(subscribed = false)
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes raw bytes to a characteristic. Only invoked after the explicit
+     * confirmation dialog — writes change remote device state.
+     */
+    @SuppressLint("MissingPermission")
+    fun writeCharacteristic(
+        serviceUuid: String,
+        characteristicUuid: String,
+        bytes: ByteArray,
+    ): Boolean {
+        val g = gatt ?: return false
+        if (!hasConnectPermission()) return false
+        val ch = findCharacteristic(serviceUuid, characteristicUuid) ?: return false
+        val writeable =
+            ch.properties and (
+                BluetoothGattCharacteristic.PROPERTY_WRITE or
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE
+                ) != 0
+        if (!writeable) return false
+        return runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                g.writeCharacteristic(
+                    ch, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
+                ) == BluetoothStatusCodes.SUCCESS
+            } else {
+                @Suppress("DEPRECATION")
+                ch.value = bytes
+                @Suppress("DEPRECATION")
+                g.writeCharacteristic(ch)
+            }
+        }.getOrDefault(false)
+    }
+
     fun disconnect() {
         runCatching { gatt?.disconnect() }
         runCatching { gatt?.close() }
@@ -193,6 +318,12 @@ class GattExplorerViewModel @Inject constructor(
     override fun onCleared() {
         disconnect()
         super.onCleared()
+    }
+
+    companion object {
+        /** Client Characteristic Configuration Descriptor — 0x2902. */
+        val CCCD_UUID: java.util.UUID =
+            java.util.UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
     }
 }
 

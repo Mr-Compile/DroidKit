@@ -74,17 +74,12 @@ class BluetoothViewModel @Inject constructor(
             other is ScanResultEntry && address == other.address &&
                 name == other.name && rssi == other.rssi &&
                 rssiHistory == other.rssiHistory &&
-                rawBytes.contentEqualsOrNull(other.rawBytes) && decoded == other.decoded
+                rawBytes.contentEquals(other.rawBytes) && decoded == other.decoded
 
         override fun hashCode(): Int =
             31 * address.hashCode() + rssi +
-                (rssiHistory.hashCode() * 7) + rawBytes.contentHashCodeOr0()
+                (rssiHistory.hashCode() * 7) + rawBytes.contentHashCode()
     }
-
-    private fun ByteArray?.contentEqualsOrNull(o: ByteArray?) =
-        this?.contentEquals(o) ?: (o == null)
-
-    private fun ByteArray?.contentHashCodeOr0() = this?.contentHashCode() ?: 0
 
     private val _scanning = MutableStateFlow(false)
     val scanning: StateFlow<Boolean> = _scanning.asStateFlow()

@@ -715,7 +715,7 @@ const S = {
     { time:"16:02:11", tail:"…61:80", tech:"Ndef, NfcA, MifareUltralight", summary:"URI record — https://droidkit.dev" },
     { time:"15:47:33", tail:"…0F:2C", tech:"NfcA, MifareClassic", summary:"No NDEF message" },
   ]},
-  ble: { scanning:false, results:[], gatt:{} },
+  ble: { scanning:false, results:[], gatt:{}, raw:{} },
   snapshots: [], snapSel: { before:null, after:null },
   sensorRec: { recording:false, samples:0 },
   preset: "FULL",
@@ -786,8 +786,8 @@ const TOOLS = [
   t("network.interfaces","Interface Detail","Every network interface: MTU, flags, addresses",CAT.CONNECTIVITY,"network"),
   t("network.saved","Saved Wi-Fi Networks","Saved SSIDs and passwords read from the system store — root only",CAT.CONNECTIVITY,"network/saved",{safety:ADV,caps:[CAP.ROOT],phase:"V2"}),
   t("bluetooth.status","Bluetooth Status","Adapter state, classic/LE capability, bonded devices",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTC],feats:["android.hardware.bluetooth"],minSdk:31}),
-  t("bluetooth.scan","BLE Scan","Scan for nearby BLE devices (post-V1)",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTS],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
-  t("bluetooth.gatt","GATT Explorer","Connect to a discovered device and inspect services (read-only)",CAT.CONNECTIVITY,"bluetooth",{safety:MINOR,perms:[P.BTC],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
+  t("bluetooth.scan","BLE Scan","Bounded scan w/ decoded advertisements, beacon detection, RSSI trend",CAT.CONNECTIVITY,"bluetooth",{perms:[P.BTS],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
+  t("bluetooth.gatt","GATT Explorer","Inspect services — read, subscribe to notifications, confirmed writes",CAT.CONNECTIVITY,"bluetooth",{safety:MINOR,perms:[P.BTC],feats:["android.hardware.bluetooth_le"],minSdk:31,phase:"V2"}),
   t("nfc.read","NFC Tag Read","Tech dump, decoded NDEF records, Tag Doctor, tag report",CAT.HARDWARE,"nfc",{perms:[P.NFC],feats:["android.hardware.nfc"]}),
   t("nfc.write","NFC Write / Erase","Multi-record NDEF composer — 11 record types, erase and duplicate",CAT.HARDWARE,"nfc/write",{safety:MINOR,perms:[P.NFC],feats:["android.hardware.nfc"]}),
   t("usb.host","USB Host Check","Detect USB host capability and connected devices",CAT.HARDWARE,"usb",{feats:["android.hardware.usb.host"]}),
@@ -928,7 +928,7 @@ const TOOL_KW = {
   "audio.routing":["route","devices","bluetooth audio","headset"],"audio.speaker":["tone","sound","loudspeaker","output"],
   "audio.vibration":["haptic","motor","buzz"],
   "battery.lab":["charge","charging","health","temperature","voltage","power","capacity"],
-  "bluetooth.gatt":["gatt","services","characteristics","connect"],"bluetooth.scan":["ble","scan","nearby","low energy"],
+  "bluetooth.gatt":["gatt","services","characteristics","connect","notify","write"],"bluetooth.scan":["ble","scan","nearby","low energy","ibeacon","advertisement"],
   "bluetooth.status":["bt","adapter","bonded","paired"],"camera.capture":["photo","preview","capture","selfie"],
   "camera.details":["camera2","lens","sensor","capabilities"],"camera.flash":["torch","led","light"],
   "developer.deeplink":["uri","url","link","resolve"],
@@ -2652,6 +2652,17 @@ function netLayers(){
   return rows.map(([n,d,s])=>`<div class="row" style="padding:4px 0"><div class="grow"><div class="t-body">${n}</div><div class="t-mini sub">${d}</div></div><span class="res ${s==="PASS"?"pass":"fail"}">${s}</span></div>`).join("");
 }
 /* ---------- bluetooth ---------- */
+function rssiSvg(hist){
+  if(!hist||hist.length<2) return "";
+  const w=200,h=40,pad=4;
+  const pts=hist.map((v,i)=>{
+    const x=pad+i*(w-2*pad)/(hist.length-1);
+    const y=pad+(1-(Math.max(-100,Math.min(-30,v))+100)/70)*(h-2*pad);
+    return x.toFixed(1)+","+y.toFixed(1);
+  }).join(" ");
+  const last=pts.split(" ").pop().split(",");
+  return `<svg width="100%" height="40" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="margin-top:6px"><polyline points="${pts}" fill="none" stroke="var(--primary)" stroke-width="2"/><circle cx="${last[0]}" cy="${last[1]}" r="3" fill="var(--primary)"/></svg>`;
+}
 function scrBluetooth(){
   const hasPerm = S.perms[P.BTC];
   const hasScan = S.perms[P.BTS];
@@ -2677,10 +2688,14 @@ function scrBluetooth(){
         <button class="btn-outline" style="margin-top:8px" data-act="ble-scan">${b.scanning?"Stop scan":"Start BLE scan"}</button>
         ${!b.scanning&&!b.results.length?`<div class="t-body" style="margin-top:4px">No devices seen yet.</div>`:""}
         ${b.scanning?`<div class="t-mini sub" style="margin-top:4px">Scanning…</div>`:""}`)}
-    ${b.results.map(d=>`<div class="card clickable" data-bledev="${d.addr}">
+    ${b.results.map(d=>`<div class="card">
       <div class="t-med">${esc(d.name)}</div>
-      <div class="t-mini sub">${d.addr} · ${d.rssi} dBm</div>
-      <div class="t-mini ${hasPerm?"pri":"sub"}">${hasPerm?"Tap to inspect GATT services (read-only)":"BLUETOOTH_CONNECT required to inspect services"}</div>
+      <div class="t-mini sub">${d.addr} · ${d.rssi} dBm${d.beacon?" · "+d.beacon:""}</div>
+      ${rssiSvg(d.hist)}
+      ${(d.adv||[]).map(f=>infoRow(f[0],f[1])).join("")}
+      ${b.raw[d.addr]?`<div class="t-mini sub" style="font-family:monospace;overflow-wrap:break-word">${d.raw}</div>`:""}
+      <div class="row">${d.raw?`<button class="textbtn" data-act="ble-raw" data-addr="${d.addr}">${b.raw[d.addr]?"Hide raw":"Raw"}</button>`:""}
+      <button class="textbtn" data-bledev="${d.addr}">${hasPerm?"Inspect GATT":"GATT needs BLUETOOTH_CONNECT"}</button></div>
     </div>`).join("")}
   </div>`;
 }
@@ -3064,7 +3079,7 @@ function scrCameraDetails(){
 /* ---------- gatt explorer ---------- */
 function scrGatt(addr){
   const g = S.ble.gatt[addr] || (S.ble.gatt[addr]={state:"connecting"});
-  const note=`<div class="t-mini sub">Device: ${esc(addr)} — read-only inspection. DroidKit never writes to or subscribes to characteristics.</div>`;
+  const note=`<div class="t-mini sub">Device: ${esc(addr)} — reads and subscriptions are explicit per characteristic. Writes require confirmation.</div>`;
   if(g.state==="connecting"){
     later(()=>{ g.state="connected"; g.name="Pixel Buds Pro 2"; g.services=[
       {uuid:"00001800-0000-1000-8000-00805f9b34fb",primary:true,chars:[
@@ -3078,6 +3093,8 @@ function scrGatt(addr){
         {uuid:"00002a29-0000-1000-8000-00805f9b34fb",name:"Manufacturer Name",props:["read"],val:null},
         {uuid:"00002a24-0000-1000-8000-00805f9b34fb",name:"Model Number",props:["read"],val:null},
         {uuid:"00002a26-0000-1000-8000-00805f9b34fb",name:"Firmware Revision",props:["read"],val:null}]},
+      {uuid:"0000fff0-0000-1000-8000-00805f9b34fb",primary:true,chars:[
+        {uuid:"0000fff1-0000-1000-8000-00805f9b34fb",name:"Config",props:["read","write","notify"],val:null}]},
     ]; if(cur().startsWith("bluetooth/gatt"))render(); },900);
     return `<div class="pad col">${note}<div class="empty"><span class="spin"></span>Connecting…</div></div>`;
   }
@@ -3090,8 +3107,11 @@ function scrGatt(addr){
       `<div class="t-mini sub">${s.uuid}</div>`+s.chars.map((c,ci)=>`
         <div style="padding:6px 0"><div class="t-body">${c.uuid}</div>
         <div class="t-mini sub">${c.props.join(", ")||"no properties"}${c.name?" — "+c.name:""}</div>
-        ${c.val?`<div class="t-mini">value: ${c.val}</div>`
-          :c.props.includes("read")?`<button class="textbtn" data-gattread="${si}:${ci}" data-addr="${esc(addr)}">Read value</button>`:""}
+        ${c.val?`<div class="t-mini">value: ${c.val}</div>`:""}
+        ${c.notify?`<div class="t-mini">notify: ${c.notify}</div>`:""}
+        <div class="row">${!c.val&&c.props.includes("read")?`<button class="textbtn" data-gattread="${si}:${ci}" data-addr="${esc(addr)}">Read</button>`:""}
+        ${c.props.includes("notify")||c.props.includes("indicate")?`<button class="textbtn" data-act="gatt-sub" data-addr="${esc(addr)}" data-si="${si}:${ci}">${c.sub?"Unsubscribe":"Subscribe"}</button>`:""}
+        ${c.props.includes("write")||c.props.includes("write-no-rsp")?`<button class="textbtn" data-act="gatt-write" data-addr="${esc(addr)}" data-si="${si}:${ci}">Write</button>`:""}</div>
         </div>`).join(""))).join("")}
   </div>`;
 }
@@ -3717,13 +3737,35 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "ob-next": if(S.obPage<3){ S.obPage++; renderOnboarding(); } else { S.obPage=0; goTab("home"); } break;
     case "ble-scan": { const b=S.ble;
       if(b.scanning) b.scanning=false;
-      else { b.scanning=true; b.results=[];
+      else { b.scanning=true; b.results=[]; b.raw={};
         later(()=>{ b.scanning=false; b.results=[
-          {name:"Pixel Buds Pro 2",addr:"C4:77:64:3A:11:9B",rssi:-48},
-          {name:"BLE Beacon",addr:"F0:18:98:0C:D2:71",rssi:-71},
-          {name:"Unnamed advertiser",addr:"5D:2E:9F:B8:44:0A",rssi:-83}];
+          {name:"Pixel Buds Pro 2",addr:"C4:77:64:3A:11:9B",rssi:-48,
+            hist:[-55,-53,-52,-51,-49,-50,-48],
+            adv:[["Flags","LE General Discoverable, BR/EDR not supported"],
+                 ["Complete name","Pixel Buds Pro 2"],["TX power","-4 dBm"],
+                 ["Service data (Google (0xFE9F))","01 0A 02"]],
+            raw:"02 01 06 10 09 50 69 78 65 6C 20 42 75 64 73 20 50 72 6F 20 32 02 0A FC 07 16 9F FE 01 0A 02"},
+          {name:"BLE Beacon",addr:"F0:18:98:0C:D2:71",rssi:-71,beacon:"iBeacon",
+            hist:[-78,-76,-74,-73,-71],
+            adv:[["Service UUIDs (16-bit)","Eddystone (Google) (0xFEAA)"],
+                 ["Manufacturer (Apple)","02 15 E2 C5 6D B5 DF FB 48 D2 …"],
+                 ["iBeacon","uuid=e2c56db5-dffb-48d2-b060-d0f5a71096e0 major=1 minor=2 tx=-59"]],
+            raw:"02 01 06 03 03 AA FE 1A FF 4C 00 02 15 E2 C5 6D B5 DF FB 48 D2 B0 60 D0 F5 A7 10 96 E0 00 01 00 02 C5"},
+          {name:"Unnamed advertiser",addr:"5D:2E:9F:B8:44:0A",rssi:-83,
+            hist:[-86,-85,-84,-83],
+            adv:[["Flags","LE Limited Discoverable"],
+                 ["Service UUIDs (16-bit)","Battery (0x180F), Heart Rate (0x180D)"]],
+            raw:"02 01 01 05 03 0F 18 0D 18"}];
           if(cur()==="bluetooth")render(); },1600); }
       render(); break; }
+    case "ble-raw": { const a=el.dataset.addr; S.ble.raw[a]=!S.ble.raw[a]; render(); break; }
+    case "gatt-sub": { const g=S.ble.gatt[el.dataset.addr];
+      const [si,ci]=el.dataset.si.split(":").map(Number); const c=g.services[si].chars[ci];
+      c.sub=!c.sub;
+      if(c.sub) later(()=>{ if(c.sub){ c.notify="0x4C"; if(cur().startsWith("bluetooth/gatt"))render(); } },1200);
+      render(); break; }
+    case "gatt-write": { const [si,ci]=el.dataset.si.split(":").map(Number);
+      dialog({title:"Write characteristic?",text:"This sends raw bytes to the characteristic on the remote device and can change its behavior. Mock writes 4 random bytes.",confirm:"Write",cancel:"Cancel",onConfirm:`gatt-write-ok:${el.dataset.addr}:${si}:${ci}`}); break; }
     case "gatt-retry": S.ble.gatt[el.dataset.addr]={state:"connecting"}; render(); break;
     case "port-probe": { const h=$("#porthost")?.value.trim(), pl=$("#portlist")?.value.trim(); if(!h||!pl)break;
       $("#portsout").innerHTML=`<div class="t-body">Probing…</div>`;
@@ -3942,6 +3984,11 @@ function dlgOk(cb){
       render(); toast("Settings reset"); break;
     case cb==="bt-on": S.btEnabled=true; render(); break;
     case cb==="del-all": S.sessions=[]; S.engine=null; render(); break;
+    case cb.startsWith("gatt-write-ok:"): { const [,addr,si,ci]=cb.split(":");
+      const g=S.ble.gatt[addr];
+      if(g&&g.services){ g.services[+si].chars[+ci].val=
+        "0x"+Array.from({length:4},()=>Math.floor(Math.random()*255).toString(16).padStart(2,"0")).join(" ")+" (written)"; }
+      render(); break; }
     case cb.startsWith("del-report:"): { const id=cb.split(":")[1];
       S.sessions=S.sessions.filter(x=>x.id!==id); goBack(); break; }
     case cb==="nfc-arm-erase": S.nfc.armed="erase"; S.nfc.tag=null;

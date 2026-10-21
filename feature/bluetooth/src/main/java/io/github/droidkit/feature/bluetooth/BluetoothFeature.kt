@@ -32,7 +32,7 @@ object BluetoothFeature : FeatureContribution {
         Tool(
             id = "bluetooth.scan",
             title = "BLE Scan",
-            description = "Scan for nearby BLE devices (post-V1)",
+            description = "Bounded scan w/ decoded advertisements, beacon detection, RSSI trend",
             category = ToolCategory.CONNECTIVITY,
             route = ROUTE,
             safetyLevel = SafetyLevel.SAFE,
@@ -40,13 +40,13 @@ object BluetoothFeature : FeatureContribution {
             requiredFeatures = setOf("android.hardware.bluetooth_le"),
             minSdk = 31,
             phase = ToolPhase.V2,
-            keywords = setOf("ble", "scan", "nearby", "low energy"),
+            keywords = setOf("ble", "scan", "nearby", "low energy", "ibeacon", "advertisement"),
             iconKey = ToolIconKeys.BLE,
         ),
         Tool(
             id = "bluetooth.gatt",
             title = "GATT Explorer",
-            description = "Connect to a discovered device and inspect services (read-only)",
+            description = "Inspect services — read, subscribe to notifications, confirmed writes",
             category = ToolCategory.CONNECTIVITY,
             route = ROUTE,
             safetyLevel = SafetyLevel.MINOR,
@@ -54,7 +54,7 @@ object BluetoothFeature : FeatureContribution {
             requiredFeatures = setOf("android.hardware.bluetooth_le"),
             minSdk = 31,
             phase = ToolPhase.V2,
-            keywords = setOf("gatt", "services", "characteristics", "connect"),
+            keywords = setOf("gatt", "services", "characteristics", "connect", "notify", "write"),
             iconKey = ToolIconKeys.GATT,
         ),
     )
