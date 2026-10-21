@@ -2,6 +2,8 @@ package io.github.droidkit.feature.battery
 
 import android.os.PowerManager
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,10 +26,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kotlin.math.roundToInt
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -51,19 +56,35 @@ fun BatteryScreen(
     val measuring by viewModel.measuring.collectAsStateWithLifecycle()
     val measureFailed by viewModel.measureFailed.collectAsStateWithLifecycle()
     val measureUnsupported by viewModel.measureUnsupported.collectAsStateWithLifecycle()
+    val currentHistoryMa by viewModel.currentHistoryMa.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.refresh()
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.refresh()
+                    viewModel.setLiveSampling(true)
+                }
+                Lifecycle.Event.ON_PAUSE -> viewModel.setLiveSampling(false)
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.setLiveSampling(false)
+        }
     }
 
     val powerSave = (context.getSystemService(android.content.Context.POWER_SERVICE) as? PowerManager)
         ?.isPowerSaveMode
+    val batteryManager =
+        context.getSystemService(android.content.Context.BATTERY_SERVICE) as? android.os.BatteryManager
+    val currentAvgUa = batteryManager
+        ?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
+        ?.takeIf { it != Int.MIN_VALUE }
 
     Scaffold(topBar = { DroidKitTopAppBar("Battery Lab", onBack = onBack) }) { padding ->
         LazyColumn(
@@ -88,10 +109,15 @@ fun BatteryScreen(
                     InfoRow("Voltage", status.voltageMv.takeIf { it > 0 }?.let { "$it mV" })
                     InfoRow("Technology", status.technology)
                     InfoRow("Health (as reported)", status.healthText)
-                    if (status.temperatureC >= 45f) {
+                    val tempLevel = BatteryInfo.tempLevel(status.temperatureC)
+                    BatteryInfo.tempHint(tempLevel)?.let { hint ->
                         Text(
-                            "Battery unusually warm — let device cool",
-                            color = MaterialTheme.colorScheme.error,
+                            hint,
+                            color = if (tempLevel == BatteryInfo.TempLevel.HOT) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.tertiary
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 4.dp),
                         )
@@ -192,7 +218,48 @@ fun BatteryScreen(
                         "Current now",
                         status.currentNowUa?.let { "${it / 1000} mA (instantaneous)" },
                     )
+                    InfoRow("Current average", BatteryInfo.maLabel(currentAvgUa))
+                    InfoRow(
+                        "Power (est.)",
+                        BatteryInfo.powerMw(status.currentNowUa, status.voltageMv)
+                            ?.let { "$it mW" },
+                    )
                     InfoRow("Battery saver", powerSave?.toString())
+                    val history = currentHistoryMa
+                    if (history.size >= 2) {
+                        Text(
+                            "Live draw — ${history.size} samples @ 2 s",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                        val lineColor = MaterialTheme.colorScheme.primary
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(72.dp)
+                                .padding(top = 6.dp)
+                                .drawBehind {
+                                    val pts = BatteryInfo.sparklinePoints(
+                                        history, size.width, size.height,
+                                    )
+                                    for (i in 1 until pts.size) {
+                                        drawLine(
+                                            lineColor,
+                                            Offset(pts[i - 1].first, pts[i - 1].second),
+                                            Offset(pts[i].first, pts[i].second),
+                                            strokeWidth = 2.dp.toPx(),
+                                        )
+                                    }
+                                },
+                        )
+                        Text(
+                            "min ${history.min().roundToInt()} mA · " +
+                                "max ${history.max().roundToInt()} mA",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
             item {
@@ -210,6 +277,7 @@ fun BatteryScreen(
                         "Health (measured)" to measured?.healthPct?.let { "%.0f%%".format(it) },
                         "Health (estimated)" to estimate.healthPct?.let { "≈%.0f%%".format(it) },
                         "Current now" to status.currentNowUa?.let { "${it / 1000} mA" },
+                        "Current average" to BatteryInfo.maLabel(currentAvgUa),
                         "Battery saver" to powerSave?.toString(),
                     ),
                 )

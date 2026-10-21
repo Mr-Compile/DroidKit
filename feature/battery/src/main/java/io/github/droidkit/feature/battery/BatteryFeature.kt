@@ -16,7 +16,7 @@ object BatteryFeature : FeatureContribution {
         Tool(
             id = "battery.lab",
             title = "Battery Lab",
-            description = "Charge level, status, temperature, voltage, power draw",
+            description = "Charge level, status, temperature, voltage, live mA draw, power estimate",
             category = ToolCategory.DEVICE,
             route = ROUTE,
             keywords = setOf("charge", "charging", "health", "temperature", "voltage", "power", "capacity"),

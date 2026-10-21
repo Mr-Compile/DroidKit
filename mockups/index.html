@@ -2314,7 +2314,9 @@ function scrBattery(){
   const b=DEVICE.battery;
   return `<div class="pad col">
     ${sectionCard("Charge", infoRow("Level",b.level+"%",false)+infoRow("Status",b.status,false)+infoRow("Source",b.plug,false))}
-    ${sectionCard("Conditions", infoRow("Temperature",b.tempC.toFixed(1)+" °C",false)+infoRow("Voltage",b.voltageMv+" mV",false)+infoRow("Technology",b.tech,false)+infoRow("Health (as reported)",b.health,false))}
+    ${sectionCard("Conditions", infoRow("Temperature",b.tempC.toFixed(1)+" °C",false)+infoRow("Voltage",b.voltageMv+" mV",false)+infoRow("Technology",b.tech,false)+infoRow("Health (as reported)",b.health,false)+
+      (b.tempC>=45?`<div class="t-mini" style="color:var(--error);margin-top:4px">Battery unusually warm — let device cool</div>`:
+        b.tempC>=35?`<div class="t-mini" style="color:var(--c-hardware);margin-top:4px">Battery warm — heavy load or fast charge in progress?</div>`:""))}
     ${sectionCard("Health",
       infoRow("Cycle count (reported)",String(b.cycles),false)+
       infoRow("Charge in pack",b.chargeMah+" mAh",false)+
@@ -2338,9 +2340,19 @@ function scrBattery(){
         <button class="btn-outline" data-act="batt-design">Save</button></div>`+
       (S.batt.designMah&&S.batt.estMah?infoRow("Estimated health","≈"+Math.round(S.batt.estMah/S.batt.designMah*100)+"% of design capacity",false):"")+
       (S.batt.samples?`<button class="textbtn" data-act="batt-reset-est">Reset estimate</button>`:""))}
-    ${sectionCard("Power", infoRow("Current now",b.currentMa+" mA (instantaneous)",false)+infoRow("Battery saver",String(b.saver),false))}
+    ${sectionCard("Power", infoRow("Current now",b.currentMa+" mA (instantaneous)",false)+
+      infoRow("Current average","780 mA",false)+infoRow("Power (est.)","3400 mW",false)+
+      infoRow("Battery saver",String(b.saver),false)+
+      `<div class="t-mini sub" style="margin-top:8px">Live draw — 24 samples @ 2 s</div>`+
+      sparkline([820,790,760,880,910,850,780,760,810,840,800,780,830,860,840,810,790,820,800,780,760,790,810,850])+
+      `<div class="t-mini sub">min 760 mA · max 910 mA</div>`)}
     ${aiSumCard("battery")}
   </div>`;
+}
+function sparkline(vals,w=320,h=56){
+  const min=Math.min(...vals),max=Math.max(...vals),r=(max-min)||1;
+  const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-(v-min)/r*h).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:56px;margin-top:6px"><polyline points="${pts}" fill="none" stroke="var(--primary)" stroke-width="2"/></svg>`;
 }
 function labIndex(title, subtitle, entries){
   return `<div class="pad col">

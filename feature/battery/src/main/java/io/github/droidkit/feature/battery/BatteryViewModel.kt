@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -33,6 +34,33 @@ class BatteryViewModel @Inject constructor(
 
     private val _measuring = MutableStateFlow(false)
     val measuring: StateFlow<Boolean> = _measuring
+
+    /**
+     * Rolling mA history sampled while the screen is visible (2 s cadence,
+     * last 120 samples). Deliberately in-memory only — the persistent
+     * estimator already runs at a much slower cadence.
+     */
+    private val _currentHistoryMa = MutableStateFlow<List<Double>>(emptyList())
+    val currentHistoryMa: StateFlow<List<Double>> = _currentHistoryMa
+
+    private var samplingJob: kotlinx.coroutines.Job? = null
+
+    fun setLiveSampling(active: Boolean) {
+        if (active && samplingJob == null) {
+            samplingJob = viewModelScope.launch {
+                while (isActive) {
+                    probe.batteryStatus.currentNowUa?.let { ua ->
+                        _currentHistoryMa.value =
+                            (_currentHistoryMa.value + ua / 1000.0).takeLast(120)
+                    }
+                    kotlinx.coroutines.delay(2_000)
+                }
+            }
+        } else if (!active) {
+            samplingJob?.cancel()
+            samplingJob = null
+        }
+    }
 
     /** null = not measured yet; reading fields null = node not exposed. */
     private val _measured = MutableStateFlow<FuelGaugeReading?>(null)
