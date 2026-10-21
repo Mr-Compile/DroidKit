@@ -4,9 +4,25 @@ A static, zero-dependency HTML replica of the DroidKit Android app — every
 screen from the real navigation graph, clickable like the real app. No build,
 no emulator, no device.
 
+## Two files
+
+- **`index.html`** — canonical mockup. Mirrors the app's *current* UI and stays
+  synchronized with implementation per `AGENTS.md`.
+- **`improved-index.html`** — design-direction preview: the same replica
+  restyled in the "Dark Instrument" language (v5 spec: Dark Technical +
+  Minimalism + Bento + Aurora accents + restrained glass, minus the Material
+  look). Ink surfaces, green→teal gradient accents, hairline borders,
+  letterspaced micro-labels, monospace technical values, status dots — the
+  splash's identity carried through the whole app. Also demos the component
+  layer the reskin adds: `.res` verdict pills on every PASS/FAIL/state
+  surface, a shared `.gatecard` for permission/elevated-access gates,
+  per-reason dots in tool availability, card press feedback, and a real
+  loading vocabulary (`.spin` inline loaders, `.skeleton` shimmer). Dark-first,
+  light theme included (toggle in Settings). Proposal only — not yet the app.
+
 ## Open it
 
-Double-click `index.html`, or serve the folder:
+Double-click `index.html` / `improved-index.html`, or serve the folder:
 
 ```bash
 npx http-server mockups        # or
@@ -29,8 +45,8 @@ Simulates a Pixel 8 Pro, Android 15, mid-setup:
 - CAMERA granted; RECORD_AUDIO / BLUETOOTH_CONNECT / BLUETOOTH_SCAN not
   granted (try the Microphone test or Bluetooth Lab to see the permission
   gates).
-- STANDARD provider ready; ADB needs pairing; SHIZUKU/ROOT unavailable —
-  V2 tools show real **Blocked** badges and stub screens show blocked reasons.
+- STANDARD provider ready; ADB needs pairing; ROOT unavailable — V2 tools
+  show real **Blocked** badges and stub screens show blocked reasons.
 - Four saved diagnostic sessions are seeded in Reports / Diagnose history —
   they tell one story (Aug intake: dead pixels + touch + mic faults → Oct recheck
   → post-repair pass on Oct 19) and feed the Insights charts. One session is
@@ -49,7 +65,7 @@ Simulates a Pixel 8 Pro, Android 15, mid-setup:
 3. **Apps → any app** — App Inspector detail with launch/settings buttons.
 4. **NFC Lab → Start scan** — tag appears with Tag Doctor verdicts; try
    Write / erase for the armed-write confirmation flow.
-5. **Settings** — theme radios switch the phone between dark/light.
+5. **Settings** — theme control switches the phone between dark/light.
 6. **Home → Insights card** (or Tools → Reports category → Device Insights) —
    the on-device analytics screen: verdict donut + pass-rate trend across
    sessions, tests needing attention, storage sparkline, activity stats, and
