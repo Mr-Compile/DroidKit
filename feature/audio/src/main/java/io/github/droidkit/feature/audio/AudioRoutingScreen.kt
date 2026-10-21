@@ -113,6 +113,18 @@ fun AudioRoutingScreen(onBack: () -> Unit) {
                     }
                 }
                 item {
+                    SectionCard(title = "Stream volumes") {
+                        AudioInfo.volumeStreams().forEach { s ->
+                            InfoRow(
+                                AudioInfo.streamName(s),
+                                "${am.getStreamVolume(s)}/${am.getStreamMaxVolume(s)}" +
+                                    if (am.isStreamMute(s)) " · muted" else "",
+                                copyable = false,
+                            )
+                        }
+                    }
+                }
+                item {
                     SectionCard(title = "Input devices (${inputs.size})") {
                         inputs.forEach { d ->
                             InfoRow(

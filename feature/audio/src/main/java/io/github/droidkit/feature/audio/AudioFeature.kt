@@ -52,6 +52,15 @@ object AudioFeature : FeatureContribution {
             keywords = setOf("route", "devices", "bluetooth audio", "headset"),
             iconKey = ToolIconKeys.AUDIO_ROUTE,
         ),
+        Tool(
+            id = "audio.lab",
+            title = "Audio Lab",
+            description = "Tone generator, stereo channel check and mic level meter",
+            category = ToolCategory.DIAGNOSTICS,
+            route = "$ROUTE/lab",
+            keywords = setOf("tone", "sine", "channel", "left", "right", "meter"),
+            iconKey = ToolIconKeys.SPEAKER,
+        ),
     )
 }
 
@@ -85,5 +94,8 @@ fun NavGraphBuilder.audioGraph(nav: NavHostController) {
     }
     composable("${AudioFeature.ROUTE}/routing") {
         AudioRoutingScreen(onBack = { nav.navigateUp() })
+    }
+    composable("${AudioFeature.ROUTE}/lab") {
+        AudioLabScreen(onBack = { nav.navigateUp() })
     }
 }

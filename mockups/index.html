@@ -583,6 +583,7 @@ const TOOLS = [
   t("audio.microphone","Microphone Test","Record and meter microphone input",CAT.DIAGNOSTICS,"audio",{perms:[P.REC]}),
   t("audio.vibration","Vibration Test","Run haptic patterns and confirm motor response",CAT.DIAGNOSTICS,"audio",{perms:[P.VIB]}),
   t("audio.routing","Audio Routing","Audio devices, active mode, routing and capabilities",CAT.DIAGNOSTICS,"audio/routing"),
+  t("audio.lab","Audio Lab","Tone generator, stereo channel check and mic level meter",CAT.DIAGNOSTICS,"audio/lab"),
   t("camera.capture","Camera Test","Preview each camera and capture a test frame",CAT.DIAGNOSTICS,"camera",{perms:[P.CAM],feats:["android.hardware.camera.any"]}),
   t("camera.flash","Flash Test","Toggle torch on each camera unit",CAT.DIAGNOSTICS,"camera",{feats:["android.hardware.camera.flash"]}),
   t("camera.details","Camera Capabilities","Camera2 inventory: sensors, lenses, output sizes, modes, FPS ranges",CAT.DIAGNOSTICS,"camera/details",{feats:["android.hardware.camera.any"]}),
@@ -715,7 +716,7 @@ const TOOL_ICON = {
   "sensors.check":"fact_check",
   "display.deadpixel":"fiber_manual_record","display.touch":"touch_app","display.modes":"display_settings",
   "display.motion":"animation","display.patterns":"palette","audio.speaker":"volume_up","audio.microphone":"mic","audio.vibration":"vibration",
-  "audio.routing":"alt_route","camera.capture":"photo_camera","camera.flash":"flash_on","camera.details":"camera_alt",
+  "audio.routing":"alt_route","audio.lab":"volume_up","camera.capture":"photo_camera","camera.flash":"flash_on","camera.details":"camera_alt",
   "apps.installed":"apps","apps.components":"account_tree","apps.permissions":"policy",
   "permissions.center":"security","permissions.inspector":"policy","appops.view":"app_settings_alt","appops.set":"tune",
   "packages.disable":"block","packages.clear":"delete_sweep","packages.uninstall":"delete",
@@ -748,7 +749,8 @@ const TOOL_KW = {
   "appops.set":["appops","change","modes","background"],"appops.view":["appops","modes","usage access","overlay"],
   "apps.components":["activities","services","receivers","providers"],"apps.installed":["packages","apk","installed","apps"],
   "apps.permissions":["perms","granted","denied","requested"],"audio.microphone":["record","mic","voice","input"],
-  "audio.routing":["route","devices","bluetooth audio","headset"],"audio.speaker":["tone","sound","loudspeaker","output"],
+  "audio.routing":["route","devices","bluetooth audio","headset"],"audio.lab":["tone","sine","channel","left","right","meter"],
+  "audio.speaker":["tone","sound","loudspeaker","output"],
   "audio.vibration":["haptic","motor","buzz"],
   "battery.lab":["charge","charging","health","temperature","voltage","power","capacity"],
   "bluetooth.gatt":["gatt","services","characteristics","connect","notify","write"],"bluetooth.scan":["ble","scan","nearby","low energy","ibeacon","advertisement"],
@@ -1164,6 +1166,7 @@ function nav(route){
   }
   S.paneSel = null;
   S.dispPatternFull = false;
+  S.micOn = false;
   S.stack.push(route); clearTimers(); closeOverlay(); render();
   if(route==="nfc"){ S.nfc.scanning=true;
     if(!S.nfc.tag) later(()=>{ if(S.nfc.scanning&&!S.nfc.tag&&cur()==="nfc"){ S.nfc.tag={...NFC_TAG}; render(); } },1600); }
@@ -1251,6 +1254,7 @@ function render(){
       break;
     case "audio":
       if(parts[1]==="routing"){ body = scrAudioRouting(); title="Audio Routing"; }
+      else if(parts[1]==="lab"){ body = scrAudioLab(); title="Audio Lab"; }
       else { body = labIndex("Audio & Haptics",
         "Standalone audio and haptics checks from Phone Doctor. Results here are not saved — run Full Diagnostic to persist them.",
         [["audio.speaker","Speaker","Play a test tone and confirm clear, consistent output."],
@@ -2922,7 +2926,28 @@ function scrAudioRouting(){
       infoRow("Music muted","false",false)+infoRow("Speaker sample rates","48000 Hz",false))}
     ${sectionCard(`Output devices (${outs.length})`, outs.map(([k,v])=>infoRow(k,v,false)).join(""))}
     ${sectionCard(`Input devices (${ins.length})`, ins.map(([k,v])=>infoRow(k,v,false)).join(""))}
+    ${sectionCard("Stream volumes", [["Music","9/15"],["Ring","5/7"],["Notification","5/7"],["Alarm","6/7"],["Voice call","4/5"],["System","7/15"],["DTMF","15/15"],["Accessibility","15/15"]].map(([k,v])=>infoRow(k,v,false)).join(""))}
     ${sectionCard("Communication device", infoRow("Current","Earpiece — Pixel 8 Pro",false))}
+  </div>`;
+}
+/* ---------- audio lab ---------- */
+function scrAudioLab(){
+  if(S.micOn && !S._micTimer){ S._micTimer=true; every(()=>{ if(!S.micOn){S._micTimer=false;return;} S.micDb=-(18+Math.random()*30); const bar=$("#micbar"),lbl=$("#miclbl"); if(bar)bar.style.width=((S.micDb+96)/96*100)+"%"; if(lbl)lbl.textContent=S.micDb.toFixed(1)+" dBFS"; },200); }
+  const freq=S.audioFreq||440, ch=S.audioChan||0;
+  return `<div class="pad col">
+    ${sectionCard("Tone generator", `
+      <div class="t-mini sub">Sine burst through the music stream — confirms the output path is alive and roughly how loud it is.</div>
+      <div class="chiprow" style="margin-top:8px">${[125,440,1000,4000].map(f=>`<button class="fchip ${freq===f?"sel":""}" data-afreq="${f}">${f} Hz</button>`).join("")}</div>
+      <div class="chiprow"><button class="btn ${S.tonePlaying?"":"primary"}" data-act="tone-play">${S.tonePlaying?"Stop":"Play 1 s"}</button></div>`)}
+    ${sectionCard("Channel check", `
+      <div class="t-mini sub">Plays the tone on one side only — swapped or dead stereo channels show up immediately on headphones/speakers.</div>
+      <div class="chiprow" style="margin-top:8px">${[[0,"Both"],[1,"Left only"],[2,"Right only"]].map(([c,l])=>`<button class="fchip ${ch===c?"sel":""}" data-achan="${c}">${l}</button>`).join("")}</div>
+      <div class="t-mini sub">Applies to the next tone you play.</div>`)}
+    ${sectionCard("Microphone meter", `
+      <div class="t-mini sub">Live input level in dBFS. Recording is on-device only and stops when you leave or tap Stop.</div>
+      <div style="height:10px;border-radius:5px;background:var(--tonal);margin-top:12px;overflow:hidden"><div id="micbar" style="height:100%;width:${S.micOn?((S.micDb||-96)+96)/96*100:0}%;background:var(--primary)"></div></div>
+      <div class="t-mini" id="miclbl" style="margin-top:4px">${S.micOn?(S.micDb||-96).toFixed(1)+" dBFS":"-96.0 dBFS"}</div>
+      <div class="chiprow"><button class="btn ${S.micOn?"":"primary"}" data-act="mic-meter">${S.micOn?"Stop":"Start meter"}</button></div>`)}
   </div>`;
 }
 /* ---------- camera capabilities ---------- */
@@ -3534,6 +3559,8 @@ document.addEventListener("click", e => {
   const mpp = e.target.closest("[data-mppat]"); if(mpp){ S.motionPattern=mpp.dataset.mppat; render(); return; }
   const mps = e.target.closest("[data-mpspeed]"); if(mps){ S.motionSpeed=+mps.dataset.mpspeed; render(); return; }
   const dp = e.target.closest("[data-pat]"); if(dp){ S.dispPattern=dp.dataset.pat; render(); return; }
+  const afr = e.target.closest("[data-afreq]"); if(afr){ S.audioFreq=+afr.dataset.afreq; render(); return; }
+  const ach = e.target.closest("[data-achan]"); if(ach){ S.audioChan=+ach.dataset.achan; render(); return; }
   const np = e.target.closest("[data-nfcpreset]"); if(np){
     const k=S.nfcKind||"TEXT", F=(S.nfc.nfcF[k]=S.nfc.nfcF[k]||{});
     F[NFC_FIELDS[k][0][0]]=np.dataset.nfcpreset; render(); return; }
@@ -3550,6 +3577,13 @@ function handleAct(act, el, e){
   switch(act){
     case "disp-pat-full": S.dispPatternFull=true; render(); break;
     case "disp-pat-exit": S.dispPatternFull=false; render(); break;
+    case "tone-play":
+      S.tonePlaying=!S.tonePlaying; render();
+      if(S.tonePlaying) later(()=>{ S.tonePlaying=false; render(); },1000);
+      break;
+    case "mic-meter":
+      if(!S.micOn){ S.micOn=true; S.micDb=-96; } else { S.micOn=false; }
+      render(); break;
     case "dlg-close": closeOverlay(); break;
     case "go-back": goBack(); break;
     case "pane-back": S.paneSel = null; render(); break;
