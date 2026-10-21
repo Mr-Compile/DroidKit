@@ -173,7 +173,7 @@ fun DashboardScreen(
             if (recentTools.isEmpty()) {
                 item { EmptyState("No recent tools yet — browse the Tools tab.") }
             } else {
-                items(recentTools, key = { it.id }) { tool ->
+                items(recentTools, key = { "rec_${it.id}" }) { tool ->
                     ToolCard(
                         tool = tool,
                         resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) },
@@ -184,7 +184,7 @@ fun DashboardScreen(
             }
 
             item { SectionHeader("Ready now") }
-            items(quickTools, key = { it.id }) { tool ->
+            items(quickTools, key = { "quick_${it.id}" }) { tool ->
                 ToolCard(
                     tool = tool,
                     resolution = remember(tool, providerStatuses) { viewModel.resolve(tool) },

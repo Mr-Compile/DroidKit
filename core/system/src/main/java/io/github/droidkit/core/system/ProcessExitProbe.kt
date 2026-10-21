@@ -57,7 +57,8 @@ object ProcessExitProbe {
                     append(deviceHeader)
                     append("time=${ts.format(Date())} thread=${thread.name}\n\n")
                     append("${error.javaClass.name}: ${error.message}\n")
-                    append(android.util.Log.getStackTraceString(error))
+                    // getStackTraceString reprints the exception header line.
+                    append(android.util.Log.getStackTraceString(error).substringAfter('\n'))
                 })
             }
             if (previous != null) {
