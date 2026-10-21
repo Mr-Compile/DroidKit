@@ -1802,6 +1802,7 @@ function scrAbout(){
       ${navRow("Help & FAQ",null,{route:"settings/about/help"})}
       ${navRow("Report a problem","GitHub Issues",{act:"ext:github.com/Mr-Compile/DroidKit/issues/new",ext:true})}
       ${navRow("Send feedback","GitHub Issues",{act:"ext:github.com/Mr-Compile/DroidKit/issues",ext:true})}
+      ${navRow("Last run report","App stopped responding — report captured",{act:"last-report"})}
     </div>
     <div class="sec-head">Legal</div>
     <div class="card">
@@ -3096,6 +3097,27 @@ function handleAct(act, el, e){
       render(); break; }
     case "privacy-policy": toast("The privacy policy isn't published yet."); break;
     case "terms": toast("Terms of use aren't published yet."); break;
+    case "last-report":
+      $("#overlay").innerHTML=`<div class="scrim" data-act="dlg-close"></div>
+        <div class="dialog"><h3>App stopped responding</h3>
+          <div class="dtext"><pre style="white-space:pre-wrap;font-family:monospace;font-size:11px;margin:0">=== Previous process exit ===
+Timestamp: 2026-10-24 18:41:52
+Reason: ANR (6)
+Description: Input dispatching timed out
+Process: io.github.droidkit
+Status: 0
+Importance: FOREGROUND (100)
+
+=== ANR trace (what the system recorded) ===
+"main" prio=5 tid=1 Blocked
+  at java.lang.Object.wait(Native Method)
+  at io.github.droidkit.privilege.adb.AdbConnection.close(AdbConnection.kt:80)
+  ...
+On Android &lt; 11 this section may be absent.</pre></div>
+          <div class="dbtns"><button class="textbtn" data-act="dlg-close">Close</button>
+          <button class="textbtn" data-act="last-report-copy">Copy</button></div></div>`;
+      break;
+    case "last-report-copy": closeOverlay(); toast("Report copied — paste it into your issue."); break;
     case "update-check": if(S.upd!=="checking"){ S.upd="checking"; render();
       later(()=>{ S.upd="none"; if(cur()==="settings/about")render(); },900); } break;
     case "dlg-ok": { const cb=$("#overlay").dataset.dlgOk||""; closeOverlay(); dlgOk(cb); break; }

@@ -323,7 +323,11 @@ class WirelessAdbProvider(
 
     override suspend fun disconnect() {
         mutex.withLock {
-            session?.close()
+            // AdbConnection.close() is @Synchronized — a shell still in flight
+            // holds that monitor until its deadline (up to timeoutMs). Callers
+            // run this on the main dispatcher, so the monitor wait must happen
+            // off-thread or a stuck shell freezes the UI into an ANR.
+            withContext(Dispatchers.IO) { session?.close() }
             session = null
             sessionInfo = null
         }

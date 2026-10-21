@@ -8,11 +8,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolRegistry
+import io.github.droidkit.core.system.ProcessExitProbe
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Explicit state for the Check for Updates row. */
 sealed interface UpdateUiState {
@@ -28,6 +31,8 @@ class AboutViewModel @Inject constructor(
     private val updateChecker: UpdateChecker,
 ) : ViewModel() {
 
+    private val appContext = context.applicationContext
+
     val appInfo: AppInfo = AppInfo.read(context)
 
     /** Real, registered tools only — the Features page can't advertise stubs. */
@@ -38,6 +43,18 @@ class AboutViewModel @Inject constructor(
 
     private val _updateState = MutableStateFlow<UpdateUiState>(UpdateUiState.Idle)
     val updateState: StateFlow<UpdateUiState> = _updateState.asStateFlow()
+
+    /** How the previous process run ended — crash/freeze capture for support. */
+    private val _lastExit = MutableStateFlow<ProcessExitProbe.ExitReport?>(null)
+    val lastExit: StateFlow<ProcessExitProbe.ExitReport?> = _lastExit.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _lastExit.value = withContext(Dispatchers.IO) {
+                ProcessExitProbe.report(appContext)
+            }
+        }
+    }
 
     /** Guarded against re-entry while a check is running. */
     fun checkForUpdates() {
