@@ -2957,12 +2957,25 @@ function scrAppDetail(pkg){
       <button class="btn-outline grow" data-act="launch-app" data-app="${a.label}">Launch</button>
       <button class="btn-outline grow" data-act="app-settings" data-app="${a.label}">App settings</button>
     </div>
+    <button class="btn-outline full" style="display:block;width:100%" data-act="share-apk" data-app="${a.label}">Share base APK</button>
     <div class="sec-head">Package</div>
     <div class="card">
       ${infoRow("Version",a.ver)}${infoRow("Version code","15400871")}
       ${infoRow("Target SDK","API 35",false)}${infoRow("Min SDK","API 26",false)}
       ${infoRow("Installed","Mar 14, 2025",false)}${infoRow("Updated","Oct 2, 2026",false)}
       ${infoRow("APK path",`/data/app/~~kL2f/${a.pkg}-x9/base.apk`)}
+    </div>
+    <div class="sec-head">Signing &amp; install</div>
+    <div class="card">
+      ${infoRow("Signature SHA-256","4C:9A:21:B7:F0:5E:D3:88:AA:6C:12:9F:4E:D0:2B:77:81:63:09:5D:FE:C8:71:22:9A:44:0B:13:E2:5A:9C:01")}
+      ${infoRow("Signing scheme","v2+",false)}
+      ${infoRow("Installed by","Google Play Store",false)}
+      ${infoRow("Originating package","com.android.vending",false)}
+    </div>
+    <div class="sec-head">APK &amp; libraries</div>
+    <div class="card">
+      ${infoRow("Base APK","38.2 MB",false)}${infoRow("Split APKs","2",false)}
+      ${infoRow("Total on disk","61.7 MB",false)}${infoRow("Native libs","arm64-v8a: 14",false)}
     </div>
     <div class="sec-head">Permissions</div>
     <div class="card">
@@ -4145,6 +4158,7 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "share-device": toast("Sharesheet would open (mock)"); break;
     case "launch-app": toast(`Would launch ${el.dataset.app} (mock)`); break;
     case "app-settings": toast(`Would open system settings for ${el.dataset.app}`); break;
+    case "share-apk": toast(`Copied base APK to share cache — system share sheet opens for ${el.dataset.app}`); break;
     case "intent": toast(`Would launch intent ${el.dataset.intent}`); break;
     case "custom-intent": toast("Would launch custom intent"); break;
     case "reports-menu": {

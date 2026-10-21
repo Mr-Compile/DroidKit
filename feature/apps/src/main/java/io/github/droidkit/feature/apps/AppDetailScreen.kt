@@ -31,12 +31,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
@@ -48,6 +50,7 @@ import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,11 +63,15 @@ fun AppDetailScreen(
     val context = LocalContext.current
     val pm = context.packageManager
     var info by remember { mutableStateOf<PackageInfo?>(null) }
+    var extras by remember { mutableStateOf<AppExtras?>(null) }
     var loaded by remember { mutableStateOf(false) }
     var launchError by remember { mutableStateOf<String?>(null) }
+    var sharing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(packageName) {
         info = viewModel.packageInfo(packageName)
+        extras = viewModel.appExtras(packageName)
         loaded = true
     }
 
@@ -157,6 +164,40 @@ fun AppDetailScreen(
                             ) { Text("App settings") }
                         }
                     }
+
+                    item {
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    sharing = true
+                                    val apk = viewModel.exportApk(packageName)
+                                    sharing = false
+                                    if (apk == null) {
+                                        launchError = "APK not readable — cannot share"
+                                    } else {
+                                        val uri = FileProvider.getUriForFile(
+                                            context,
+                                            "${context.packageName}.fileprovider",
+                                            apk,
+                                        )
+                                        val share = Intent(Intent.ACTION_SEND).apply {
+                                            type = "application/vnd.android.package-archive"
+                                            putExtra(Intent.EXTRA_STREAM, uri)
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        runCatching {
+                                            context.startActivity(
+                                                Intent.createChooser(share, "Share APK")
+                                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                            )
+                                        }.onFailure { launchError = it.message }
+                                    }
+                                }
+                            },
+                            enabled = !sharing,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text(if (sharing) "Copying APK…" else "Share base APK") }
+                    }
                     launchError?.let { err ->
                         item {
                             Text(
@@ -194,6 +235,48 @@ fun AppDetailScreen(
                         }
                     }
 
+                    item { SectionHeader("Signing & install") }
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                val x = extras
+                                if (x == null) {
+                                    Text("Reading package metadata…")
+                                } else {
+                                    InfoRow("Signature SHA-256", x.signingSha256, copyable = true)
+                                    InfoRow("Signing scheme", x.signingScheme, copyable = false)
+                                    InfoRow(
+                                        "Installed by",
+                                        AppInfo.installerLabel(x.installer),
+                                        copyable = false,
+                                    )
+                                    InfoRow(
+                                        "Originating package",
+                                        x.originating?.let { AppInfo.installerLabel(it) },
+                                        copyable = false,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    item { SectionHeader("APK & libraries") }
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                val x = extras
+                                if (x == null) {
+                                    Text("Reading package metadata…")
+                                } else {
+                                    InfoRow("Base APK", AppInfo.formatBytes(x.baseApkBytes), copyable = false)
+                                    InfoRow("Split APKs", x.splitCount.toString(), copyable = false)
+                                    InfoRow("Total on disk", AppInfo.formatBytes(x.totalApkBytes), copyable = false)
+                                    InfoRow("Native libs", AppInfo.summarizeLibs(x.nativeLibs), copyable = false)
+                                }
+                            }
+                        }
+                    }
+
                     val aiFields = buildMap<String, String?> {
                         put("Label", app?.loadLabel(pm)?.toString())
                         put("Package", packageName)
@@ -204,6 +287,8 @@ fun AppDetailScreen(
                             "Requested permissions",
                             pkg.requestedPermissions?.joinToString(", "),
                         )
+                        put("Installed by", extras?.installer?.let { AppInfo.installerLabel(it) })
+                        put("Total APK size", extras?.let { AppInfo.formatBytes(it.totalApkBytes) })
                     }
                     item {
                         AiSummaryCard(
