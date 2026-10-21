@@ -131,3 +131,16 @@ Owner approval required?: yes — given in session (all four recommended options
 Files/docs updated: `feature/nfc/.../{NdefRecordSpec,NfcTechProbe}.kt` (new), `NfcTagParser.kt`, `NfcViewModel.kt`, `NfcScreen.kt`, `NfcWriteScreen.kt`, `NfcFeature.kt`, tests (`NdefRecordSpecTest`, `NfcTechProbeTest`, `NfcTagReportTest`, `NfcTagParserTest`), `mockups/index.html`, `mockups/improved-index.html`, spec `feature_plans_v2/features/15_NFC_LAB_V2.md`, journey `playbook/15`, master checklist J13, `CHANGELOG.md`
 Migration completed? [x]
 Notes: `makeReadOnly` stays excluded — the J13 irreversible-op exclusion stands. Bank/transit/access-control/secure-element cloning remains a hard boundary; MIFARE Classic sectors are reported as key-protected, never read. The physical-tag release gate stays open — hardware validation is still pending.
+
+## Entry
+Date: 2026-10-21
+Feature: Phone Doctor location/GPS test — live coordinate read
+Old document/decision: J02 feasibility (`J02_TOOL_RECORDS.md`) — "ACCESS_FINE_LOCATION needed only for an actual fix (not in V1 diagnostic)"; `connectivity.location` shipped capability-only (feature flag + `isLocationEnabled`)
+Improved v2 decision: owner direction — "add coordinates identify"; extend the existing test with an instant last-known fix plus an on-demand live fix
+Repository reality: `ConnectivityCheckScreen` reads capability synchronously and auto-emits; `PermissionGate`/`rememberRuntimePermission` already provide the denial → PERMISSION_REQUIRED flow used by camera/mic/flash
+Conflict classification: scope extension beyond frozen V1 diagnostic behavior — adds a runtime permission and an async location read to a previously synchronous check
+Decision: extension wins — dedicated `LocationCheckScreen` behind a new `PhoneDoctorRoute.LocationCheck`; guided-runner emit stays instant and capability-based; the live fix is user-triggered only; raw coordinates stay on screen (report/share/AI notes carry provider/accuracy/age only, matching the identifier-exclusion decision)
+Owner approval required?: yes — given in session (design presented, approved "sure ok")
+Files/docs updated: `docs/01_plans/2026-10-21-location-gps-fix.md` (spec); implementation files pending
+Migration completed? [ ]
+Notes: checkbox closes when the screen ships; `mockups/index.html` updates in the same commit per AGENTS.md.
