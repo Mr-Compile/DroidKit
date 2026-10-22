@@ -435,6 +435,15 @@ interface AdbSessionSetup : ProviderSetup {
     suspend fun pairWithDiscovered(code: String): Result<String>
 
     /**
+     * Pair against a caller-supplied endpoint, keeping the same state flow
+     * and auto-connect as [pairWithDiscovered]. Used when mDNS discovery
+     * can't see the pairing advert (e.g. the notification reply path on
+     * devices whose NSD can't resolve a locally-advertised service) and the
+     * user typed the host/port straight off the pairing dialog.
+     */
+    suspend fun pairWithEndpoint(host: String, port: Int, code: String): Result<String>
+
+    /**
      * Discover `_adb-tls-connect._tcp` and open the session on it. Works
      * without re-pairing when the device already trusts our ADB key.
      */

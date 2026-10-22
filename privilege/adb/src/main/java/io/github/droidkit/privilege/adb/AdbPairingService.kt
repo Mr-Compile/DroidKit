@@ -9,10 +9,13 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import io.github.droidkit.core.privileges.AdbPairingState
+import java.net.Inet4Address
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -48,11 +51,26 @@ class AdbPairingService : Service() {
         val provider = WirelessAdbProvider.instance
         when (intent?.action) {
             ACTION_REPLY -> {
-                val code = RemoteInput.getResultsFromIntent(intent)
-                    ?.getCharSequence(KEY_PAIRING_CODE)?.toString().orEmpty()
+                val raw = RemoteInput.getResultsFromIntent(intent)
+                    ?.getCharSequence(KEY_PAIRING_CODE)?.toString().orEmpty().trim()
                 scope.launch {
-                    provider?.pairWithDiscovered(code)
-                        ?.onFailure { showResult(success = false, it.message) }
+                    val codeAndPort = parseCodeAndPort(raw)
+                    val result = when {
+                        codeAndPort != null ->
+                            // Dialog shows host+port — pair straight to it, no
+                            // waiting on mDNS which can't always self-resolve.
+                            provider?.pairWithEndpoint(selfHost(), codeAndPort.port, codeAndPort.code)
+                        raw.matches(Regex("\\d{6}")) ->
+                            provider?.pairWithDiscovered(raw)
+                        else ->
+                            Result.failure(
+                                IllegalArgumentException(
+                                    "Reply with the 6-digit code — or CODE PORT " +
+                                        "from the dialog, e.g. 123456 38745",
+                                ),
+                            )
+                    }
+                    result?.onFailure { showResult(success = false, it.message) }
                 }
                 showNotification(workingNotification())
             }
@@ -141,10 +159,13 @@ class AdbPairingService : Service() {
         .setStyle(Notification.BigTextStyle().bigText(
             "Searching for the pairing service… In Developer options, open " +
                 "Wireless debugging and tap “Pair device with pairing code”. " +
-                "Then reply here with the 6-digit code.",
+                "Reply here with the 6-digit code. If it keeps searching, " +
+                "reply as CODE PORT from the dialog — e.g. 123456 38745.",
         ))
         .addAction(
-            Notification.Action.Builder(null, "Open Developer options", devOptionsIntent()).build(),
+            Notification.Action.Builder(null, "Pair", replyIntent())
+                .addRemoteInput(codeInput())
+                .build(),
         )
         .addAction(
             Notification.Action.Builder(null, "Stop", stopIntent()).build(),
@@ -153,22 +174,14 @@ class AdbPairingService : Service() {
         .setContentIntent(openAppIntent())
         .build()
 
-    private fun inputNotification(): Notification {
-        val remoteInput = RemoteInput.Builder(KEY_PAIRING_CODE)
-            .setLabel("Pairing code (6 digits)")
-            .build()
-        val replyIntent = PendingIntent.getService(
-            this, REQUEST_REPLY,
-            Intent(this, AdbPairingService::class.java).setAction(ACTION_REPLY),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
-        )
-        return Notification.Builder(this, CHANNEL_ID)
+    private fun inputNotification(): Notification =
+        Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
             .setContentTitle("Enter pairing code")
             .setContentText("Reply with the 6-digit code shown in the pairing dialog.")
             .addAction(
-                Notification.Action.Builder(null, "Pair", replyIntent)
-                    .addRemoteInput(remoteInput)
+                Notification.Action.Builder(null, "Pair", replyIntent())
+                    .addRemoteInput(codeInput())
                     .build(),
             )
             .addAction(
@@ -177,7 +190,6 @@ class AdbPairingService : Service() {
             .setOngoing(true)
             .setContentIntent(openAppIntent())
             .build()
-    }
 
     private fun workingNotification(): Notification = Notification.Builder(this, CHANNEL_ID)
         .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
@@ -186,6 +198,59 @@ class AdbPairingService : Service() {
         .setOngoing(true)
         .setContentIntent(openAppIntent())
         .build()
+
+    private fun codeInput(): RemoteInput = RemoteInput.Builder(KEY_PAIRING_CODE)
+        .setLabel("Pairing code — or CODE PORT")
+        .build()
+
+    private fun replyIntent(): PendingIntent = PendingIntent.getService(
+        this, REQUEST_REPLY,
+        Intent(this, AdbPairingService::class.java).setAction(ACTION_REPLY),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+    )
+
+    private data class CodeAndPort(val code: String, val port: Int)
+
+    /**
+     * Parses "123456 38745" (or "38745 123456", ":"/"/" separators) from a
+     * reply that carries both the pairing code and the port shown in the
+     * dialog. Null unless exactly two numeric tokens with one 6-digit code.
+     */
+    private fun parseCodeAndPort(raw: String): CodeAndPort? {
+        val tokens = raw.split(Regex("\\D+")).filter { it.isNotEmpty() }
+        if (tokens.size != 2) return null
+        val (a, b) = tokens
+        val (code, portStr) = when {
+            a.length == 6 && b.length != 6 -> a to b
+            b.length == 6 && a.length != 6 -> b to a
+            else -> return null
+        }
+        val port = portStr.toIntOrNull() ?: return null
+        return if (port in 1..65535) CodeAndPort(code, port) else null
+    }
+
+    /**
+     * This device's own address for self-pairing — the pairing server binds
+     * all interfaces, so WiFi IP works and [WirelessAdbProvider] transparently
+     * prefers loopback when reachable.
+     */
+    private fun selfHost(): String {
+        val cm = getSystemService(ConnectivityManager::class.java)
+        val nets = cm?.allNetworks.orEmpty().toList()
+        val wifi = nets.firstOrNull { n ->
+            cm?.getNetworkCapabilities(n)
+                ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        }
+        return listOfNotNull(wifi, cm?.activeNetwork)
+            .asSequence()
+            .mapNotNull { n ->
+                cm?.getLinkProperties(n)?.linkAddresses
+                    ?.mapNotNull { it.address as? Inet4Address }
+                    ?.firstOrNull { !it.isLoopbackAddress }
+                    ?.hostAddress
+            }
+            .firstOrNull() ?: "127.0.0.1"
+    }
 
     private fun openAppIntent(): PendingIntent = PendingIntent.getActivity(
         this, REQUEST_OPEN_APP,

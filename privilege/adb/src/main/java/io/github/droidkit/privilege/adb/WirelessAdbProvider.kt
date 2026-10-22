@@ -133,9 +133,14 @@ class WirelessAdbProvider(
     override suspend fun pairWithDiscovered(code: String): Result<String> {
         val endpoint = discoveredEndpoint
             ?: return Result.failure(IllegalStateException("No pairing endpoint discovered yet"))
+        return pairWithEndpoint(endpoint.host, endpoint.port, code)
+    }
+
+    override suspend fun pairWithEndpoint(host: String, port: Int, code: String): Result<String> {
+        val endpoint = AdbEndpoint(host, port, serviceName = "manual")
         _pairingState.value = AdbPairingState.Pairing
-        val host = loopbackIfReachable(endpoint)
-        val result = pair(host, endpoint.port, code)
+        val connectHost = loopbackIfReachable(endpoint)
+        val result = pair(connectHost, endpoint.port, code)
         result.onSuccess { summary ->
             qrPayload = null
             _pairingState.value = AdbPairingState.Paired(summary)

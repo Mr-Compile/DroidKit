@@ -11,6 +11,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,7 +53,7 @@ import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AdbScreen(
     onBack: () -> Unit,
@@ -148,7 +150,9 @@ fun AdbScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     GuidedStateText(pairingState)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         DroidKitOutlinedButton(
                             onClick = {
                                 viewModel.startPairing()

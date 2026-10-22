@@ -15,6 +15,7 @@ import javax.net.ssl.SSLSocket
  */
 object AdbPairing {
 
+    private const val TAG = "DroidKitAdb"
     private const val PACKET_VERSION = 1
     private const val TYPE_SPAKE2_MSG = 0
     private const val TYPE_PEER_INFO = 1
@@ -33,7 +34,14 @@ object AdbPairing {
      * public key and [AdbConnection] can connect on the normal service port.
      */
     fun pair(host: String, port: Int, code: String, keys: AdbKeys): PairResult {
-        val socket = tlsSocket(host, port, keys)
+        val socket = try {
+            tlsSocket(host, port, keys)
+        } catch (t: Throwable) {
+            android.util.Log.e(TAG, "TLS handshake to $host:$port failed", t)
+            keys.logTlsSelfTest()
+            throw t
+        }
+        android.util.Log.i(TAG, "TLS up: ${socket.session.protocol}/${socket.session.cipherSuite}")
         try {
             val input = DataInputStream(socket.getInputStream())
             val output = DataOutputStream(socket.getOutputStream())
@@ -44,6 +52,7 @@ object AdbPairing {
             val password = code.toByteArray(Charsets.UTF_8) + keys.exportedKeyMaterial(socket)
             val spake2 = Spake2(password)
             writePacket(output, TYPE_SPAKE2_MSG, spake2.generateMsg())
+            android.util.Log.i(TAG, "SPAKE2 msg sent")
 
             val their = readPacket(input)
             check(their.type == TYPE_SPAKE2_MSG) { "expected SPAKE2_MSG, got ${their.type}" }
@@ -58,6 +67,7 @@ object AdbPairing {
             check(pubBytes.size < PEER_INFO_SIZE - 1) { "public key too large" }
             System.arraycopy(pubBytes, 0, peerInfo, 1, pubBytes.size)
             writePacket(output, TYPE_PEER_INFO, gcm(aesKey, 0, Cipher.ENCRYPT_MODE, peerInfo))
+            android.util.Log.i(TAG, "PEER_INFO sent, awaiting device reply")
 
             val theirInfo = readPacket(input)
             check(theirInfo.type == TYPE_PEER_INFO) { "expected PEER_INFO, got ${theirInfo.type}" }
@@ -67,6 +77,7 @@ object AdbPairing {
             }
             val theirType = decrypted[0].toInt() and 0xff
             val summary = String(decrypted, 1, printableLen(decrypted), Charsets.UTF_8).trim()
+            android.util.Log.i(TAG, "Pairing OK: type=$theirType")
             return PairResult(theirType, summary.ifEmpty { "peer registered" })
         } finally {
             runCatching { socket.close() }
@@ -95,7 +106,7 @@ object AdbPairing {
      * ADB RSA auth, not by CA — same trust model as `adb pair`.
      */
     private fun tlsSocket(host: String, port: Int, keys: AdbKeys): SSLSocket {
-        val socket = keys.sslContext().socketFactory.createSocket() as SSLSocket
+        val socket = keys.pairingSslContext().socketFactory.createSocket() as SSLSocket
         socket.soTimeout = CONNECT_TIMEOUT_MS
         socket.connect(InetSocketAddress(host, port), CONNECT_TIMEOUT_MS)
         socket.startHandshake()

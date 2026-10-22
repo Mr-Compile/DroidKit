@@ -221,7 +221,7 @@ fun ToolsScreen(
                             RecoveryAction.OpenAppSettings -> context.openAppSettings()
                             RecoveryAction.RequestElevatedAccess -> {
                                 blockedTool = null
-                                onOpenTool("settings")
+                                onOpenTool("adb")
                             }
                             is RecoveryAction.Navigate -> {
                                 blockedTool = null

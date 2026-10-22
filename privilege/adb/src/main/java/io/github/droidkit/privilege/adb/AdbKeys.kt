@@ -37,6 +37,11 @@ class AdbKeys(
 ) {
     private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
+    /** Private key from the generator — some OEM keystores never surface the
+     * entry via getEntry() (Spreadtrum KeyMint), so keep the generated handle. */
+    @Volatile
+    private var generatedPrivateKey: PrivateKey? = null
+
     private val publicKey: RSAPublicKey by lazy { ensureKey() }
 
     /** Self-signed TLS client cert carrying [publicKey] (CN=00, v3, no extensions). */
@@ -78,11 +83,17 @@ class AdbKeys(
                 )
                 .build()
         )
-        return gen.generateKeyPair().public as RSAPublicKey
+        val pair = gen.generateKeyPair()
+        generatedPrivateKey = pair.private
+        return pair.public as RSAPublicKey
     }
 
-    private fun privateKey(): PrivateKey =
-        (keyStore.getEntry(KEY_ALIAS, null) as KeyStore.PrivateKeyEntry).privateKey
+    private fun privateKey(): PrivateKey {
+        publicKey // force key generation before entry lookup
+        return (keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.PrivateKeyEntry)?.privateKey
+            ?: generatedPrivateKey
+            ?: throw IOException("ADB identity key unavailable")
+    }
 
     /** Sign an ADB AUTH token — RSA PKCS1 v1.5 over SHA-1 of the token. */
     fun signToken(token: ByteArray): ByteArray =
@@ -91,6 +102,31 @@ class AdbKeys(
             update(token)
             sign()
         }
+
+    /**
+     * Probes which signature schemes the ADB key can actually run on this
+     * device — TLS 1.3 CertificateVerify needs RSA-PSS, which some OEM
+     * keystores declare but can't perform. Diagnostic only.
+     */
+    fun logTlsSelfTest() {
+        for (alg in listOf("SHA256withRSA/PSS", "SHA256withRSA", "SHA1withRSA")) {
+            val ok = runCatching {
+                Signature.getInstance(alg).run {
+                    initSign(privateKey())
+                    update(byteArrayOf(1, 2, 3))
+                    sign()
+                }
+            }.isSuccess
+            android.util.Log.i("DroidKitAdb", "self-test sign $alg: ${if (ok) "OK" else "FAIL"}")
+        }
+        runCatching {
+            val k = privateKey()
+            android.util.Log.i(
+                "DroidKitAdb",
+                "key class=${k.javaClass.name} encoded=${k.encoded?.size ?: -1}",
+            )
+        }
+    }
 
     /**
      * The public key in ADB wire format: base64 of the little-endian
@@ -112,6 +148,18 @@ class AdbKeys(
     fun sslContext(): SSLContext {
         val ctx = SSLContext.getInstance("TLS")
         ctx.init(arrayOf(clientKeyManager()), arrayOf(TrustAll), SecureRandom())
+        return ctx
+    }
+
+    /**
+     * TLS context for the *pairing* port only — no client certificate. The
+     * pairing server authenticates via SPAKE2 (the code), not by client cert;
+     * presenting our keystore key here only gives a broken OEM keystore a
+     * chance to fail the CertificateVerify RSA-PSS sign for no benefit.
+     */
+    fun pairingSslContext(): SSLContext {
+        val ctx = SSLContext.getInstance("TLS")
+        ctx.init(null, arrayOf(TrustAll), SecureRandom())
         return ctx
     }
 
@@ -145,27 +193,56 @@ class AdbKeys(
      * `sizeof(kExportedKeyLabel)` (10 bytes, not 9).
      */
     fun exportedKeyMaterial(socket: SSLSocket, length: Int = EXPORTED_KEY_SIZE): ByteArray {
-        // Fast path: the Conscrypt socket itself exposes the method.
-        socket.javaClass.methods
-            .firstOrNull {
-                it.name == "exportKeyingMaterial" && it.parameterTypes.contentEquals(
-                    arrayOf(String::class.java, ByteArray::class.java, Int::class.javaPrimitiveType),
-                )
+        // Unlock hidden-API reflection — exportKeyingMaterial is a non-SDK
+        // Conscrypt member on some devices. No-op where exempt/unsupported.
+        runCatching {
+            val rt = Class.forName("dalvik.system.VMRuntime")
+            val runtime = rt.getDeclaredMethod("getRuntime").apply { isAccessible = true }
+                .invoke(null)
+            rt.getDeclaredMethod("setHiddenApiExemptions", Array<String>::class.java)
+                .apply { isAccessible = true }
+                .invoke(runtime, arrayOf("L"))
+        }
+
+        val sig = arrayOf(
+            String::class.java, ByteArray::class.java, Int::class.javaPrimitiveType,
+        )
+
+        // 1. The Conscrypt socket itself — any visibility, any superclass.
+        var cls: Class<*>? = socket.javaClass
+        while (cls != null) {
+            for (m in cls.declaredMethods) {
+                if (m.name == "exportKeyingMaterial" &&
+                    m.parameterTypes.contentEquals(sig)
+                ) {
+                    runCatching { m.isAccessible = true }
+                    return m.invoke(socket, EXPORTED_KEY_LABEL, null, length) as ByteArray
+                }
             }
-            ?.let { return it.invoke(socket, EXPORTED_KEY_LABEL, null, length) as ByteArray }
-        // Fallback: the static Conscrypt helper (platform namespace first,
-        // then the upstream name for OEMs/bundled providers).
+            cls = cls.superclass
+        }
+
+        // 2. Static Conscrypt helper — platform namespace, then upstream.
         for (name in listOf("com.android.org.conscrypt.Conscrypt", "org.conscrypt.Conscrypt")) {
             runCatching {
-                val m = Class.forName(name).getMethod(
-                    "exportKeyingMaterial",
-                    SSLSocket::class.java,
-                    String::class.java,
-                    ByteArray::class.java,
-                    Int::class.javaPrimitiveType,
-                )
-                return m.invoke(null, socket, EXPORTED_KEY_LABEL, null, length) as ByteArray
+                val k = Class.forName(name)
+                for (m in k.declaredMethods) {
+                    if (m.name == "exportKeyingMaterial" &&
+                        m.parameterTypes.size == 4 &&
+                        m.parameterTypes[0].isAssignableFrom(SSLSocket::class.java)
+                    ) {
+                        runCatching { m.isAccessible = true }
+                        return m.invoke(null, socket, EXPORTED_KEY_LABEL, null, length) as ByteArray
+                    }
+                }
             }
+        }
+
+        // Diagnostics: log candidates so the failure shows what the device has.
+        runCatching {
+            val names = socket.javaClass.methods.map { it.name }.distinct()
+                .filter { it.contains("xport", true) || it.contains("eying", true) }
+            android.util.Log.w("DroidKitAdb", "EKM missing; socket=${socket.javaClass.name} candidates=$names")
         }
         throw IOException("TLS exported keying material unavailable on this device")
     }
