@@ -26,8 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private fun facingName(facing: Int?) = CameraInfo.facingName(facing)
@@ -41,7 +43,15 @@ fun CameraDetailsScreen(onBack: () -> Unit) {
     val cm = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
     val cameraIds = runCatching { cm?.cameraIdList?.toList().orEmpty() }.getOrDefault(emptyList())
 
-    Scaffold(topBar = { DroidKitTopAppBar("Camera Capabilities", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Camera Capabilities",
+                onBack = onBack,
+                actions = { CopyAllAction { cameraSectionsText(cm, cameraIds) } },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
@@ -110,6 +120,65 @@ fun CameraDetailsScreen(onBack: () -> Unit) {
             }
         }
     }
+}
+
+private fun cameraSectionsText(cm: CameraManager?, cameraIds: List<String>): String? {
+    val sections = cameraIds.mapNotNull { id ->
+        val c = runCatching { cm?.getCameraCharacteristics(id) }.getOrNull()
+            ?: return@mapNotNull null
+        val rows = buildList<Pair<String, String?>> {
+            add(
+                "Hardware level" to hardwareLevelName(
+                    c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL),
+                ),
+            )
+            add(
+                "Sensor" to c.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
+                    ?.let { "${it.width}×${it.height} (${CameraInfo.megapixels(it)})" },
+            )
+            add("Flash" to c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)?.toString())
+            add(
+                "Focal lengths" to c.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                    ?.joinToString { "%.1f mm".format(it) },
+            )
+            add(
+                "Apertures" to c.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES)
+                    ?.joinToString { "f/%.1f".format(it) },
+            )
+            c.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)?.let {
+                add("Sensor physical size" to "%.2f × %.2f mm".format(it.width, it.height))
+            }
+            c.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)?.let {
+                add("ISO range" to "${it.lower}–${it.upper}")
+            }
+            c.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)?.let {
+                add("Exposure range" to "${it.lower}–${it.upper} ns")
+            }
+            c.get(CameraCharacteristics.SENSOR_ORIENTATION)?.let {
+                add("Sensor orientation" to "$it°")
+            }
+            c.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)
+                ?.takeIf { it.isNotEmpty() }?.let { ranges ->
+                    add("FPS ranges" to ranges.joinToString { CameraInfo.fpsRangeLabel(it) })
+                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                c.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE)?.let {
+                    add("Zoom ratio" to "${it.lower}×–${it.upper}×")
+                }
+            }
+            add(
+                "Capabilities" to c.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
+                    ?.toList()?.mapNotNull(CameraInfo::capabilityName)
+                    ?.takeIf { it.isNotEmpty() }?.joinToString(),
+            )
+            add(
+                "Physical cameras" to c.physicalCameraIds
+                    .takeIf { it.isNotEmpty() }?.joinToString(),
+            )
+        }
+        "Camera $id — ${facingName(c.get(CameraCharacteristics.LENS_FACING))}" to rows
+    }
+    return sections.takeIf { it.isNotEmpty() }?.let { formatSectionsForCopy(it) }
 }
 
 @Composable

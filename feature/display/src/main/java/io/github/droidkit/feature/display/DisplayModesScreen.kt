@@ -27,8 +27,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
@@ -53,6 +55,9 @@ fun DisplayModesScreen(onBack: () -> Unit) {
     val display = activity?.windowManager?.defaultDisplay
         ?: (context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager)
             ?.getDisplay(Display.DEFAULT_DISPLAY)
+    val config = LocalConfiguration.current
+    val view = LocalView.current
+    val density = LocalDensity.current
     var listenerTick by remember { mutableStateOf(0) }
 
     DisposableEffect(display) {
@@ -69,7 +74,57 @@ fun DisplayModesScreen(onBack: () -> Unit) {
         onDispose { dm.unregisterDisplayListener(listener) }
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Display Modes", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Display Modes",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        display?.let { d ->
+                            val current = d.mode
+                            val metrics = view.resources.displayMetrics
+                            val phys = DisplayInfo.physicalSizeMm(
+                                current.physicalWidth, current.physicalHeight,
+                                metrics.xdpi, metrics.ydpi,
+                            )
+                            formatSectionsForCopy(
+                                listOf(
+                                    "Current mode" to listOf(
+                                        "Mode id" to current.modeId.toString(),
+                                        "Resolution" to
+                                            "${current.physicalWidth} x ${current.physicalHeight}",
+                                        "Refresh rate" to "%.2f Hz".format(current.refreshRate),
+                                        "Rotation" to DisplayInfo.rotationName(d.rotation),
+                                        "Display state" to DisplayInfo.stateName(d.state),
+                                        "HDR capable" to d.isHdr.toString(),
+                                        "HDR types" to DisplayInfo.hdrTypeLabel(
+                                            d.hdrCapabilities?.supportedHdrTypes ?: IntArray(0),
+                                        ),
+                                        "Wide color" to d.isWideColorGamut.toString(),
+                                    ),
+                                    "Density & size" to listOf(
+                                        "Density" to DisplayInfo.densityLabel(config.densityDpi),
+                                        "Scale factor" to "x${density.density}",
+                                        "Font scale" to "x${config.fontScale}",
+                                        "Physical size (est.)" to DisplayInfo.physicalSizeLabel(phys),
+                                        "Diagonal (est.)" to
+                                            (DisplayInfo.diagonalInches(phys) ?: "Unavailable"),
+                                    ),
+                                    "Supported modes (${d.supportedModes.size})" to
+                                        d.supportedModes.map { mode ->
+                                            "${mode.physicalWidth} x ${mode.physicalHeight}" to
+                                                "%.2f Hz".format(mode.refreshRate) +
+                                                if (mode.modeId == current.modeId) " · current" else ""
+                                        },
+                                ),
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
@@ -87,8 +142,6 @@ fun DisplayModesScreen(onBack: () -> Unit) {
                     }
                 } else {
                     val current = display.mode
-                    val config = LocalConfiguration.current
-                    val view = LocalView.current
                     val metrics = view.resources.displayMetrics
                     val phys = DisplayInfo.physicalSizeMm(
                         current.physicalWidth, current.physicalHeight,
@@ -106,7 +159,7 @@ fun DisplayModesScreen(onBack: () -> Unit) {
                     }
                     SectionCard(title = "Density & size") {
                         InfoRow("Density", DisplayInfo.densityLabel(config.densityDpi), copyable = false)
-                        InfoRow("Scale factor", "x${LocalDensity.current.density}", copyable = false)
+                        InfoRow("Scale factor", "x${density.density}", copyable = false)
                         InfoRow("Font scale", "x${config.fontScale}", copyable = false)
                         InfoRow("Physical size (est.)", DisplayInfo.physicalSizeLabel(phys), copyable = false)
                         InfoRow("Diagonal (est.)", DisplayInfo.diagonalInches(phys) ?: "Unavailable", copyable = false)

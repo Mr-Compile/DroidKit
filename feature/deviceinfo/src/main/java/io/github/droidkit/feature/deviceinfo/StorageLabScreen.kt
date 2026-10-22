@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.system.formatBytes
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
@@ -48,7 +50,53 @@ fun StorageLabScreen(
     var beforeId by remember { mutableStateOf<String?>(null) }
     var afterId by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Storage Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Storage Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                live.forEach { v ->
+                                    add(
+                                        v.name to listOf(
+                                            "Path" to v.path,
+                                            "State" to v.state,
+                                            "Total" to formatBytes(v.totalBytes),
+                                            "Free" to formatBytes(v.freeBytes),
+                                            "Used" to formatBytes(v.totalBytes - v.freeBytes),
+                                        ),
+                                    )
+                                }
+                                diff?.let { (_, deltas) ->
+                                    deltas.forEach { d ->
+                                        add(
+                                            "Delta ${d.name}" to listOf(
+                                                "Free space" to d.freeDeltaBytes?.let { delta ->
+                                                    "${if (delta >= 0) "+" else "−"}" +
+                                                        formatBytes(kotlin.math.abs(delta))
+                                                },
+                                                "Total changed" to
+                                                    if (d.beforeTotal != d.afterTotal) {
+                                                        "${d.beforeTotal?.let { formatBytes(it) }}" +
+                                                            " → " +
+                                                            "${d.afterTotal?.let { formatBytes(it) }}"
+                                                    } else {
+                                                        null
+                                                    },
+                                            ),
+                                        )
+                                    }
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(

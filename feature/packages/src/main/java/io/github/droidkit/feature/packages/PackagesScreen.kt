@@ -36,9 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import kotlinx.coroutines.launch
 
@@ -76,7 +78,30 @@ fun PackagesScreen(
     }
 
     Scaffold(
-        topBar = { DroidKitTopAppBar("Package Controls", onBack = onBack) },
+        topBar = {
+            DroidKitTopAppBar(
+                "Package Controls",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                (elevated as? PackagesViewModel.ElevatedState.Ready)?.let { e ->
+                                    add(
+                                        "Elevated access" to listOf(
+                                            "Active provider" to e.kind.name,
+                                        ),
+                                    )
+                                }
+                                if (packages.isNotEmpty()) {
+                                    add("Packages" to packages.map { it.label to it.packageName })
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(

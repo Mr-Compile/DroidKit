@@ -29,8 +29,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.rememberRuntimePermission
 import io.github.droidkit.feature.network.NetworkViewModel.LayerResult
@@ -57,7 +59,58 @@ fun NetworkScreen(
     var portHost by remember { mutableStateOf("") }
     var portList by remember { mutableStateOf("80, 443") }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Network Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Network Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                snapshot?.takeIf { it.available }?.let { s ->
+                                    add(
+                                        "Active connection" to listOf(
+                                            "Transports" to s.transports.joinToString()
+                                                .ifBlank { "None" },
+                                            "Internet capable" to s.internetCapable?.toString(),
+                                            "Validated" to s.validated?.toString(),
+                                            "Metered" to s.metered?.toString(),
+                                            "Downstream" to s.downKbps?.let { "$it kbps" },
+                                            "Upstream" to s.upKbps?.let { "$it kbps" },
+                                            "Interface" to s.interfaceName,
+                                            "Local addresses" to s.addresses.joinToString()
+                                                .ifBlank { null },
+                                            "DNS servers" to s.dnsServers.joinToString()
+                                                .ifBlank { null },
+                                            "MTU" to s.mtu?.toString(),
+                                            "Private DNS" to s.privateDns,
+                                            "Captive portal" to s.captivePortal?.toString(),
+                                        ),
+                                    )
+                                }
+                                wifiLink?.let { wl ->
+                                    add(
+                                        "Wi-Fi link" to listOf(
+                                            "SSID" to wl.ssid,
+                                            "BSSID" to wl.bssid,
+                                            "Signal" to wl.rssiDbm?.let { "$it dBm" },
+                                            "Link speed" to wl.linkSpeedMbps?.let { "$it Mbps" },
+                                            "Frequency" to wl.frequencyMhz?.let { f ->
+                                                "$f MHz" + (wl.band?.let { " · $it" } ?: "")
+                                            },
+                                            "IP address" to wl.ipAddress,
+                                            "Gateway" to wl.gateway,
+                                        ),
+                                    )
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

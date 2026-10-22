@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlin.math.roundToInt
@@ -67,7 +69,47 @@ fun OrientationScreen(
         onDispose { viewModel.sensorManager?.unregisterListener(listener) }
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Orientation", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Orientation",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        sensor?.let { s ->
+                            formatSectionsForCopy(
+                                buildList {
+                                    orientation?.let { o ->
+                                        add(
+                                            "Orientation" to listOf(
+                                                "Azimuth" to "${o.first.roundToInt()}° (0=N, 90=E)",
+                                                "Pitch" to "${o.second.roundToInt()}° (+tilt back)",
+                                                "Roll" to "${o.third.roundToInt()}° (+right edge up)",
+                                                "Reported accuracy" to when (accuracy) {
+                                                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "high"
+                                                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "medium"
+                                                    SensorManager.SENSOR_STATUS_ACCURACY_LOW ->
+                                                        "low — move in a figure-8"
+                                                    SensorManager.SENSOR_STATUS_UNRELIABLE -> "unreliable"
+                                                    else -> "not reported"
+                                                },
+                                            ),
+                                        )
+                                    }
+                                    add(
+                                        "Sensor" to listOf(
+                                            "Name" to s.name,
+                                            "Vendor" to s.vendor,
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

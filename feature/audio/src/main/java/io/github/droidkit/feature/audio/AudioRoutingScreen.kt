@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private fun deviceTypeName(type: Int): String = when (type) {
@@ -61,7 +63,82 @@ fun AudioRoutingScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
 
-    Scaffold(topBar = { DroidKitTopAppBar("Audio Routing", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Audio Routing",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        am?.let { a ->
+                            formatSectionsForCopy(
+                                buildList {
+                                    add(
+                                        "Active state" to listOf(
+                                            "Mode" to modeName(a.mode),
+                                            "Speakerphone" to a.isSpeakerphoneOn.toString(),
+                                            "Bluetooth SCO" to a.isBluetoothScoOn.toString(),
+                                            "Music stream" to
+                                                "${a.getStreamVolume(AudioManager.STREAM_MUSIC)}" +
+                                                "/${a.getStreamMaxVolume(AudioManager.STREAM_MUSIC)}",
+                                            "Music muted" to a
+                                                .isStreamMute(AudioManager.STREAM_MUSIC).toString(),
+                                            "Speaker sample rates" to a
+                                                .getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                                                .firstOrNull {
+                                                    it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                                                }
+                                                ?.sampleRates?.takeIf { it.isNotEmpty() }
+                                                ?.joinToString { "$it Hz" },
+                                        ),
+                                    )
+                                    val outs = a.getDevices(AudioManager.GET_DEVICES_OUTPUTS).toList()
+                                    add(
+                                        "Output devices (${outs.size})" to outs.map { d ->
+                                            deviceTypeName(d.type) to listOfNotNull(
+                                                d.productName?.toString()
+                                                    ?.takeIf { it.isNotBlank() },
+                                                "id ${d.id}",
+                                            ).joinToString(" · ")
+                                        },
+                                    )
+                                    add(
+                                        "Stream volumes" to AudioInfo.volumeStreams().map { s ->
+                                            AudioInfo.streamName(s) to
+                                                "${a.getStreamVolume(s)}/" +
+                                                "${a.getStreamMaxVolume(s)}" +
+                                                if (a.isStreamMute(s)) " · muted" else ""
+                                        },
+                                    )
+                                    val ins = a.getDevices(AudioManager.GET_DEVICES_INPUTS).toList()
+                                    add(
+                                        "Input devices (${ins.size})" to ins.map { d ->
+                                            deviceTypeName(d.type) to listOfNotNull(
+                                                d.productName?.toString()
+                                                    ?.takeIf { it.isNotBlank() },
+                                                "id ${d.id}",
+                                            ).joinToString(" · ")
+                                        },
+                                    )
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        add(
+                                            "Communication device" to listOf(
+                                                "Current" to runCatching { a.communicationDevice }
+                                                    .getOrNull()?.let {
+                                                        "${deviceTypeName(it.type)} — " +
+                                                            (it.productName ?: "")
+                                                    },
+                                            ),
+                                        )
+                                    }
+                                },
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

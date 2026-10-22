@@ -34,7 +34,9 @@ import io.github.droidkit.core.database.DiagnosticSessionEntity
 import io.github.droidkit.core.database.DiagnosticSessionDao
 import io.github.droidkit.core.database.DiagnosticResultDao
 import io.github.droidkit.core.database.DeviceSnapshotDao
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -101,7 +103,40 @@ fun SessionCompareScreen(
     var beforeId by remember { mutableStateOf<String?>(null) }
     var afterId by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Compare sessions", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Compare sessions",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        result?.let { r ->
+                            formatSectionsForCopy(
+                                buildList {
+                                    if (r.transitions.isNotEmpty()) {
+                                        add(
+                                            "Test transitions" to r.transitions.map { t ->
+                                                t.testId to
+                                                    "${t.transition.name}: ${t.before ?: "—"} → " +
+                                                        (t.after ?: "—")
+                                            },
+                                        )
+                                    }
+                                    if (r.snapshotDiffs.isNotEmpty()) {
+                                        add(
+                                            "Device changes" to r.snapshotDiffs.map { d ->
+                                                d.label to "${d.before ?: "—"} → ${d.after ?: "—"}"
+                                            },
+                                        )
+                                    }
+                                },
+                            ).takeIf { it.isNotBlank() }
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(

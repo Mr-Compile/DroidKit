@@ -30,7 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 private const val CHECK_WINDOW_MS = 4_000L
@@ -85,7 +87,43 @@ fun SensorCheckScreen(
         finishedAt = System.currentTimeMillis()
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Sensor check", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Sensor check",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        if (finishedAt == 0L && !running) {
+                            null
+                        } else {
+                            formatSectionsForCopy(
+                                listOf(
+                                    "Batch check" to live.map { (type, sensor) ->
+                                        val events = eventCounts[type] ?: 0
+                                        (sensor?.name ?: "Type $type") to buildString {
+                                            append(
+                                                sensorCheckVerdict(true, events).name +
+                                                    " — $events events",
+                                            )
+                                            lastValues[type]?.let { v ->
+                                                append(
+                                                    " — last: " + v.take(3)
+                                                        .joinToString { "%.2f".format(it) },
+                                                )
+                                            }
+                                        }
+                                    } + absentTypes.map { type ->
+                                        "Type $type" to "ABSENT — not present on this device"
+                                    },
+                                ),
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

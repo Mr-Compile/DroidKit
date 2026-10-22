@@ -42,10 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -55,6 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
+import io.github.droidkit.core.ui.CopyIconButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -103,7 +103,6 @@ fun NfcScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
-    val clipboard = LocalClipboardManager.current
     val haptics = LocalHapticFeedback.current
     val adapterEnabled by viewModel.adapterEnabled.collectAsStateWithLifecycle()
     val scanning by viewModel.scanning.collectAsStateWithLifecycle()
@@ -143,7 +142,21 @@ fun NfcScreen(
         }
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("NFC Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "NFC Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        tag?.let { t ->
+                            buildTagReport(t, viewModel.doctorChecks(t), techSections)
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
@@ -296,9 +309,10 @@ fun NfcScreen(
                                             }
                                         }
                                         r.decoded?.let { value ->
-                                            TextButton(onClick = {
-                                                clipboard.setText(AnnotatedString(value))
-                                            }) { Text("Copy") }
+                                            CopyIconButton(
+                                                copyText = { value },
+                                                description = "Copy record value",
+                                            )
                                         }
                                         TextButton(onClick = {
                                             rawOpen = if (i in rawOpen) rawOpen - i else rawOpen + i
@@ -337,9 +351,10 @@ fun NfcScreen(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             val report = buildTagReport(t, viewModel.doctorChecks(t), techSections)
-                            DroidKitOutlinedButton(onClick = {
-                                clipboard.setText(AnnotatedString(report))
-                            }) { Text("Copy report") }
+                            CopyIconButton(
+                                copyText = { report },
+                                description = "Copy tag report",
+                            )
                             DroidKitOutlinedButton(onClick = {
                                 val send = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"

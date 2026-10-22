@@ -214,8 +214,9 @@
   .inforow .k { flex: 1; min-width: 0; overflow-wrap: break-word; font-size: 13px; color: var(--sub); }
   .inforow .v { flex: 1.2; min-width: 0; font-family: Consolas, monospace; font-size: 12.5px; color: var(--text); text-align: right; word-break: break-all; }
   .inforow .v.na { color: var(--faint); font-style: italic; }
-  .copybtn { font-size: 11px; font-weight: 600; color: var(--brand); cursor: pointer; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line-n); }
-  .copybtn:hover { border-color: var(--line); background: rgba(60,232,138,.07); }
+  .copybtn { cursor: pointer; padding: 4px; border-radius: 7px; color: var(--sub); display: inline-flex; align-items: center; }
+  .copybtn:hover { background: rgba(60,232,138,.09); color: var(--brand); }
+  .copybtn svg { width: 15px; height: 15px; fill: currentColor; }
   .btn {
     display: inline-block; border: none; border-radius: 10px; cursor: pointer;
     background: var(--grad); color: var(--onbrand);
@@ -842,6 +843,7 @@ const ICONS = {
   build: "M22.61 18.99l-9.08-9.08c.93-2.34.45-5.1-1.44-7C9.79.61 6.21.4 3.66 2.26L7.5 6.11L6.08 7.52L2.25 3.69C.39 6.23.6 9.82 2.9 12.11c1.86 1.86 4.57 2.35 6.89 1.48l9.11 9.11c.39.39 1.02.39 1.41 0l2.3-2.3c.4-.38.4-1.01 0-1.41zm-3 1.6l-9.46-9.46c-.61.45-1.29.72-2 .82c-1.36.2-2.79-.21-3.83-1.25C3.37 9.76 2.93 8.5 3 7.26l3.09 3.09l4.24-4.24l-3.09-3.09c1.24-.07 2.49.37 3.44 1.31a4.469 4.469 0 0 1 1.24 3.96a4.35 4.35 0 0 1-.88 1.96l9.45 9.45l-.88.89z ",
   camera_alt: "M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5s5-2.24 5-5s-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3s3 1.35 3 3s-1.35 3-3 3z ",
   compare: "M10 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h5v2h2V1h-2v2zm0 15H5l5-6v6zm9-15h-5v2h5v13l-5-6v9h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z ",
+  content_copy: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z ",
   delete: "M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z ",
   delete_sweep: "M15 16h4v2h-4zm0-8h7v2h-7zm0 4h6v2h-6zM3 18c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V8H3v10zm2-8h6v8H5v-8zm5-6H6L5 5H2v2h12V5h-3z ",
   display_settings: "M20 3H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h4v2h8v-2h4c1.1 0 2-.9 2-2V5a2 2 0 0 0-2-2zm0 14H4V5h16v12z M6 8.25h8v1.5H6zm10.5 1.5H18v-1.5h-1.5V7H15v4h1.5zm-6.5 2.5h8v1.5h-8zM7.5 15H9v-4H7.5v1.25H6v1.5h1.5z ",
@@ -1334,7 +1336,7 @@ function infoRow(k,v,copy=true){
   const na = v==null;
   return `<div class="inforow"><span class="k">${esc(k)}</span>
     <span class="v ${na?"na":""}">${na?"Not exposed":esc(v)}</span>
-    ${copy && !na ? `<span class="copybtn" data-copy="${esc(k)}: ${esc(v)}">Copy</span>` : ``}</div>`;
+    ${copy && !na ? `<span class="copybtn" data-copy="${esc(k)}: ${esc(v)}" title="Copy ${esc(k)}">${icoSm("content_copy")}</span>` : ``}</div>`;
 }
 function sectionCard(title, inner){ return `<div class="card"><div class="sec-head" style="padding:0 0 6px">${esc(title)}</div>${inner}</div>`; }
 /* Inline AI value summary — shown when AI is enabled + key stored.
@@ -1407,6 +1409,13 @@ function sysPermDialog(perm, cb){
 const TOP_ROUTES=new Set(["home","tools","diagnose","settings"]);
 /* routes that open a two-pane list-detail at expanded width */
 const PANE_LIST = new Set(["apps","usb","reports"]);
+/* info screens that expose a top-bar "copy all" affordance */
+const COPY_ALL_ROUTES = new Set(["deviceinfo","deviceinfo/storage","battery","insights",
+  "display/modes","audio/routing","camera/details","sensors","sensors/orientation","sensors/check",
+  "network","bluetooth","usb","nfc","packages","adb","developer","diagnose/review","permissions"]);
+const COPY_ALL_PREFIX = ["sensors/live/","bluetooth/gatt/","usb/device/","apps/detail/",
+  "reports/detail/","reports/compare"];
+const COPY_ALL_BTN = `<span class="iconbtn" data-act="copy-all" title="Copy all"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span>`;
 function isExpanded(){ return $("#phone").dataset.size === "expanded"; }
 function nav(route){
   if(TOP_ROUTES.has(route)) return goTab(route);
@@ -1563,6 +1572,8 @@ function render(){
     default: body = `<div class="pad empty">Unknown route: ${esc(r)}</div>`;
   }
   if(parts.length>1) back=true;
+  if(COPY_ALL_ROUTES.has(r) || COPY_ALL_PREFIX.some(p=>r.startsWith(p)))
+    actions = COPY_ALL_BTN + actions;
   if(isExpanded() && PANE_LIST.has(r) && parts.length===1){
     const detail = S.paneSel ? paneDetailFor(S.paneSel)
       : `<div class="pane-empty">Select an item to inspect it here.</div>`;
@@ -2613,7 +2624,7 @@ function scrDeviceInfo(){
   </div>`;
 }
 function copyBar(name,route,label){
-  return `<div class="row" style="margin-top:4px"><button class="textbtn" data-act="copy-section" data-sec="${esc(name)}">Copy section</button>
+  return `<div class="row" style="margin-top:4px"><span class="iconbtn" data-act="copy-section" data-sec="${esc(name)}" title="Copy section"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span>
     ${route?`<button class="textbtn" data-nav="${route}">${esc(label)}</button>`:""}</div>`;
 }
 function scrStorage(){
@@ -2950,7 +2961,7 @@ function scrUsbDetail(name){
     ${sectionCard("Status & limits",
       infoRow("USB permission",has?"granted":"not granted",false)+
       `<div class="t-mini sub" style="margin-top:8px">Android USB APIs cannot expose flash-controller model, NAND Flash ID, bad blocks, or firmware. Tools claiming ChipGenius-style internals on Android are not possible through these APIs.</div>
-      <div class="row" style="margin-top:12px"><button class="btn-outline" data-act="copy-usb">Copy summary</button>
+      <div class="row" style="margin-top:12px;align-items:center"><span class="iconbtn" data-act="copy-usb" title="Copy summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span>
       <button class="btn-outline" data-act="share-usb">Share</button></div>`)}
   </div>`;
 }
@@ -2987,7 +2998,7 @@ function scrNfc(){
         <div style="padding:6px 0"><div class="t-body">#${i+1} · ${r.tnf} · type ${r.type}</div>
         ${infoRow(r.kind,r.decoded)}
         <div class="row" style="gap:4px">${r.kind==="uri"?`<button class="textbtn" data-act="nfc-open" data-u="${esc(r.decoded)}">Open</button>`:""}
-        <button class="textbtn" data-act="nfc-copyrec" data-i="${i}">Copy</button>
+        <span class="iconbtn" data-act="nfc-copyrec" data-i="${i}" title="Copy"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span>
         <button class="textbtn" data-act="nfc-raw" data-i="${i}">${n.nfcRaw[i]?"Hide raw":"Raw"}</button></div>
         ${n.nfcRaw[i]?`<div class="t-mini sub" style="font-family:monospace">${r.raw||"—"}</div>`:""}
         </div>`).join(""))}
@@ -2998,7 +3009,7 @@ function scrNfc(){
           <button class="btn-outline" data-act="nfc-erase">Erase</button>
         </div>
         <div class="row" style="margin-top:6px">
-          <button class="btn-outline" data-act="nfc-copy-report">Copy report</button>
+          <span class="iconbtn" data-act="nfc-copy-report" title="Copy report"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span>
           <button class="btn-outline" data-act="nfc-share">Share</button>
         </div>
         <div class="t-mini sub" style="margin-top:8px">Duplicate copies NDEF content only — tag UID, locked regions and secure credentials are never copied.</div>`)}
@@ -3280,7 +3291,7 @@ function scrReportDetail(id){
     <div class="card"><div class="t-mini sub" id="aiSummaryText">Send a minimized, redacted copy of this report to Groq for a technician summary. Optional — the report above never leaves the device unless you ask.</div>
       <button class="btn-outline" style="margin-top:8px" data-act="ai-summary" data-sid="${s.id}">Summarize with AI</button></div>
     <div class="row">
-      <button class="btn-outline grow" data-act="copy-summary">Copy summary</button>
+      <span class="iconbtn" data-act="copy-summary" title="Copy summary"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span>
       <button class="btn grow" data-act="export">Export</button>
       <button class="btn-outline grow" data-act="delete-report">Delete</button>
     </div>
@@ -4163,7 +4174,7 @@ Importance: FOREGROUND (100)
   ...
 On Android &lt; 11 this section may be absent.</pre></div>
           <div class="dbtns"><button class="textbtn" data-act="dlg-close">Close</button>
-          <button class="textbtn" data-act="last-report-copy">Copy</button></div></div>`;
+          <span class="iconbtn" data-act="last-report-copy" title="Copy"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${ICONS.content_copy}"/></svg></span></div></div>`;
       break;
     case "last-report-copy": closeOverlay(); toast("Report copied — paste it into your issue."); break;
     case "update-check": if(S.upd!=="checking"){ S.upd="checking"; render();
@@ -4468,6 +4479,8 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "copy-usb": navigator.clipboard?.writeText("USB2.0 Flash Disk 090C:1000 Mass Storage").catch(()=>{}); toast("USB summary copied"); break;
     case "share-usb": toast("Sharesheet would open (mock)"); break;
     case "copy-section": navigator.clipboard?.writeText("["+el.dataset.sec+"]").catch(()=>{}); toast("Section copied"); break;
+    case "copy-all": { const lines=[...$("#body").querySelectorAll("[data-copy]")].map(e=>e.dataset.copy);
+      if(lines.length){ navigator.clipboard?.writeText(lines.join("\n")).catch(()=>{}); toast("Copied "+lines.length+" fields"); } else toast("Nothing to copy"); } break;
     case "share-device": toast("Sharesheet would open (mock)"); break;
     case "launch-app": toast(`Would launch ${el.dataset.app} (mock)`); break;
     case "app-settings": toast(`Would open system settings for ${el.dataset.app}`); break;

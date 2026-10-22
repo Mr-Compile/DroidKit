@@ -38,8 +38,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,7 +88,69 @@ fun BatteryScreen(
         ?.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
         ?.takeIf { it != Int.MIN_VALUE }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Battery Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Battery Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            listOf(
+                                "Charge" to listOf(
+                                    "Level" to status.levelPct.takeIf { it >= 0f }
+                                        ?.let { "${it.toInt()}%" },
+                                    "Status" to status.statusText,
+                                    "Source" to status.pluggedText,
+                                ),
+                                "Conditions" to listOf(
+                                    "Temperature" to status.temperatureC.takeIf { it >= 0f }
+                                        ?.let { "%.1f °C".format(it) },
+                                    "Voltage" to status.voltageMv.takeIf { it > 0 }
+                                        ?.let { "$it mV" },
+                                    "Technology" to status.technology,
+                                    "Health (as reported)" to status.healthText,
+                                ),
+                                "Health" to buildList {
+                                    add("Cycle count (reported)" to status.cycleCount?.toString())
+                                    add("Charge in pack" to status.chargeCounterUa
+                                        ?.let { "${it / 1000} mAh" })
+                                    measured?.let { m ->
+                                        add("Fuel-gauge node" to m.node)
+                                        add("Max capacity (measured)" to m.chargeFullUa
+                                            ?.let { "${it / 1000} mAh" })
+                                        add("Design capacity" to m.chargeFullDesignUa
+                                            ?.let { "${it / 1000} mAh" })
+                                        add("Health (measured)" to m.healthPct
+                                            ?.let { "%.0f%%".format(it) })
+                                        add("Cycles (fuel gauge)" to m.cycleCount?.toString())
+                                    }
+                                },
+                                "Capacity estimate" to listOf(
+                                    "Samples" to estimate.samples.toString(),
+                                    "Estimated capacity" to (
+                                        estimate.estimatedFullUa?.let { "≈${it / 1000} mAh" }
+                                            ?: "Collecting — needs ≥20% of tracked charge"
+                                        ),
+                                    "Estimated health" to estimate.healthPct
+                                        ?.let { "≈%.0f%% of design capacity".format(it) },
+                                ),
+                                "Power" to listOf(
+                                    "Current now" to status.currentNowUa
+                                        ?.let { "${it / 1000} mA (instantaneous)" },
+                                    "Current average" to BatteryInfo.maLabel(currentAvgUa),
+                                    "Power (est.)" to BatteryInfo
+                                        .powerMw(status.currentNowUa, status.voltageMv)
+                                        ?.let { "$it mW" },
+                                    "Battery saver" to powerSave?.toString(),
+                                ),
+                            ),
+                        )
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

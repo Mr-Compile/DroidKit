@@ -27,7 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 
@@ -45,7 +47,38 @@ fun GattExplorerScreen(
         onDispose { viewModel.disconnect() }
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("GATT explorer", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "GATT explorer",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        (state as? GattExplorerViewModel.State.Connected)?.let { s ->
+                            formatSectionsForCopy(
+                                s.services.map { svc ->
+                                    (
+                                        (if (svc.isPrimary) "Service " else "Secondary service ") +
+                                            svc.uuid.take(8)
+                                        ) to svc.characteristics.map { c ->
+                                        c.uuid to buildList {
+                                            add(
+                                                c.properties.joinToString(", ")
+                                                    .ifEmpty { "no properties" },
+                                            )
+                                            c.readValueHex?.let { add("value: $it") }
+                                            c.notifyValueHex?.let { add("notify: $it") }
+                                            c.readError?.let { add(it) }
+                                        }.joinToString(" · ")
+                                    }
+                                },
+                            ).takeIf { it.isNotBlank() }
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

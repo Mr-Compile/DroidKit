@@ -2,6 +2,7 @@ package io.github.droidkit.feature.developer
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.net.Uri
@@ -33,8 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.droidkit.core.ai.AiSummaryContent
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 
@@ -100,7 +103,47 @@ fun DeveloperLabScreen(
         }
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Developer Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Developer Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                add("Display metrics" to displayMetricsRows(context))
+                                memory?.let { m ->
+                                    val usedPct = if (m.totalMem > 0) {
+                                        ((m.totalMem - m.availMem) * 100 / m.totalMem)
+                                    } else {
+                                        0
+                                    }
+                                    add(
+                                        "Memory" to listOf(
+                                            "System RAM" to "${DevTools.mb(m.totalMem)} total",
+                                            "Available" to
+                                                "${DevTools.mb(m.availMem)} ($usedPct% used)",
+                                            "Low-memory threshold" to
+                                                DevTools.mb(m.lowMemThreshold),
+                                            "Low-memory state" to
+                                                if (m.lowMemory) {
+                                                    "Yes — device is under memory pressure"
+                                                } else {
+                                                    "No"
+                                                },
+                                            "App heap limit" to DevTools.mb(m.heapMax),
+                                            "App heap in use" to DevTools.mb(m.heapUsed),
+                                        ),
+                                    )
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(
@@ -517,6 +560,49 @@ private fun MemoryCard(memory: DeveloperViewModel.MemorySnapshot?, onRefresh: ()
             ) { Text("Refresh") }
         }
     }
+}
+
+@Suppress("DEPRECATION")
+private fun displayMetricsRows(context: Context): List<Pair<String, String?>> {
+    val metrics = context.resources.displayMetrics
+    val display = (context as? Activity)?.display
+        ?: context.getSystemService(DisplayManager::class.java)
+            ?.displays?.firstOrNull()
+    val bounds = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        runCatching {
+            context.getSystemService(android.view.WindowManager::class.java)
+                ?.currentWindowMetrics?.bounds
+        }.getOrNull()
+    } else {
+        null
+    }
+    return listOf(
+        "Resolution" to (
+            bounds?.let { "${it.width()} × ${it.height()} px" }
+                ?: "${metrics.widthPixels} × ${metrics.heightPixels} px"
+            ),
+        "Size (dp)" to "%.0f × %.0f dp".format(
+            metrics.widthPixels / metrics.density,
+            metrics.heightPixels / metrics.density,
+        ),
+        "Density" to "${metrics.densityDpi} dpi (×${metrics.density})",
+        "Scaled density" to "×${metrics.scaledDensity}",
+        "Physical dpi (x/y)" to "${metrics.xdpi.toInt()} / ${metrics.ydpi.toInt()}",
+        "Refresh rate" to (display?.refreshRate?.let { "%.1f Hz".format(it) } ?: "Not exposed"),
+        "Supported modes" to (
+            display?.supportedModes
+                ?.joinToString(", ") {
+                    "%d×%d@%.0f".format(it.physicalWidth, it.physicalHeight, it.refreshRate)
+                }
+                ?: "Not exposed"
+            ),
+        "HDR" to (
+            display?.hdrCapabilities?.supportedHdrTypes
+                ?.takeIf { it.isNotEmpty() }
+                ?.joinToString(", ") { hdrTypeName(it) }
+                ?: "None reported"
+            ),
+    )
 }
 
 private fun hdrTypeName(type: Int): String = when (type) {

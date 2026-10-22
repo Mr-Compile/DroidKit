@@ -19,8 +19,8 @@
     <string name="dk_state_unsupported_fallback">This device doesn\'t support it.</string>
     <string name="dk_state_setup_fallback">Setup is required before this can run.</string>
 
-    <!-- InfoRow -->
-    <string name="dk_copy">Copy</string>
+    <!-- InfoRow / copy actions -->
     <string name="dk_copy_to_clipboard">Copy %1$s to clipboard</string>
+    <string name="dk_copy_all">Copy all</string>
     <string name="dk_not_exposed">Not exposed</string>
 </resources>

@@ -20,9 +20,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.DroidKitListDetail
 import io.github.droidkit.core.ui.adaptive.rememberDroidKitWindowInfo
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 
@@ -37,7 +39,58 @@ fun UsbScreen(
     val events by viewModel.events.collectAsStateWithLifecycle()
     val windowInfo = rememberDroidKitWindowInfo()
 
-    Scaffold(topBar = { DroidKitTopAppBar("USB Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "USB Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                add(
+                                    "Capability" to listOf(
+                                        "USB Host mode" to if (viewModel.hostSupported) {
+                                            "supported"
+                                        } else {
+                                            "not supported (NOT_SUPPORTED)"
+                                        },
+                                    ),
+                                )
+                                if (devices.isNotEmpty()) {
+                                    add(
+                                        "USB devices" to devices.map { d ->
+                                            (d.productName ?: d.deviceName) to
+                                                "VID:PID ${UsbDescriptors.hex4(d.vendorId)}:" +
+                                                UsbDescriptors.hex4(d.productId) +
+                                                (
+                                                    UsbDescriptors.vendorName(d.vendorId)
+                                                        ?.let { " · $it" } ?: ""
+                                                    ) +
+                                                " · ${UsbDescriptors.className(d.deviceClass)}"
+                                        },
+                                    )
+                                }
+                                if (events.isNotEmpty()) {
+                                    add(
+                                        "Attach / detach log" to events.asReversed().take(20)
+                                            .map { e ->
+                                                (e.productName ?: e.deviceName) to
+                                                    (if (e.attached) "attached" else "detached") +
+                                                    " · " + e.vidPid + " · " +
+                                                    android.text.format.DateFormat.format(
+                                                        "HH:mm:ss", e.atEpochMs,
+                                                    )
+                                            },
+                                    )
+                                }
+                            },
+                        )
+                    }
+                },
+            )
+        },
+    ) { padding ->
         if (windowInfo.isExpandedWidth) {
             // Two-pane at expanded: detail route stays navigable for deep
             // links, but device selection opens it inside the pane.

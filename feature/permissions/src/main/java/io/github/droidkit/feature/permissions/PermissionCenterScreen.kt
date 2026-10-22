@@ -31,7 +31,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.permissions.RuntimePermissionState
 import io.github.droidkit.core.privileges.ProviderStatus
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.components.RuntimePermissionRequest
@@ -98,7 +100,48 @@ fun PermissionCenterScreen(
     // request so a grant updates both.
     val runtimeRequests = runtime.associateWith { rememberRuntimePermission(it) }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Permissions & Access", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Permissions & Access",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                if (runtimeRequests.isNotEmpty()) {
+                                    add(
+                                        "Runtime permissions" to runtimeRequests.map { (p, r) ->
+                                            p.substringAfterLast('.') to
+                                                "${r.state.name} — ${permissionPurpose(p)}"
+                                        },
+                                    )
+                                }
+                                if (providerStatuses.isNotEmpty()) {
+                                    add(
+                                        "Advanced access" to providerStatuses.map { (kind, status) ->
+                                            kind.name to when (status) {
+                                                ProviderStatus.Ready -> "Ready"
+                                                is ProviderStatus.NeedsSetup -> "Setup required"
+                                                is ProviderStatus.Unavailable -> status.reason
+                                            }
+                                        },
+                                    )
+                                }
+                                if (installTime.isNotEmpty()) {
+                                    add(
+                                        "Install-time permissions" to installTime.map { p ->
+                                            p.substringAfterLast('.') to permissionPurpose(p)
+                                        },
+                                    )
+                                }
+                            },
+                        )
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(

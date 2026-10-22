@@ -30,6 +30,8 @@ import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
 import io.github.droidkit.core.common.TestResultState
+import io.github.droidkit.core.ui.CopyAllAction
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.ResultBadge
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -66,7 +68,30 @@ fun SessionReviewScreen(
     val grouped = engineState.results.entries
         .groupBy { PhoneDoctorTests.findById(it.key)?.category ?: "Other" }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Diagnostic review", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Diagnostic review",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            grouped.map { (category, results) ->
+                                category to results.map { (testId, state) ->
+                                    val title =
+                                        PhoneDoctorTests.findById(testId)?.title ?: testId
+                                    title to (
+                                        state.name +
+                                            (engineState.notes[testId]?.let { " — $it" } ?: "")
+                                        )
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(

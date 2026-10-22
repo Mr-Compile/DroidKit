@@ -30,8 +30,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import kotlin.math.abs
@@ -92,7 +94,70 @@ fun LiveSensorScreen(
         else -> listOf("x", "y", "z")
     }
 
-    Scaffold(topBar = { DroidKitTopAppBar(sensor?.name ?: "Live Sensor", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                sensor?.name ?: "Live Sensor",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        sensor?.let { s ->
+                            formatSectionsForCopy(
+                                buildList {
+                                    values?.let { v ->
+                                        add(
+                                            "Live values" to axes.mapIndexed { i, axis ->
+                                                axis to "%.3f %s"
+                                                    .format(v.getOrNull(i) ?: 0f, unit).trim()
+                                            } + listOf("Updates" to updates.toString()),
+                                        )
+                                    }
+                                    if (stats.count > 0L) {
+                                        add(
+                                            "Session stats" to buildList {
+                                                axes.forEachIndexed { i, axis ->
+                                                    val mn = stats.min(i)
+                                                    val mx = stats.max(i)
+                                                    val mean = stats.mean(i)
+                                                    add(
+                                                        "$axis min / max / mean" to
+                                                            if (mn == null || mx == null || mean == null) {
+                                                                "—"
+                                                            } else {
+                                                                "%.3f / %.3f / %.3f %s"
+                                                                    .format(mn, mx, mean, unit).trim()
+                                                            },
+                                                    )
+                                                }
+                                                if (axes.size >= 2) {
+                                                    add(
+                                                        "Magnitude now / peak" to
+                                                            "%.3f / %.3f %s".format(
+                                                                stats.lastMagnitude,
+                                                                stats.peakMagnitude,
+                                                                unit,
+                                                            ).trim(),
+                                                    )
+                                                }
+                                            },
+                                        )
+                                    }
+                                    add(
+                                        "Sensor" to listOf(
+                                            "Vendor" to s.vendor,
+                                            "Type" to (s.stringType ?: sensorType.toString()),
+                                            "Max range" to "${s.maximumRange} $unit".trim(),
+                                            "Resolution" to s.resolution.toString(),
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         when {
             !supported -> Column(Modifier.padding(padding)) {
                 EmptyState("This sensor type is not in the live-monitor safe list.")

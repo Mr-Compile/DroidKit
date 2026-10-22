@@ -5,7 +5,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -69,14 +73,13 @@ fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
                 color = androidx.compose.ui.graphics.Color.Transparent,
                 border = BorderStroke(1.dp, c.lineNeutral),
             ) {
-                Text(
-                    stringResource(R.string.dk_copy),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    ),
-                    color = c.brandPrimary,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                Icon(
+                    Icons.Outlined.ContentCopy,
+                    contentDescription = null,
+                    tint = c.brandPrimary,
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                        .size(13.dp),
                 )
             }
         }

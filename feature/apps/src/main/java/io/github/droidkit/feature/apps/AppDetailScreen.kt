@@ -43,7 +43,9 @@ import androidx.core.graphics.drawable.toBitmap
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.adaptive.EmptyWindowInsets
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
@@ -84,6 +86,57 @@ fun AppDetailScreen(
                 onBack = onBack,
                 windowInsets =
                     if (embedded) EmptyWindowInsets else TopAppBarDefaults.windowInsets,
+                actions = {
+                    CopyAllAction {
+                        info?.let { pkg ->
+                            formatSectionsForCopy(
+                                buildList {
+                                    add(
+                                        "Package" to listOf(
+                                            "Label" to pkg.applicationInfo
+                                                ?.loadLabel(pm)?.toString(),
+                                            "Package name" to packageName,
+                                            "Version" to (pkg.versionName ?: "Not exposed"),
+                                            "Version code" to pkg.longVersionCode.toString(),
+                                            "Target SDK" to pkg.applicationInfo
+                                                ?.targetSdkVersion?.let { "API $it" },
+                                            "Min SDK" to pkg.applicationInfo
+                                                ?.minSdkVersion?.takeIf { it > 0 }
+                                                ?.let { "API $it" },
+                                            "Installed" to DateFormat.getDateInstance()
+                                                .format(Date(pkg.firstInstallTime)),
+                                            "Updated" to DateFormat.getDateInstance()
+                                                .format(Date(pkg.lastUpdateTime)),
+                                            "APK path" to pkg.applicationInfo?.sourceDir,
+                                        ),
+                                    )
+                                    extras?.let { x ->
+                                        add(
+                                            "Signing & install" to listOf(
+                                                "Signature SHA-256" to x.signingSha256,
+                                                "Signing scheme" to x.signingScheme,
+                                                "Installed by" to AppInfo
+                                                    .installerLabel(x.installer),
+                                                "Originating package" to x.originating
+                                                    ?.let { AppInfo.installerLabel(it) },
+                                            ),
+                                        )
+                                        add(
+                                            "APK & libraries" to listOf(
+                                                "Base APK" to AppInfo.formatBytes(x.baseApkBytes),
+                                                "Split APKs" to x.splitCount.toString(),
+                                                "Total on disk" to AppInfo
+                                                    .formatBytes(x.totalApkBytes),
+                                                "Native libs" to AppInfo
+                                                    .summarizeLibs(x.nativeLibs),
+                                            ),
+                                        )
+                                    }
+                                },
+                            )
+                        }
+                    }
+                },
             )
         },
     ) { padding ->

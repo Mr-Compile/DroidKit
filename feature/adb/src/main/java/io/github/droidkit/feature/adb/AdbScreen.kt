@@ -48,9 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.droidkit.core.privileges.AdbPairingState
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -113,7 +115,24 @@ fun AdbScreen(
     }
 
     Scaffold(
-        topBar = { DroidKitTopAppBar("Wireless ADB", onBack = onBack) },
+        topBar = {
+            DroidKitTopAppBar(
+                "Wireless ADB",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                session?.let { add("Session" to listOf("Connected" to it)) }
+                                if (props.isNotEmpty()) {
+                                    add("Device properties" to props.toList())
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(

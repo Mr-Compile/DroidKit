@@ -17,8 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 
@@ -30,7 +32,34 @@ fun SensorsScreen(
 ) {
     val sensors = viewModel.probe.sensors
 
-    Scaffold(topBar = { DroidKitTopAppBar("Sensor Lab", onBack = { nav.navigateUp() }) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Sensor Lab",
+                onBack = { nav.navigateUp() },
+                actions = {
+                    CopyAllAction {
+                        sensors.takeIf { it.isNotEmpty() }?.let { list ->
+                            formatSectionsForCopy(
+                                list.map { s ->
+                                    s.name to listOf(
+                                        "Vendor" to s.vendor,
+                                        "Type" to "${s.stringType} (${s.type})",
+                                        "Version" to s.version.toString(),
+                                        "Max range" to "${s.maxRange} " +
+                                            "${SensorsViewModel.unitFor(s.type)}".trim(),
+                                        "Resolution" to s.resolution.toString(),
+                                        "Power" to "${s.powerMa} mA",
+                                        "Wake-up" to s.isWakeUp.toString(),
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         if (sensors.isEmpty()) {
             Column(Modifier.padding(padding)) {
                 EmptyState("No sensors reported by the platform.")

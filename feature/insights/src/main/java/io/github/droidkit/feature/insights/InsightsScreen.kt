@@ -30,8 +30,10 @@ import io.github.droidkit.core.database.InsightRange
 import io.github.droidkit.core.database.SessionHealth
 import io.github.droidkit.core.database.TestAttention
 import io.github.droidkit.core.system.formatBytes
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -49,7 +51,68 @@ fun InsightsScreen(
     val health by viewModel.health.collectAsStateWithLifecycle()
     val activity by viewModel.activity.collectAsStateWithLifecycle()
 
-    Scaffold(topBar = { DroidKitTopAppBar("Insights", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Insights",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                health.latest?.let { latest ->
+                                    add(
+                                        "Device health" to listOf(
+                                            "Latest session" to
+                                                "${latest.pass} of ${latest.total} passed",
+                                            "Failed" to latest.fail.toString(),
+                                            "Skipped/other" to latest.skip.toString(),
+                                            "Change vs previous" to health.passDeltaVsPrev
+                                                ?.let { "$it pass(es)" },
+                                        ),
+                                    )
+                                }
+                                if (health.storage.size >= 2) {
+                                    val first = health.storage.first()
+                                    val last = health.storage.last()
+                                    val delta = last.freeBytes - first.freeBytes
+                                    add(
+                                        "Storage" to listOf(
+                                            "Free space now" to formatBytes(last.freeBytes),
+                                            "Change across ${health.storage.size} snapshots" to
+                                                "${if (delta >= 0) "+" else "−"}" +
+                                                    formatBytes(abs(delta)),
+                                        ),
+                                    )
+                                }
+                                if (health.attention.isNotEmpty()) {
+                                    add(
+                                        "Tests needing attention" to health.attention.map { att ->
+                                            att.title to listOfNotNull(
+                                                if (att.fails > 0) "${att.fails}× fail" else null,
+                                                if (att.skips > 0) "${att.skips}× skipped" else null,
+                                            ).joinToString(", ")
+                                        },
+                                    )
+                                }
+                                add(
+                                    "Activity" to listOf(
+                                        "Diagnostics" to health.completedCount.toString(),
+                                        "Tests recorded" to activity.testsRecorded.toString(),
+                                        "Tools used" to activity.toolsUsed.toString(),
+                                        "NFC scans" to activity.nfcScans.toString(),
+                                        "Snapshots" to health.snapshotCount.toString(),
+                                        "Reports saved" to activity.reportsSaved.toString(),
+                                        "Elevated actions" to activity.elevatedActions.toString(),
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().contentWidthCap(),
             contentPadding = PaddingValues(

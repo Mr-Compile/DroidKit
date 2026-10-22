@@ -41,8 +41,11 @@ import io.github.droidkit.core.system.formatBytes
 import io.github.droidkit.core.system.formatHz
 import io.github.droidkit.core.system.formatInches
 import io.github.droidkit.core.system.formatUptime
+import io.github.droidkit.core.ui.CopyAllAction
+import io.github.droidkit.core.ui.CopyIconButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -110,6 +113,7 @@ fun DeviceInfoScreen(
                 title = "Device Overview",
                 onBack = { nav.navigateUp() },
                 actions = {
+                    CopyAllAction { allSectionsText(sections) }
                     IconButton(onClick = {
                         val send = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
@@ -141,9 +145,12 @@ fun DeviceInfoScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (section.rows.isNotEmpty() && !section.sensitive) {
-                                TextButton(onClick = {
-                                    copySection(context, section)
-                                }) { Text("Copy section") }
+                                CopyIconButton(
+                                    copyText = {
+                                        formatSectionsForCopy(listOf(section.title to section.rows))
+                                    },
+                                    description = "Copy ${section.title}",
+                                )
                             }
                             if (section.labRoute != null && section.labLabel != null) {
                                 TextButton(onClick = { nav.openRoute(section.labRoute) }) {
@@ -464,12 +471,10 @@ private fun buildSections(
     )
 }
 
-private fun copySection(context: android.content.Context, section: Section) {
-    val text = buildString {
-        appendLine("[${section.title}]")
-        section.rows.forEach { (k, v) -> appendLine("$k: ${v ?: "Not exposed"}") }
-    }
-    val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE)
-        as android.content.ClipboardManager
-    cm.setPrimaryClip(android.content.ClipData.newPlainText(section.title, text))
+private fun allSectionsText(sections: List<Section>): String? {
+    val data = sections
+        .filter { !it.sensitive }
+        .map { s -> s.title to s.rows.filter { (label, _) -> label !in SENSITIVE_ROW_LABELS } }
+        .filter { (_, rows) -> rows.isNotEmpty() }
+    return data.takeIf { it.isNotEmpty() }?.let { formatSectionsForCopy(it) }
 }

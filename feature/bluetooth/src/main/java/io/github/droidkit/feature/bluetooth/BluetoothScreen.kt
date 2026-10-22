@@ -37,8 +37,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
+import io.github.droidkit.core.ui.formatSectionsForCopy
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 
@@ -93,7 +95,48 @@ fun BluetoothScreen(
     val hasPermission = permissionVersion.let { viewModel.hasConnectPermission() }
     val hasScanPermission = permissionVersion.let { viewModel.hasScanPermission() }
 
-    Scaffold(topBar = { DroidKitTopAppBar("Bluetooth Lab", onBack = onBack) }) { padding ->
+    Scaffold(
+        topBar = {
+            DroidKitTopAppBar(
+                "Bluetooth Lab",
+                onBack = onBack,
+                actions = {
+                    CopyAllAction {
+                        formatSectionsForCopy(
+                            buildList {
+                                add(
+                                    "Adapter" to listOf(
+                                        "Adapter present" to viewModel.adapterPresent.toString(),
+                                        "Classic Bluetooth" to viewModel.classicSupported.toString(),
+                                        "Bluetooth LE" to viewModel.leSupported.toString(),
+                                        "Adapter enabled" to enabled.toString(),
+                                    ),
+                                )
+                                if (hasPermission && bonded.isNotEmpty()) {
+                                    add(
+                                        "Bonded devices" to bonded.map { d ->
+                                            (d.name ?: "Unnamed device") to
+                                                "${d.address ?: "Address not exposed"} · " +
+                                                "${d.typeName} · ${d.bondStateName}"
+                                        },
+                                    )
+                                }
+                                if (scanResults.isNotEmpty()) {
+                                    add(
+                                        "BLE scan" to scanResults.map { d ->
+                                            (d.name ?: "Unnamed advertiser") to
+                                                "${d.address} · ${d.rssi} dBm" +
+                                                (d.decoded?.beaconHint?.let { " · $it" } ?: "")
+                                        },
+                                    )
+                                }
+                            },
+                        ).takeIf { it.isNotBlank() }
+                    }
+                },
+            )
+        },
+    ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),

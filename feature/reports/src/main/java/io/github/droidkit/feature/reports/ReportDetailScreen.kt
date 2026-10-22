@@ -31,16 +31,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import android.content.ClipData
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
 import io.github.droidkit.core.database.DeviceSnapshotEntity
 import io.github.droidkit.core.database.DiagnosticResultEntity
 import io.github.droidkit.core.database.DiagnosticSessionEntity
+import io.github.droidkit.core.ui.CopyAllAction
+import io.github.droidkit.core.ui.CopyIconButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.adaptive.EmptyWindowInsets
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
@@ -75,7 +75,6 @@ fun ReportDetailScreen(
     embedded: Boolean = false,
 ) {
     val context = LocalContext.current
-    val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     var detail by remember { mutableStateOf<DetailState?>(null) }
     var showExport by remember { mutableStateOf(false) }
@@ -103,6 +102,7 @@ fun ReportDetailScreen(
                 onBack = onBack,
                 windowInsets =
                     if (embedded) EmptyWindowInsets else TopAppBarDefaults.windowInsets,
+                actions = { CopyAllAction { report } },
             )
         },
     ) { padding ->
@@ -239,22 +239,14 @@ fun ReportDetailScreen(
             }
 
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DroidKitOutlinedButton(
-                        onClick = {
-                            scope.launch {
-                                clipboard.setClipEntry(
-                                    ClipEntry(
-                                        ClipData.newPlainText(
-                                            "DroidKit summary",
-                                            ReportBuilder.buildSummary(d.session, d.results),
-                                        ),
-                                    ),
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) { Text("Copy summary") }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CopyIconButton(
+                        copyText = { ReportBuilder.buildSummary(d.session, d.results) },
+                        description = "Copy summary",
+                    )
                     DroidKitButton(
                         onClick = { showExport = true },
                         modifier = Modifier.weight(1f),

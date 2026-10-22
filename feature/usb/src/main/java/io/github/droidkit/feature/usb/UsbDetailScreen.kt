@@ -1,6 +1,5 @@
 package io.github.droidkit.feature.usb
 
-import android.content.ClipData
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,23 +20,21 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.ai.AiAssistant
 import io.github.droidkit.core.ai.AiExplainButton
 import io.github.droidkit.core.ai.AiSummaryCard
+import io.github.droidkit.core.ui.CopyAllAction
+import io.github.droidkit.core.ui.CopyIconButton
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.EmptyWindowInsets
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,8 +49,6 @@ fun UsbDetailScreen(
     val permissionPending by viewModel.permissionPending.collectAsStateWithLifecycle()
     val device = devices.firstOrNull { it.deviceName == deviceName }
     val context = LocalContext.current
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         contentWindowInsets =
@@ -64,6 +59,11 @@ fun UsbDetailScreen(
                 onBack = onBack,
                 windowInsets =
                     if (embedded) EmptyWindowInsets else TopAppBarDefaults.windowInsets,
+                actions = {
+                    CopyAllAction {
+                        device?.let { d -> d.summaryText(viewModel.serialOrNull(d)) }
+                    }
+                },
             )
         },
     ) { padding ->
@@ -245,13 +245,10 @@ fun UsbDetailScreen(
                         modifier = Modifier.padding(top = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        DroidKitOutlinedButton(onClick = {
-                            scope.launch {
-                                clipboard.setClipEntry(
-                                    ClipEntry(ClipData.newPlainText("USB summary", device.summaryText(serial))),
-                                )
-                            }
-                        }) { Text("Copy summary") }
+                        CopyIconButton(
+                            copyText = { device.summaryText(serial) },
+                            description = "Copy USB summary",
+                        )
                         DroidKitOutlinedButton(onClick = {
                             val send = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
