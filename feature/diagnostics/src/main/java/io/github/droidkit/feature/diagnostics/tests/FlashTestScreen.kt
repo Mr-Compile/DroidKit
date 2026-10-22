@@ -1,7 +1,10 @@
 package io.github.droidkit.feature.diagnostics.tests
 
-import androidx.camera.core.CameraSelector
-import androidx.camera.lifecycle.ProcessCameraProvider
+import android.content.Context
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.feature.diagnostics.PhoneDoctorTest
 
@@ -38,6 +39,13 @@ fun FlashTestScreen(
     }
 }
 
+/**
+ * Drives the LED via [CameraManager.setTorchMode] — the same API the system
+ * quick-settings tile uses — instead of CameraX `enableTorch`. CameraX torch
+ * control needs an active capture session; binding a camera with no use case
+ * leaves the torch request applied to nothing on many devices, so the flash
+ * never lit even though the call succeeded.
+ */
 @Composable
 private fun FlashContent(
     test: PhoneDoctorTest,
@@ -45,47 +53,45 @@ private fun FlashContent(
     autoResult: Boolean,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    var provider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
+    val cameraManager = remember {
+        context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    }
+    var flashCameraId by remember { mutableStateOf<String?>(null) }
     var hasFlash by remember { mutableStateOf<Boolean?>(null) }
     var torchOn by remember { mutableStateOf(false) }
     var toggleCount by remember { mutableIntStateOf(0) }
-    var initError by remember { mutableStateOf<String?>(null) }
-    var boundCamera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
+    var torchError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        val future = ProcessCameraProvider.getInstance(context)
-        future.addListener(
-            {
-                try {
-                    val p = future.get()
-                    provider = p
-                    val selector = CameraSelector.DEFAULT_BACK_CAMERA
-                    if (p.hasCamera(selector)) {
-                        val camera = p.bindToLifecycle(lifecycleOwner, selector)
-                        boundCamera = camera
-                        hasFlash = camera.cameraInfo.hasFlashUnit()
-                        if (hasFlash == false && autoResult) {
-                            onResult(TestResultState.NOT_SUPPORTED, "Rear camera reports no flash unit")
-                        }
-                    } else {
-                        hasFlash = false
-                        if (autoResult) {
-                            onResult(TestResultState.NOT_SUPPORTED, "No rear camera for flash test")
-                        }
-                    }
-                } catch (e: Exception) {
-                    initError = e.message ?: e.javaClass.simpleName
-                }
-            },
-            ContextCompat.getMainExecutor(context),
-        )
+        try {
+            flashCameraId = findFlashCameraId(cameraManager)
+            hasFlash = flashCameraId != null
+            if (hasFlash == false && autoResult) {
+                onResult(TestResultState.NOT_SUPPORTED, "No camera reports a flash unit")
+            }
+        } catch (e: Exception) {
+            torchError = e.message ?: e.javaClass.simpleName
+        }
     }
 
     DisposableEffect(Unit) {
+        val callback = object : CameraManager.TorchCallback() {
+            override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+                if (cameraId == flashCameraId) torchOn = enabled
+            }
+
+            override fun onTorchModeUnavailable(cameraId: String) {
+                if (cameraId == flashCameraId) {
+                    torchError = "Torch unavailable — another app holds the camera"
+                }
+            }
+        }
+        cameraManager.registerTorchCallback(callback, Handler(Looper.getMainLooper()))
         onDispose {
-            boundCamera?.cameraControl?.enableTorch(false)
-            provider?.unbindAll()
+            cameraManager.unregisterTorchCallback(callback)
+            flashCameraId?.let { id ->
+                runCatching { cameraManager.setTorchMode(id, false) }
+            }
         }
     }
 
@@ -97,9 +103,9 @@ private fun FlashContent(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 4.dp),
             )
-            initError?.let {
+            torchError?.let {
                 Text(
-                    "Camera init failed: $it",
+                    "Torch error: $it",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp),
@@ -115,16 +121,22 @@ private fun FlashContent(
         ) {
             DroidKitButton(
                 onClick = {
-                    torchOn = !torchOn
-                    boundCamera?.cameraControl?.enableTorch(torchOn)
-                    toggleCount++
+                    val id = flashCameraId ?: return@DroidKitButton
+                    try {
+                        cameraManager.setTorchMode(id, !torchOn)
+                        torchOn = !torchOn
+                        toggleCount++
+                        torchError = null
+                    } catch (e: Exception) {
+                        torchError = e.message ?: e.javaClass.simpleName
+                    }
                 },
                 enabled = hasFlash == true,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(if (torchOn) "Turn torch OFF" else "Turn torch ON")
             }
-            if (hasFlash == false) {
+            if (hasFlash == false && torchError == null) {
                 Text(
                     "No flash unit reported — " +
                         if (autoResult) "recorded NOT SUPPORTED." else "NOT SUPPORTED.",
@@ -137,7 +149,7 @@ private fun FlashContent(
             onResult = { state, note ->
                 val detail = listOfNotNull(
                     note,
-                    initError?.let { "camera init error: $it" },
+                    torchError?.let { "torch error: $it" },
                     if (toggleCount == 0) "torch never toggled"
                     else "torch toggled $toggleCount time(s)",
                 ).joinToString("; ").ifBlank { null }
@@ -145,4 +157,24 @@ private fun FlashContent(
             },
         )
     }
+}
+
+/**
+ * Picks the camera whose LED the torch mode controls. Prefers a back-facing
+ * unit; falls back to any camera reporting [CameraCharacteristics.FLASH_INFO_AVAILABLE].
+ */
+private fun findFlashCameraId(manager: CameraManager): String? {
+    data class FlashCamera(val id: String, val lensFacing: Int?)
+
+    val withFlash = manager.cameraIdList.mapNotNull { id ->
+        val chars = runCatching { manager.getCameraCharacteristics(id) }.getOrNull()
+            ?: return@mapNotNull null
+        if (chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true) {
+            FlashCamera(id, chars.get(CameraCharacteristics.LENS_FACING))
+        } else {
+            null
+        }
+    }
+    return withFlash.firstOrNull { it.lensFacing == CameraCharacteristics.LENS_FACING_BACK }?.id
+        ?: withFlash.firstOrNull()?.id
 }

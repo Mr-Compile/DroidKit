@@ -100,6 +100,14 @@
   reports or AI fields
 
 ### Fixed
+- Phone Doctor flash test could leave the LED dark on devices where CameraX
+  applies `enableTorch` only to an active capture session — the test bound
+  the camera with no use case, so the torch request never reached the HAL.
+  The test now drives the LED through `CameraManager.setTorchMode` (the same
+  path as the system quick-settings tile), picks the flash-capable camera
+  via `FLASH_INFO_AVAILABLE`, tracks real torch state through `TorchCallback`,
+  and surfaces `CameraAccessException`s (e.g. camera busy) instead of
+  silently no-oping
 - Audio/camera/display tool entries previously opened stale placeholder
   screens claiming tests "ship in Phase 3" — the tests already shipped in
   J08/J09; labs now launch them
