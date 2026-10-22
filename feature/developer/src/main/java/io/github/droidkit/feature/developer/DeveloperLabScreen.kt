@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitButton
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -137,7 +137,7 @@ fun DeveloperLabScreen(
 
             item { SectionHeader("Intent launcher") }
             items(presets, key = { it.action }) { preset ->
-                Card(
+                DroidKitCard(
                     onClick = { launch(Intent(preset.action), preset.label) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -153,27 +153,27 @@ fun DeveloperLabScreen(
             }
 
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text("Custom intent", style = MaterialTheme.typography.titleSmall)
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = customAction,
                             onValueChange = { customAction = it },
                             label = { Text("Action (e.g. android.intent.action.VIEW)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = customData,
                             onValueChange = { customData = it },
                             label = { Text("Data URI (optional)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = customPackage,
                             onValueChange = { customPackage = it },
                             label = { Text("Package (optional)") },
@@ -190,7 +190,7 @@ fun DeveloperLabScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Button(
+                        DroidKitButton(
                             onClick = {
                                 val intent = Intent(customAction.trim())
                                 customData.takeIf { it.isNotBlank() }
@@ -210,12 +210,12 @@ fun DeveloperLabScreen(
 
             item { SectionHeader("Deep-link tester") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = deepLink,
                             onValueChange = { deepLink = it },
                             label = { Text("URI (e.g. https:// or myapp://…)") },
@@ -229,7 +229,7 @@ fun DeveloperLabScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        Button(
+                        DroidKitButton(
                             onClick = {
                                 val uri = Uri.parse(deepLink.trim())
                                 val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -252,7 +252,7 @@ fun DeveloperLabScreen(
 
             item { SectionHeader("System properties") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -263,14 +263,14 @@ fun DeveloperLabScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = propQuery,
                             onValueChange = { viewModel.propQuery.value = it },
                             label = { Text("Filter keys or values") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        Button(
+                        DroidKitButton(
                             onClick = viewModel::readProps,
                             enabled = activeProvider != null &&
                                 propsState !is DeveloperViewModel.PropsState.Loading,
@@ -328,7 +328,7 @@ fun DeveloperLabScreen(
 
             item { SectionHeader("Log viewer") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -341,21 +341,21 @@ fun DeveloperLabScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = logLines,
                             onValueChange = { logLines = it.filter(Char::isDigit).take(4) },
                             label = { Text("Lines (max 5000)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = logTag,
                             onValueChange = { logTag = it },
                             label = { Text("Tag filter (optional)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        Button(
+                        DroidKitButton(
                             onClick = {
                                 viewModel.readLog(
                                     logLines.toIntOrNull()?.coerceIn(1, 5000) ?: 200,
@@ -418,7 +418,7 @@ private fun DisplayMetricsCard() {
         } else null
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             InfoRow(
                 "Resolution",
@@ -484,7 +484,7 @@ private fun DisplayMetricsCard() {
 
 @Composable
 private fun MemoryCard(memory: DeveloperViewModel.MemorySnapshot?, onRefresh: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             if (memory == null) {
                 Text("Reading…", style = MaterialTheme.typography.bodyMedium)

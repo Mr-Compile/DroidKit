@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -109,7 +109,7 @@ fun ReportsScreen(
     }
 
     if (confirmDeleteAll) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { confirmDeleteAll = false },
             title = { Text("Delete all reports?") },
             text = { Text("Every diagnostic session, result and saved report entry is deleted permanently.") },
@@ -143,13 +143,13 @@ private fun ReportsListContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             StatusFilter.entries.forEach { f ->
-                FilterChip(
+                DroidKitFilterChip(
                     selected = filter == f,
                     onClick = { onFilter(f) },
                     label = { Text(f.name.replace('_', ' ').lowercase().replaceFirstChar { c -> c.uppercase() }) },
                 )
             }
-            FilterChip(
+            DroidKitFilterChip(
                 selected = false,
                 onClick = onCompare,
                 label = { Text("Compare") },
@@ -171,7 +171,7 @@ private fun ReportsListContent(
                 }
             }
             items(rows, key = { it.session.id }) { row ->
-                Card(
+                DroidKitCard(
                     onClick = { onSelect(row.session.id) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {

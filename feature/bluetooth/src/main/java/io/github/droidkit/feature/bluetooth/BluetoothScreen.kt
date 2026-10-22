@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -113,7 +113,7 @@ fun BluetoothScreen(
                     } else {
                         InfoRow("Adapter enabled", enabled.toString(), copyable = false)
                         if (!enabled) {
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     enableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
                                 },
@@ -132,7 +132,7 @@ fun BluetoothScreen(
                                 "BLUETOOTH_CONNECT permission required to list bonded devices.",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     permissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
                                 },
@@ -154,7 +154,7 @@ fun BluetoothScreen(
 
             if (hasPermission && bonded.isNotEmpty()) {
                 items(bonded) { device ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(device.name ?: "Unnamed device", style = MaterialTheme.typography.bodyLarge)
                             Text(
@@ -185,7 +185,7 @@ fun BluetoothScreen(
                                     "permission required to scan for nearby devices.",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     scanPermissionLauncher.launch(viewModel.requiredScanPermission())
                                 },
@@ -199,7 +199,7 @@ fun BluetoothScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = { if (scanning) viewModel.stopScan() else viewModel.startScan() },
                                 modifier = Modifier.padding(top = 8.dp),
                             ) { Text(if (scanning) "Stop scan" else "Start BLE scan") }
@@ -218,7 +218,7 @@ fun BluetoothScreen(
             if (scanning || scanResults.isNotEmpty()) {
                 items(scanResults, key = { it.address }) { device ->
                     val isOpen = expanded[device.address] == true
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 device.name ?: "Unnamed advertiser",

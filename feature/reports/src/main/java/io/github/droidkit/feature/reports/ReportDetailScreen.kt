@@ -10,14 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitButton
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -123,7 +123,7 @@ fun ReportDetailScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             DateFormat.getDateTimeInstance().format(Date(d.session.startedAtEpochMs)),
@@ -139,7 +139,7 @@ fun ReportDetailScreen(
 
             item { SectionHeader("Device") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         val s = d.snapshot
                         if (s == null) {
@@ -164,7 +164,7 @@ fun ReportDetailScreen(
                 item { Text("No test results recorded.") }
             } else {
                 items(d.results, key = { it.id }) { r ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row {
                                 Text(
@@ -197,7 +197,7 @@ fun ReportDetailScreen(
             d.session.notes?.takeIf { it.isNotBlank() }?.let { notes ->
                 item { SectionHeader("Technician notes") }
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Text(notes, modifier = Modifier.padding(16.dp))
                     }
                 }
@@ -206,7 +206,7 @@ fun ReportDetailScreen(
             item { SectionHeader("AI summary") }
             item {
                 val aiState by viewModel.aiSummary.collectAsStateWithLifecycle()
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         when (val s = aiState) {
                             ReportsViewModel.AiSummaryState.Idle -> Text(
@@ -225,7 +225,7 @@ fun ReportDetailScreen(
                                 color = MaterialTheme.colorScheme.error,
                             )
                         }
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = {
                                 viewModel.summarize(
                                     ReportBuilder.build(d.session, d.snapshot, d.results),
@@ -240,7 +240,7 @@ fun ReportDetailScreen(
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = {
                             scope.launch {
                                 clipboard.setClipEntry(
@@ -255,11 +255,11 @@ fun ReportDetailScreen(
                         },
                         modifier = Modifier.weight(1f),
                     ) { Text("Copy summary") }
-                    Button(
+                    DroidKitButton(
                         onClick = { showExport = true },
                         modifier = Modifier.weight(1f),
                     ) { Text("Export") }
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { showDelete = true },
                         modifier = Modifier.weight(1f),
                     ) { Text("Delete") }
@@ -285,23 +285,23 @@ fun ReportDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.padding(top = 12.dp),
                 ) {
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = format == "TEXT",
                         onClick = { format = "TEXT" },
                         label = { Text("Text (.txt)") },
                     )
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = format == "PDF",
                         onClick = { format = "PDF" },
                         label = { Text("PDF (.pdf)") },
                     )
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = format == "CERT",
                         onClick = { format = "CERT" },
                         label = { Text("Certificate") },
                     )
                 }
-                Button(
+                DroidKitButton(
                     onClick = {
                         scope.launch {
                             val text = if (format == "CERT") {
@@ -328,7 +328,7 @@ fun ReportDetailScreen(
     }
 
     if (showDelete) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { showDelete = false },
             title = { Text("Delete report?") },
             text = { Text("This session and its ${d?.results?.size ?: 0} results are deleted permanently.") },

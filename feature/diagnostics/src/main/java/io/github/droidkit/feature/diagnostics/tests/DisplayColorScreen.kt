@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,7 +72,7 @@ fun DisplayColorScreen(
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter),
         ) {
-            Card(modifier = Modifier.statusBarsPadding().padding(16.dp)) {
+            DroidKitCard(modifier = Modifier.statusBarsPadding().padding(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(test.title, style = MaterialTheme.typography.titleMedium)
                     Text(

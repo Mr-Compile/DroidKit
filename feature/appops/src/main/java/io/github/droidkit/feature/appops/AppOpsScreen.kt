@@ -11,14 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import io.github.droidkit.core.ui.components.LoadingState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.AlertDialog
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -95,7 +95,7 @@ fun AppOpsScreen(
     }
 
     pending?.let { (pkg, op, mode) ->
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { pending = null },
             title = { Text("Set $op?") },
             text = {
@@ -131,7 +131,7 @@ private fun NoProviderCard(onOpenAdb: () -> Unit) {
         modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
     ) {
-        Card(modifier = Modifier.fillMaxWidth()) {
+        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Elevated provider required", style = MaterialTheme.typography.titleSmall)
                 Text(
@@ -160,7 +160,7 @@ private fun PackageList(
     onSelect: (String) -> Unit,
     providerName: String,
 ) {
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    DroidKitCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Provider: $providerName", style = MaterialTheme.typography.titleSmall)
             if (identity != null) {
@@ -174,7 +174,7 @@ private fun PackageList(
             }
         }
     }
-    OutlinedTextField(
+    DroidKitTextField(
         value = query,
         onValueChange = onQuery,
         label = { Text("Search packages") },
@@ -191,7 +191,7 @@ private fun PackageList(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(packages, key = { it }) { pkg ->
-                Card(onClick = { onSelect(pkg) }, modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(onClick = { onSelect(pkg) }, modifier = Modifier.fillMaxWidth()) {
                     Text(
                         pkg,
                         style = MaterialTheme.typography.bodyMedium,
@@ -234,7 +234,7 @@ private fun OpsDetail(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
                                 "Mode summary",
@@ -253,13 +253,13 @@ private fun OpsDetail(
                 }
                 item {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
+                        DroidKitFilterChip(
                             selected = modeFilter == null,
                             onClick = { modeFilter = null },
                             label = { Text("All (${ops.size})") },
                         )
                         stats.forEach { (mode, count) ->
-                            FilterChip(
+                            DroidKitFilterChip(
                                 selected = modeFilter == mode,
                                 onClick = { modeFilter = if (modeFilter == mode) null else mode },
                                 label = { Text("${AppOpsInfo.modeLabel(mode)} ($count)") },
@@ -277,7 +277,7 @@ private fun OpsDetail(
                     )
                 }
                 items(shown, key = { it.op }) { entry ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
@@ -302,7 +302,7 @@ private fun OpsDetail(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 AppOpMode.entries.forEach { mode ->
-                                    FilterChip(
+                                    DroidKitFilterChip(
                                         selected = entry.mode == mode.wire,
                                         onClick = { if (entry.mode != mode.wire) onPick(entry.op, mode) },
                                         label = { Text(mode.wire) },

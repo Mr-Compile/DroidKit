@@ -49,9 +49,9 @@ class SettingsRepository @Inject constructor(
         context.settingsStore.edit { it[themeKey] = mode.name }
     }
 
-    /** Material You wallpaper colors. No-op below API 31 — the theme ignores it. */
+    /** Material You wallpaper colors — opt-in; the Dark Instrument brand palette is the default. No-op below API 31 — the theme ignores it. */
     val dynamicColor: Flow<Boolean> =
-        context.settingsStore.data.map { it[dynamicColorKey] ?: true }
+        context.settingsStore.data.map { it[dynamicColorKey] ?: false }
 
     suspend fun setDynamicColor(enabled: Boolean) {
         context.settingsStore.edit { it[dynamicColorKey] = enabled }

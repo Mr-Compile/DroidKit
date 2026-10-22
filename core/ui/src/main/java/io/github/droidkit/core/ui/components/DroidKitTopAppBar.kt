@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
  * Standard app bar (UI v6 plan file 04). Pass [onBack] on secondary/detail
@@ -42,8 +43,16 @@ fun DroidKitTopAppBar(
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val c = DroidKitTheme.colors
     TopAppBar(
         title = title,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = c.ink,
+            scrolledContainerColor = c.panel2,
+            titleContentColor = c.textPrimary,
+            navigationIconContentColor = c.textSecondary,
+            actionIconContentColor = c.textSecondary,
+        ),
         navigationIcon = {
             if (onBack != null) {
                 IconButton(onClick = onBack) {

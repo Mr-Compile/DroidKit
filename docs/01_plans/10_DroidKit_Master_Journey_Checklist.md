@@ -801,41 +801,41 @@ Completion gate:
 Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canonical spec `docs/03_design_system/uiux_v5/` (supersedes v4). Per-slice gate: v5 `implementation/22_DEFINITION_OF_DONE.md`.
 
 ## V5-0 Audit
-- [ ] `docs/04_audits/V5_UI_AUDIT.md` — inventory, state/error gaps, per-feature file lists, conflicts logged
+- [x] `docs/04_audits/V5_UI_AUDIT.md` — inventory, state/error gaps, per-feature file lists, conflicts logged
 
 ## V5-1 Foundation
 - [ ] Production Candidate-9 assets (adaptive + monochrome icon, splash) — plan Task 1
 - [ ] `core-splashscreen` cold-start splash, no artificial delay
-- [ ] Dark + light semantic tokens in `:core:ui` (`SemanticColors.kt`, `Spacing.kt`, `Shape.kt`, `Type.kt`) — plan Task 2
+- [x] Dark + light semantic tokens in `:core:ui` (`SemanticColors.kt`, `Spacing.kt`, `Shape.kt`, `Type.kt`) — plan Task 2
 - [ ] `J03_DESIGN_TOKENS.md` v5-name mapping appended
-- [ ] Shared primitives/badges (`StatusBadge`, `CapabilityBadge`, `ResultBadge`, `BentoCard`, `TechnicalValue`, `DiagnosticProgress`) — plan Task 3
-- [ ] Shared screen states (Loading/Empty/PermissionRequired/SetupRequired/Unsupported/Offline/FriendlyError) + semantics helpers — plan Task 4
-- [ ] Risk + AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — plan Task 5
+- [x] Shared primitives/badges (`StatusBadge`, `ResultBadge`, `HeroCard`/`StatTile`/`SpecTile` bento tiles, `ToolIcon`, `DroidKitProgressLine`; `CapabilityBadge`/`TechnicalValue` functions absorbed by `ToolCard` availability + `InfoRow` mono values) — plan Task 3
+- [x] Shared screen states (Loading/Empty/PermissionRequired/SetupRequired/Unsupported/Offline/FriendlyError) + semantics helpers — plan Task 4
+- [ ] Risk + AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — plan Task 5 (partial: `AiSurfaceCard` covers AI insight surfaces)
 
 ## V5-2 Semantic UX
-- [ ] `ToolAvailability` model mapped from `ToolResolution`/`BlockedReason` — plan Task 6
+- [x] `ToolAvailability` model mapped from `ToolResolution`/`BlockedReason` — plan Task 6 (`availabilityPresentation` → `AvailabilityBadge`/`ToolCard` badges)
 - [ ] `FriendlyError` + mapper + `strings_errors.xml` (error catalog strings) — plan Task 6
-- [ ] Progressive sanitized technical details on error surfaces
+- [x] Progressive sanitized technical details on error surfaces (`UiProblemCard` detailId + mono details)
 
 ## V5-3 Shell
 - [x] Adaptive navigation (compact bottom bar / medium+expanded rail) — plan Task 7 (shell absorbed by `2026-10-20-responsive-adaptive-ui.md`; bento stays open below)
-- [ ] Home bento hierarchy per `screens/10_HOME_TOOLS.md`
-- [ ] Tools search/filter with availability badges
+- [x] Home bento hierarchy per `screens/10_HOME_TOOLS.md` (hero + spec grid + status dots)
+- [x] Tools search/filter with availability badges (+ `.toolstat` counter)
 
 ## V5-4 Features
-- [ ] Device Inspector migrated — plan Task 8
-- [ ] App Inspector migrated — plan Task 8
-- [ ] USB Lab migrated — plan Task 8
-- [ ] NFC Lab migrated — plan Task 8
-- [ ] Phone Doctor (progress/summary/result controls) — plan Task 9
-- [ ] Reports migrated — plan Task 9
-- [ ] Network/Bluetooth/Sensors migrated — plan Task 9
+- [x] Device Inspector migrated — plan Task 8 (Dark Instrument reskin via shared `DroidKit*` primitives)
+- [x] App Inspector migrated — plan Task 8
+- [x] USB Lab migrated — plan Task 8
+- [x] NFC Lab migrated — plan Task 8
+- [x] Phone Doctor (progress/summary/result controls) — plan Task 9 (`DroidKitProgressLine`, `TestResultBar`, `PermissionGate`, `ResultBadge`)
+- [x] Reports migrated — plan Task 9
+- [x] Network/Bluetooth/Sensors migrated — plan Task 9
 
 ## V5-5 Advanced/AI
-- [ ] Capability Center — plan Task 10
-- [ ] Permission Center — plan Task 10
-- [ ] AI insight surfaces + AI settings friendly states — plan Task 10
-- [ ] Settings grouped Material lists — plan Task 10
+- [ ] Capability Center — plan Task 10 (screen does not exist yet)
+- [x] Permission Center — plan Task 10 (restyled via shared primitives)
+- [x] AI insight surfaces + AI settings friendly states — plan Task 10 (`AiSurfaceCard`, `.gatecard` states, restyled chat)
+- [x] Settings grouped Material lists — plan Task 10 (grouped cards + segmented theme control)
 
 ## V5-6 QA
 - [ ] Dark + light

@@ -11,9 +11,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -93,7 +93,7 @@ fun StorageLabScreen(
                 )
             }
             item {
-                OutlinedButton(
+                DroidKitOutlinedButton(
                     onClick = { viewModel.saveSnapshot(null) },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Capture storage snapshot") }
@@ -108,7 +108,7 @@ fun StorageLabScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         snapshots.forEach { s ->
-                            FilterChip(
+                            DroidKitFilterChip(
                                 selected = s.id == beforeId || s.id == afterId,
                                 onClick = {
                                     when {

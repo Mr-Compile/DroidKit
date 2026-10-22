@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -128,7 +128,7 @@ private fun UsbDeviceList(
                 item { EmptyState("No USB devices attached.") }
             } else {
                 items(devices, key = { it.deviceName }) { device ->
-                    Card(
+                    DroidKitCard(
                         onClick = { onSelect(device.deviceName) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {

@@ -6,15 +6,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.common.TestResultState
 import io.github.droidkit.core.permissions.RuntimePermissionState
+import io.github.droidkit.core.ui.components.DroidKitButton
+import io.github.droidkit.core.ui.components.GateCard
 import io.github.droidkit.core.ui.components.rememberRuntimePermission
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
  * Wraps a test that needs a runtime permission. Denied → emits
@@ -44,33 +47,44 @@ fun PermissionGate(
         modifier = Modifier.fillMaxSize().statusBarsPadding().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("Permission required", style = MaterialTheme.typography.titleMedium)
-        when (perm.state) {
-            RuntimePermissionState.NOT_DECLARED -> Text(
-                "This build does not declare $permission — the test cannot run.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            RuntimePermissionState.DENIED_PERMANENT -> {
-                Text(
+        val (message, actionLabel, onAction) = when (perm.state) {
+            RuntimePermissionState.NOT_DECLARED ->
+                Triple(
+                    "This build does not declare $permission — the test cannot run.",
+                    null,
+                    null,
+                )
+            RuntimePermissionState.DENIED_PERMANENT ->
+                Triple(
                     "Permission $permission is permanently denied. Enable it in " +
                         "system Settings to run this test.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    "Open Settings",
+                    perm.openSettings,
                 )
-                Button(onClick = perm.openSettings, modifier = Modifier.fillMaxWidth()) {
-                    Text("Open Settings")
-                }
-            }
-            else -> {
-                Text(
+            else ->
+                Triple(
                     "This test needs $permission to run. DroidKit never requests " +
                         "permissions in the background — it asks only when you start the test.",
-                    style = MaterialTheme.typography.bodyMedium,
+                    if (perm.asked) "Request again" else "Grant permission",
+                    perm.request,
                 )
-                Button(onClick = perm.request, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (perm.asked) "Request again" else "Grant permission")
-                }
-            }
         }
+        // mockup .gatecard — dashed brand gate with lock glyph.
+        GateCard(
+            title = "Permission required",
+            message = message,
+            icon = Icons.Outlined.Lock,
+            accent = DroidKitTheme.colors.statusSetupRequired,
+            action = if (actionLabel != null && onAction != null) {
+                {
+                    DroidKitButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) {
+                        Text(actionLabel)
+                    }
+                }
+            } else {
+                null
+            },
+        )
         TestResultBar(onResult = onResult)
     }
 }

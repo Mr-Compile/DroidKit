@@ -12,7 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -73,7 +73,7 @@ fun PrivacyCenterScreen(
         ) {
             item { SectionHeader("On this device") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             "Diagnostic sessions, reports, favorites, recent tools, " +
@@ -121,7 +121,7 @@ fun PrivacyCenterScreen(
 
             item { SectionHeader("Network activity") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         PrivacyInfoRow(
                             title = "DroidKit Intelligence (Groq)",
@@ -149,7 +149,7 @@ fun PrivacyCenterScreen(
 
             item { SectionHeader("AI requests") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             "When AI features run, DroidKit sends only the context " +
@@ -172,7 +172,7 @@ fun PrivacyCenterScreen(
 
             item { SectionHeader("Controls & policies") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         PrivacyNavRow(
                             title = "Permissions & Access",

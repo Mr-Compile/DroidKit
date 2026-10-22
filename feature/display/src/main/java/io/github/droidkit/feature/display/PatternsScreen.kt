@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,7 +46,7 @@ fun PatternsScreen(onBack: () -> Unit) {
     if (fullscreen) {
         Box(Modifier.fillMaxSize()) {
             PatternCanvas(pattern, Modifier.fillMaxSize())
-            Button(
+            DroidKitButton(
                 onClick = { fullscreen = false },
                 modifier = Modifier.padding(16.dp),
             ) { Text("Exit full screen") }
@@ -68,7 +68,7 @@ fun PatternsScreen(onBack: () -> Unit) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DisplayPattern.entries.take(4).forEach { p ->
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = pattern == p,
                         onClick = { pattern = p },
                         label = { Text(p.label) },
@@ -77,7 +77,7 @@ fun PatternsScreen(onBack: () -> Unit) {
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DisplayPattern.entries.drop(4).forEach { p ->
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = pattern == p,
                         onClick = { pattern = p },
                         label = { Text(p.label) },
@@ -87,7 +87,7 @@ fun PatternsScreen(onBack: () -> Unit) {
             Box(Modifier.fillMaxWidth().weight(1f)) {
                 PatternCanvas(pattern, Modifier.fillMaxSize())
             }
-            Button(onClick = { fullscreen = true }, modifier = Modifier.fillMaxWidth()) {
+            DroidKitButton(onClick = { fullscreen = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Full screen")
             }
         }

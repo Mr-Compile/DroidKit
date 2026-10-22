@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -245,14 +245,14 @@ fun UsbDetailScreen(
                         modifier = Modifier.padding(top = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        OutlinedButton(onClick = {
+                        DroidKitOutlinedButton(onClick = {
                             scope.launch {
                                 clipboard.setClipEntry(
                                     ClipEntry(ClipData.newPlainText("USB summary", device.summaryText(serial))),
                                 )
                             }
                         }) { Text("Copy summary") }
-                        OutlinedButton(onClick = {
+                        DroidKitOutlinedButton(onClick = {
                             val send = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, device.summaryText(serial))

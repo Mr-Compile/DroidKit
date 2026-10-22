@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -127,13 +127,13 @@ private fun MicContent(
             verticalArrangement = Arrangement.Center,
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
+                DroidKitButton(
                     onClick = { if (recording) stopRecording() else startRecording() },
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(if (recording) "Stop" else "Record ${RECORD_MS / 1000}s+")
                 }
-                OutlinedButton(
+                DroidKitOutlinedButton(
                     onClick = ::playRecording,
                     enabled = recordedFile != null && !recording,
                     modifier = Modifier.weight(1f),

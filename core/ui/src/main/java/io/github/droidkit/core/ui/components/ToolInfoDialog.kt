@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +22,7 @@ import io.github.droidkit.core.common.SafetyLevel
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.ToolResolution
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
  * Per-tool "Learn more" surface — every field is rendered from real [Tool]
@@ -33,16 +35,23 @@ fun ToolInfoDialog(
     resolution: ToolResolution,
     onDismiss: () -> Unit,
 ) {
+    val c = DroidKitTheme.colors
     Dialog(onDismissRequest = onDismiss) {
-        Card(modifier = Modifier.fillMaxWidth()) {
+        DroidKitCard(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = c.raise),
+            border = BorderStroke(1.dp, c.lineNeutral),
+            shape = MaterialTheme.shapes.extraLarge,
+        ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(24.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(tool.title, style = MaterialTheme.typography.titleMedium)
-                Text(tool.description, style = MaterialTheme.typography.bodyMedium)
+                Text(tool.title, style = MaterialTheme.typography.titleMedium, color = c.textPrimary)
+                Text(tool.description, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
+                DroidKitHairline()
 
                 ToolInfoRow("Category", tool.category.name.lowercase().replaceFirstChar { it.uppercase() })
                 ToolInfoRow(
@@ -108,12 +117,18 @@ fun ToolInfoDialog(
 
 @Composable
 private fun ToolInfoRow(label: String, value: String) {
+    val c = DroidKitTheme.colors
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
+            label.uppercase(),
+            style = DroidKitTheme.extraTypography.microLabel,
+            color = c.faint,
         )
-        Text(value, style = MaterialTheme.typography.bodySmall)
+        Text(
+            value,
+            style = MaterialTheme.typography.bodySmall,
+            color = c.textSecondary,
+            modifier = Modifier.padding(top = 2.dp),
+        )
     }
 }

@@ -1,7 +1,11 @@
 package io.github.droidkit.core.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.AltRoute
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -73,6 +77,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -82,6 +87,7 @@ import io.github.droidkit.core.common.SearchResultType
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolCategory
 import io.github.droidkit.core.common.ToolIconKeys
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
  * UI v6 icon registry (plan files 06/07): the single mapping from semantic
@@ -192,10 +198,11 @@ object ToolIcons {
 }
 
 /**
- * Canonical icon container: tonal rounded square, fixed 24dp glyph, decorative
- * by default so the labeled row/card announces once (plan file 19).
- * [accent] tints the glyph — resolve it through `categoryAccent`/`testAccent`
- * in the theme package; null keeps the default onSecondaryContainer.
+ * Canonical icon container (mockup `.tic`): 40dp rounded tile, brand-gradient
+ * wash + hairline, fixed 22dp glyph, decorative by default so the labeled
+ * row/card announces once (plan file 19). [accent] tints the glyph — resolve
+ * it through `categoryAccent`/`testAccent` in the theme package; null keeps
+ * the brand tint.
  */
 @Composable
 fun ToolIcon(
@@ -204,16 +211,19 @@ fun ToolIcon(
     contentDescription: String? = null,
     accent: Color? = null,
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = modifier,
+    val c = DroidKitTheme.colors
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .background(DroidKitTheme.tileGradient, RoundedCornerShape(11.dp))
+            .border(1.dp, c.lineBrand, RoundedCornerShape(11.dp)),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = accent ?: MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(8.dp).size(24.dp),
+            tint = accent ?: c.brandPrimary,
+            modifier = Modifier.size(22.dp),
         )
     }
 }

@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,13 +48,13 @@ fun LiveSensorPickerScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { nav.navigate("sensors/check") { launchSingleTop = true } },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text("Run batch sensor check") }
                 }
                 items(sensors, key = { it.type }) { s ->
-                    Card(
+                    DroidKitCard(
                         onClick = { nav.navigate("sensors/live/${s.type}") { launchSingleTop = true } },
                         modifier = Modifier.fillMaxWidth(),
                     ) {

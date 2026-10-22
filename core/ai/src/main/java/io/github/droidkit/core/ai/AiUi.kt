@@ -9,13 +9,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SmartToy
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.components.AiSurfaceCard
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
  * Drop-in "Explain with AI" affordance. Renders nothing when AI is off or
@@ -43,7 +44,7 @@ fun AiExplainButton(
     val state by viewModel.state.collectAsState()
     if (!state.enabled || !state.hasKey) return
 
-    OutlinedButton(
+    DroidKitOutlinedButton(
         onClick = { viewModel.ask(assistant, fields) },
         enabled = !state.busy,
         modifier = modifier,
@@ -71,12 +72,11 @@ fun AiSummaryCard(
     val state by viewModel.state.collectAsState()
     if (!state.enabled || !state.hasKey) return
 
-    Card(modifier = modifier.fillMaxWidth()) {
+    AiSurfaceCard(modifier = modifier.fillMaxWidth()) {
         AiSummaryContent(
             screenTitle,
             fields,
             viewModel = viewModel,
-            modifier = Modifier.padding(16.dp),
         )
     }
 }
@@ -108,7 +108,7 @@ fun AiSummaryContent(
             Icon(
                 Icons.Outlined.SmartToy,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = DroidKitTheme.colors.brandSecondary,
                 modifier = Modifier.size(18.dp),
             )
             Text(
@@ -152,7 +152,7 @@ fun AiSummaryContent(
                     enabled = hasFields,
                 ) { Text("Try again") }
             }
-            else -> OutlinedButton(
+            else -> DroidKitOutlinedButton(
                 onClick = { viewModel.summarize(screenTitle, fields) },
                 enabled = hasFields,
                 modifier = Modifier
@@ -176,7 +176,7 @@ fun AiResultDialog(
     val elevatedOutcome by viewModel.elevatedOutcome.collectAsState()
 
     val result = state.result ?: return
-    AlertDialog(
+    DroidKitAlertDialog(
         onDismissRequest = { viewModel.dismissResult() },
         title = { Text("DroidKit Intelligence") },
         text = {

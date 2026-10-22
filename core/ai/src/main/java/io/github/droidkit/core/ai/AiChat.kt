@@ -5,7 +5,9 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,19 +58,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.droidkit.core.privileges.ElevatedOps
+import io.github.droidkit.core.ui.components.DroidKitHairline
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 import javax.inject.Inject
 import kotlin.math.PI
 import kotlin.math.sin
@@ -173,8 +179,8 @@ class AiChatViewModel @Inject constructor(
     private fun errorText(e: AiError) = e.describe()
 }
 
-private val USER_BUBBLE_SHAPE = RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp)
-private val AI_BUBBLE_SHAPE = RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)
+private val USER_BUBBLE_SHAPE = RoundedCornerShape(16.dp, 16.dp, 5.dp, 16.dp)
+private val AI_BUBBLE_SHAPE = RoundedCornerShape(16.dp, 16.dp, 16.dp, 5.dp)
 
 /** Hero prompts — each exercises a real chat capability (tools + read-only elevated). */
 private val STARTER_PROMPTS = listOf(
@@ -404,27 +410,16 @@ private fun ChatBubble(
     }
 }
 
-/** Chat bubble surface: gradient for the user, tonal container for the AI. */
+/** Chat bubble surface (mockup `.msg`): brand gradient for the user, faint glass tile + hairline for the AI. */
 @Composable
 private fun MessageBubble(text: String, isUser: Boolean) {
     val shape = if (isUser) USER_BUBBLE_SHAPE else AI_BUBBLE_SHAPE
+    val c = DroidKitTheme.colors
     Column(
         modifier = Modifier
             .clip(shape)
-            .then(
-                if (isUser) {
-                    Modifier.background(
-                        brush = Brush.horizontalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary,
-                            ),
-                        ),
-                    )
-                } else {
-                    Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                },
-            )
+            .background(if (isUser) c.brandGradient else SolidColor(c.aiBubble))
+            .border(1.dp, if (isUser) Color.Transparent else c.lineNeutral, shape)
             .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
         MessageText(text = text, onUserBubble = isUser)
@@ -460,8 +455,10 @@ private fun MessageText(text: String, onUserBubble: Boolean) {
             if (onUserBubble) {
                 Text(
                     trimmed,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    color = DroidKitTheme.colors.onBrand,
                 )
             } else {
                 AiRichText(trimmed)
@@ -479,23 +476,25 @@ private fun ProposalChip(
     modifier: Modifier = Modifier,
 ) {
     val isNav = proposal.proposal is AiProposal.OpenTool
+    val c = DroidKitTheme.colors
+    val fg = if (proposal.allowed) c.brandPrimary else c.textSecondary
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = if (proposal.allowed) MaterialTheme.colorScheme.secondaryContainer
-        else MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(10.dp),
+        color = if (proposal.allowed) c.raise else c.panel,
+        border = BorderStroke(1.dp, c.lineNeutral),
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = proposal.allowed, onClick = onClick),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (!isNav) {
                 Icon(
                     Icons.Outlined.Terminal,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = fg,
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(Modifier.width(8.dp))
@@ -503,16 +502,16 @@ private fun ProposalChip(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     label,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.5.sp),
                     fontFamily = if (isNav) null else FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = fg,
                     maxLines = 2,
                 )
                 proposal.blockedReason?.let {
                     Text(
                         it,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error,
+                        color = c.statusError,
                     )
                 }
             }
@@ -520,29 +519,36 @@ private fun ProposalChip(
                 if (isNav) Icons.AutoMirrored.Outlined.ArrowForward
                 else Icons.Outlined.PlayArrow,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                tint = fg,
                 modifier = Modifier.size(18.dp),
             )
         }
     }
 }
 
-/** Small circular AI glyph — left of assistant bubbles, centered in hero/gate. */
+/** AI glyph tile (mockup `.avatar`): gradient wash + brand hairline, rounded square. */
 @Composable
 private fun AssistantAvatar(size: Dp = 28.dp, iconSize: Dp = 16.dp) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.size(size),
+    val c = DroidKitTheme.colors
+    val corner = when {
+        size >= 64.dp -> 18.dp
+        size >= 56.dp -> 16.dp
+        else -> 10.dp
+    }
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(corner))
+            .background(c.tileGradient)
+            .border(1.dp, c.lineBrand, RoundedCornerShape(corner)),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                Icons.Outlined.SmartToy,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(iconSize),
-            )
-        }
+        Icon(
+            Icons.Outlined.SmartToy,
+            contentDescription = null,
+            tint = c.brandPrimary,
+            modifier = Modifier.size(iconSize),
+        )
     }
 }
 
@@ -576,7 +582,7 @@ private fun TypingIndicator() {
                         .size(7.dp)
                         .clip(CircleShape)
                         .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                            DroidKitTheme.colors.textSecondary
                                 .copy(alpha = 0.25f + 0.75f * wave),
                         ),
                 )
@@ -585,22 +591,25 @@ private fun TypingIndicator() {
     }
 }
 
-/** Rounded suggestion pill — hero prompts and follow-up chips share it. */
+/** Suggestion chip (mockup `.chip`): panel tile with a neutral hairline. */
 @Composable
 private fun PromptChip(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val c = DroidKitTheme.colors
     Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(10.dp),
+        color = c.panel,
+        border = BorderStroke(1.dp, c.lineNeutral),
         modifier = modifier.clickable(onClick = onClick),
     ) {
         Text(
             text,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+            color = c.textPrimary,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
         )
     }
 }
@@ -613,44 +622,66 @@ private fun AiChatComposer(
     canSend: Boolean,
     onSend: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        TextField(
-            value = input,
-            onValueChange = onInputChange,
-            modifier = Modifier.weight(1f),
-            placeholder = { Text("Ask DroidKit…") },
-            shape = RoundedCornerShape(26.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-            ),
-            maxLines = 4,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(
-                onSend = { if (canSend) onSend() },
-            ),
-        )
-        Surface(
-            shape = CircleShape,
-            color = if (canSend) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.padding(start = 8.dp).size(44.dp),
-        ) {
-            IconButton(onClick = onSend, enabled = canSend) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.Send,
-                    contentDescription = "Send",
-                    tint = if (canSend) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+    val c = DroidKitTheme.colors
+    // mockup .chatform — panel bar under a hairline.
+    Surface(color = c.panel) {
+        Column {
+            DroidKitHairline()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                TextField(
+                    value = input,
+                    onValueChange = onInputChange,
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Ask DroidKit…") },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = c.field,
+                        unfocusedContainerColor = c.field,
+                        focusedTextColor = c.textPrimary,
+                        unfocusedTextColor = c.textPrimary,
+                        cursorColor = c.brandPrimary,
+                        focusedPlaceholderColor = c.faint,
+                        unfocusedPlaceholderColor = c.faint,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                    ),
+                    maxLines = 4,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(
+                        onSend = { if (canSend) onSend() },
+                    ),
                 )
+                // mockup .sendbtn — raise tile; gradient + glow once sendable.
+                Box(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (canSend) c.brandGradient
+                            else SolidColor(c.raise),
+                        )
+                        .border(
+                            1.dp,
+                            if (canSend) Color.Transparent else c.lineNeutral,
+                            RoundedCornerShape(12.dp),
+                        )
+                        .clickable(enabled = canSend, onClick = onSend),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.Send,
+                        contentDescription = "Send",
+                        tint = if (canSend) c.onBrand else c.textSecondary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
         }
     }

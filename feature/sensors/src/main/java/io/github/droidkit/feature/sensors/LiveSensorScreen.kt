@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -178,7 +178,7 @@ fun LiveSensorScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = {
                                 if (recording) {
                                     recording = false
@@ -190,7 +190,7 @@ fun LiveSensorScreen(
                             modifier = Modifier.padding(top = 8.dp),
                         ) { Text(if (recording) "Stop" else "Record") }
                         if (!recording && samples.isNotEmpty()) {
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     val sensorName = sensor.name.replace(" ", "_")
                                     val csv = buildString {

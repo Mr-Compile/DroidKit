@@ -27,14 +27,14 @@ import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Wifi
-import androidx.compose.material3.AlertDialog
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -184,7 +184,7 @@ fun NfcWriteScreen(
                 SectionCard(title = "Add record") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FormKind.entries.forEach { k ->
-                            FilterChip(
+                            DroidKitFilterChip(
                                 selected = kind == k,
                                 onClick = { kind = k },
                                 label = { Text(k.label) },
@@ -203,7 +203,7 @@ fun NfcWriteScreen(
                             Field(uri, { uri = it }, "https://example.com", KeyboardType.Uri)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 LINK_PRESETS.take(6).forEach { (label, prefix) ->
-                                    FilterChip(
+                                    DroidKitFilterChip(
                                         selected = false,
                                         onClick = { if (!uri.startsWith(prefix)) uri = prefix },
                                         label = { Text(label) },
@@ -233,7 +233,7 @@ fun NfcWriteScreen(
                             Field(wifiSsid, { wifiSsid = it }, "Network name (SSID)")
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 WifiSecurity.entries.forEach { sec ->
-                                    FilterChip(
+                                    DroidKitFilterChip(
                                         selected = wifiSecurity == sec,
                                         onClick = { wifiSecurity = sec },
                                         label = { Text(sec.label) },
@@ -241,7 +241,7 @@ fun NfcWriteScreen(
                                 }
                             }
                             if (wifiSecurity != WifiSecurity.OPEN) {
-                                OutlinedTextField(
+                                DroidKitTextField(
                                     value = wifiKey,
                                     onValueChange = { wifiKey = it },
                                     label = { Text("Password") },
@@ -275,7 +275,7 @@ fun NfcWriteScreen(
                             )
                         }
                         FormKind.GEO -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
+                            DroidKitTextField(
                                 value = geoLat,
                                 onValueChange = { geoLat = it },
                                 label = { Text("Latitude") },
@@ -285,7 +285,7 @@ fun NfcWriteScreen(
                                 ),
                                 modifier = Modifier.weight(1f).padding(top = 8.dp),
                             )
-                            OutlinedTextField(
+                            DroidKitTextField(
                                 value = geoLng,
                                 onValueChange = { geoLng = it },
                                 label = { Text("Longitude") },
@@ -321,7 +321,7 @@ fun NfcWriteScreen(
                                     4.toShort() to "External",
                                     6.toShort() to "Unknown",
                                 ).forEach { (tnf, label) ->
-                                    FilterChip(
+                                    DroidKitFilterChip(
                                         selected = rawTnf == tnf,
                                         onClick = { rawTnf = tnf },
                                         label = { Text(label) },
@@ -341,7 +341,7 @@ fun NfcWriteScreen(
                             modifier = Modifier.padding(top = 4.dp),
                         )
                     }
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { specs = specs + currentSpec() },
                         enabled = error == null,
                         modifier = Modifier.padding(top = 8.dp),
@@ -392,7 +392,7 @@ fun NfcWriteScreen(
                             copyable = false,
                         )
                     }
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { confirmWrite = true },
                         enabled = specs.isNotEmpty() && armed == null && message != null,
                         modifier = Modifier.padding(top = 8.dp),
@@ -407,7 +407,7 @@ fun NfcWriteScreen(
                             "Present the target tag to the back of the device now.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { viewModel.disarm() },
                             modifier = Modifier.padding(top = 8.dp),
                         ) { Text("Cancel") }
@@ -437,7 +437,7 @@ fun NfcWriteScreen(
     }
 
     if (confirmWrite) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { confirmWrite = false },
             title = { Text("Write to tag?") },
             text = {
@@ -467,7 +467,7 @@ private fun Field(
     label: String,
     keyboardType: KeyboardType = KeyboardType.Text,
 ) {
-    OutlinedTextField(
+    DroidKitTextField(
         value = value,
         onValueChange = onChange,
         label = { Text(label) },

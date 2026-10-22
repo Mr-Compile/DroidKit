@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitButton
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,7 +77,7 @@ fun SessionReviewScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         summary.ifBlank { "No results recorded" },
                         style = MaterialTheme.typography.titleSmall,
@@ -121,7 +121,7 @@ fun SessionReviewScreen(
             grouped.forEach { (category, results) ->
                 item { SectionHeader(category) }
                 items(results, key = { it.key }) { (testId, state) ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 val test = PhoneDoctorTests.findById(testId)
@@ -154,7 +154,7 @@ fun SessionReviewScreen(
             }
 
             item {
-                OutlinedTextField(
+                DroidKitTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text("Technician notes") },
@@ -164,7 +164,7 @@ fun SessionReviewScreen(
 
             item {
                 if (retryable.isNotEmpty()) {
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = {
                             viewModel.retryTests(retryable)
                             onRetry()
@@ -177,7 +177,7 @@ fun SessionReviewScreen(
             }
 
             item {
-                Button(
+                DroidKitButton(
                     onClick = {
                         viewModel.finishSession(notes)
                         onSaved()

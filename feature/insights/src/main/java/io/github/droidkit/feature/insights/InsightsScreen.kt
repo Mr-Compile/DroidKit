@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitButton
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,6 +35,7 @@ import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
+import io.github.droidkit.core.ui.components.StatTile
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,12 +61,12 @@ fun InsightsScreen(
         ) {
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = health.range == InsightRange.DAYS_30,
                         onClick = { viewModel.setRange(InsightRange.DAYS_30) },
                         label = { Text("30 days") },
                     )
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = health.range == InsightRange.ALL,
                         onClick = { viewModel.setRange(InsightRange.ALL) },
                         label = { Text("All time") },
@@ -78,7 +79,7 @@ fun InsightsScreen(
             val latest = health.latest
             if (latest == null) {
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("No completed diagnostics in this range.",
                                 style = MaterialTheme.typography.bodyMedium)
@@ -90,7 +91,7 @@ fun InsightsScreen(
                     }
                 }
                 item {
-                    Button(onClick = onStartDiagnostic, modifier = Modifier.fillMaxWidth()) {
+                    DroidKitButton(onClick = onStartDiagnostic, modifier = Modifier.fillMaxWidth()) {
                         Text("Start Full Diagnostic")
                     }
                 }
@@ -123,7 +124,7 @@ fun InsightsScreen(
 
                 item { SectionHeader("Pass rate per session") }
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             PassRateBars(points = health.sessions)
                             Text(
@@ -139,7 +140,7 @@ fun InsightsScreen(
                 item { SectionHeader("Tests needing attention") }
                 if (health.attention.isEmpty()) {
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 "No failed or skipped tests in range.",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -161,7 +162,7 @@ fun InsightsScreen(
                     val first = health.storage.first()
                     val last = health.storage.last()
                     val delta = last.freeBytes - first.freeBytes
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             TrendSparkline(points = health.storage)
                             InfoRow("Free space now", formatBytes(last.freeBytes), copyable = false)
@@ -178,7 +179,7 @@ fun InsightsScreen(
                         }
                     }
                 } else {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("No storage trend yet.", style = MaterialTheme.typography.bodyMedium)
                             Text(
@@ -206,7 +207,11 @@ fun InsightsScreen(
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         pair.forEach { (label, n) ->
-                            StatTile(label = label, value = n, modifier = Modifier.weight(1f))
+                            StatTile(
+                                number = "$n",
+                                label = label,
+                                modifier = Modifier.weight(1f),
+                            )
                         }
                         if (pair.size == 1) Spacer(modifier = Modifier.weight(1f))
                     }
@@ -219,7 +224,7 @@ fun InsightsScreen(
             } else {
                 val topMax = activity.topTools.maxOf { it.second }
                 items(activity.topTools, key = { it.first.id }) { (tool, n) ->
-                    Card(
+                    DroidKitCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onOpenTool(tool.route) },
@@ -265,7 +270,7 @@ private fun LatestHealthCard(
         passDeltaVsPrev < 0 -> "▼ ${-passDeltaVsPrev} fewer passed than ${fmtDay(previous.startedAtEpochMs)}"
         else -> "Same pass count as previous session"
     }
-    Card(modifier = Modifier.fillMaxWidth()) {
+    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -313,7 +318,7 @@ private fun LatestHealthCard(
 
 @Composable
 private fun AttentionCard(att: TestAttention, maxSeverity: Int) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(att.title, modifier = Modifier.weight(1f),

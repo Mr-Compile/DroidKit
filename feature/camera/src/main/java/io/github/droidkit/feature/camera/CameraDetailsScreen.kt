@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -179,7 +179,7 @@ private fun CameraCard(id: String, c: CameraCharacteristics) {
         // StreamConfigurationMap — output sizes per format, high-speed sizes.
         val map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
         if (map != null) {
-            OutlinedButton(
+            DroidKitOutlinedButton(
                 onClick = { showSizes = !showSizes },
                 modifier = Modifier.padding(top = 8.dp),
             ) { Text(if (showSizes) "Hide output sizes" else "Output sizes") }
@@ -227,7 +227,7 @@ private fun CameraCard(id: String, c: CameraCharacteristics) {
         }
 
         // Available mode lists — AE/AWB/AF, stabilization, scenes, effects.
-        OutlinedButton(
+        DroidKitOutlinedButton(
             onClick = { showModes = !showModes },
             modifier = Modifier.padding(top = 8.dp),
         ) { Text(if (showModes) "Hide modes" else "Modes & tuning") }

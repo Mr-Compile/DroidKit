@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -81,7 +81,7 @@ fun SpeakerTestScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center,
         ) {
-            Button(onClick = ::playTone, modifier = Modifier.fillMaxWidth()) {
+            DroidKitButton(onClick = ::playTone, modifier = Modifier.fillMaxWidth()) {
                 Text("Play 440 Hz tone (1 s)")
             }
             if (playCount > 0) {

@@ -1,10 +1,14 @@
 package io.github.droidkit.core.ui.navigation
 
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /** Width/height breakpoints mirrored from the suite's default rule for tests. */
 private const val WIDTH_MEDIUM_DP = 600
@@ -41,6 +45,23 @@ fun DroidKitNavigationSuite(
         content()
         return
     }
+    val c = DroidKitTheme.colors
+    val itemColors = NavigationSuiteDefaults.itemColors(
+        navigationBarItemColors = NavigationBarItemDefaults.colors(
+            selectedIconColor = c.onBrand,
+            selectedTextColor = c.brandPrimary,
+            unselectedIconColor = c.textSecondary,
+            unselectedTextColor = c.textSecondary,
+            indicatorColor = c.brandPrimary,
+        ),
+        navigationRailItemColors = NavigationRailItemDefaults.colors(
+            selectedIconColor = c.onBrand,
+            selectedTextColor = c.brandPrimary,
+            unselectedIconColor = c.textSecondary,
+            unselectedTextColor = c.textSecondary,
+            indicatorColor = c.brandPrimary,
+        ),
+    )
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             TOP_LEVEL_DESTINATIONS.forEach { dest ->
@@ -49,9 +70,11 @@ fun DroidKitNavigationSuite(
                     onClick = { onNavigate(dest.route) },
                     icon = { Icon(dest.icon, contentDescription = dest.label) },
                     label = { Text(dest.label) },
+                    colors = itemColors,
                 )
             }
         },
+        containerColor = c.ink,
         modifier = modifier,
         content = content,
     )

@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -75,7 +75,7 @@ fun AppsByPermissionScreen(
             } else {
                 items(g, key = { it.permission }) { group ->
                     val open = expanded[group.permission] == true
-                    Card(
+                    DroidKitCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { expanded[group.permission] = !open },

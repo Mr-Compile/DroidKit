@@ -1,11 +1,11 @@
 package io.github.droidkit.core.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,11 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.common.RecoveryAction
 import io.github.droidkit.core.common.UiProblem
 import io.github.droidkit.core.ui.R
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /** Human label for a recovery action — rendered on the button. */
 @Composable
@@ -45,20 +45,20 @@ fun UiProblemCard(
     onRecovery: (RecoveryAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val c = DroidKitTheme.colors
     val accent = when (problem.severity) {
-        UiProblem.Severity.INFO -> MaterialTheme.colorScheme.primary
-        UiProblem.Severity.WARNING -> MaterialTheme.colorScheme.tertiary
-        UiProblem.Severity.ERROR -> MaterialTheme.colorScheme.error
+        UiProblem.Severity.INFO -> c.statusInfo
+        UiProblem.Severity.WARNING -> c.statusWarning
+        UiProblem.Severity.ERROR -> c.statusError
     }
-    Card(
+    DroidKitCard(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
+        colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.06f)),
+        border = BorderStroke(1.dp, accent.copy(alpha = 0.3f)),
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(problem.title, style = MaterialTheme.typography.titleSmall, color = accent)
-            Text(problem.message, style = MaterialTheme.typography.bodyMedium)
+            Text(problem.message, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
             problem.technicalDetails?.let { details ->
                 var expanded by remember { mutableStateOf(false) }
                 TextButton(onClick = { expanded = !expanded }) {
@@ -72,16 +72,15 @@ fun UiProblemCard(
                 if (expanded) {
                     Text(
                         details,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = DroidKitTheme.extraTypography.technicalValue,
+                        color = c.textSecondary,
                     )
                 }
             }
             if (problem.recoveries.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     problem.recoveries.forEach { action ->
-                        TextButton(onClick = { onRecovery(action) }) {
+                        DroidKitOutlinedButton(onClick = { onRecovery(action) }) {
                             Text(action.label())
                         }
                     }

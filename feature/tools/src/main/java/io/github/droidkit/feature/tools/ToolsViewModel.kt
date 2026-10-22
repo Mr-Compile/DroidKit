@@ -56,6 +56,9 @@ class ToolsViewModel @Inject constructor(
 
     fun resolve(tool: Tool): ToolResolution = capabilityManager.resolve(tool)
 
+    /** Full catalog — backs the `.toolstat` counter on the Tools screen. */
+    fun allTools(): List<Tool> = registry.search("")
+
     fun toggleFavorite(tool: Tool) {
         viewModelScope.launch { settings.toggleFavorite(tool.id) }
     }

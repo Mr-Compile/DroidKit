@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,7 +62,7 @@ fun GattExplorerScreen(
             when (val s = state) {
                 is GattExplorerViewModel.State.Connecting -> item {
                     EmptyState("Connecting…")
-                    OutlinedButton(onClick = { viewModel.connect() }) { Text("Connect") }
+                    DroidKitOutlinedButton(onClick = { viewModel.connect() }) { Text("Connect") }
                 }
                 is GattExplorerViewModel.State.Failed -> item {
                     SectionCard(title = "Connection") {
@@ -71,7 +71,7 @@ fun GattExplorerScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                         )
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { viewModel.connect() },
                             modifier = Modifier.padding(top = 8.dp),
                         ) { Text("Retry") }
@@ -176,7 +176,7 @@ fun GattExplorerScreen(
 
     writeTarget?.let { (svcUuid, charUuid) ->
         val bytes = writeHex.toByteArrayOrNull()
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { writeTarget = null },
             title = { Text("Write characteristic?") },
             text = {
@@ -187,7 +187,7 @@ fun GattExplorerScreen(
                             "as hex (e.g. 01 A3 FF).",
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = writeHex,
                         onValueChange = { writeHex = it },
                         label = { Text("Payload hex") },

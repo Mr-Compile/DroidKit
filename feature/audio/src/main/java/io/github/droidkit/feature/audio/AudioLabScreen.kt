@@ -18,12 +18,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -149,7 +149,7 @@ fun AudioLabScreen(onBack: () -> Unit) {
                         modifier = Modifier.padding(top = 8.dp),
                     ) {
                         listOf(125, 440, 1000, 4000).forEach { f ->
-                            FilterChip(
+                            DroidKitFilterChip(
                                 selected = freq == f,
                                 onClick = { freq = f },
                                 label = { Text("$f Hz") },
@@ -158,11 +158,11 @@ fun AudioLabScreen(onBack: () -> Unit) {
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (playing) {
-                            OutlinedButton(onClick = { player.stop(); playing = false }) {
+                            DroidKitOutlinedButton(onClick = { player.stop(); playing = false }) {
                                 Text("Stop")
                             }
                         } else {
-                            Button(onClick = {
+                            DroidKitButton(onClick = {
                                 player.play(
                                     AudioInfo.sinePcm16(freq.toDouble(), 1000, channel = channel),
                                     AudioInfo.TONE_SAMPLE_RATE,
@@ -190,7 +190,7 @@ fun AudioLabScreen(onBack: () -> Unit) {
                             AudioInfo.CHANNEL_LEFT to "Left only",
                             AudioInfo.CHANNEL_RIGHT to "Right only",
                         ).forEach { (c, label) ->
-                            FilterChip(
+                            DroidKitFilterChip(
                                 selected = channel == c,
                                 onClick = { channel = c },
                                 label = { Text(label) },
@@ -234,9 +234,9 @@ fun AudioLabScreen(onBack: () -> Unit) {
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (micOn) {
-                            OutlinedButton(onClick = { micOn = false }) { Text("Stop") }
+                            DroidKitOutlinedButton(onClick = { micOn = false }) { Text("Stop") }
                         } else {
-                            Button(onClick = {
+                            DroidKitButton(onClick = {
                                 micPerm.launch(Manifest.permission.RECORD_AUDIO)
                             }) { Text("Start meter") }
                         }

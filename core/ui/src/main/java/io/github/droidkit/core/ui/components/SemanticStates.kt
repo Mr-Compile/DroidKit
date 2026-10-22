@@ -4,30 +4,32 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.SentimentDissatisfied
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import io.github.droidkit.core.common.RecoveryAction
 import io.github.droidkit.core.common.UiProblem
 import io.github.droidkit.core.ui.R
 import io.github.droidkit.core.ui.theme.DroidKitSpacing
-import io.github.droidkit.core.ui.theme.DroidKitStatusColors
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
- * V5 semantic state components (docs/03_design_system/uiux_v5/semantics/03_SEMANTIC_STATE_MODEL.md).
+ * V5 semantic state components (docs/03_design_system/uiux_v5/semantics/03_SEMANTIC_STATE_MODEL.md),
+ * styled per `mockups/improved-index.html` (`.gatecard`, `.spin`, `.progress-line`).
  * Each state explains what happened and offers the next action where one exists.
  * Shared UI never calls repositories or system APIs — screens own the actions.
  */
 
-/** Indeterminate loading with an optional friendly label. */
+/** Indeterminate loading (mockup `.spin`); optional friendly label. */
 @Composable
 fun LoadingState(modifier: Modifier = Modifier, label: String? = null) {
     Column(
@@ -35,8 +37,12 @@ fun LoadingState(modifier: Modifier = Modifier, label: String? = null) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(DroidKitSpacing.Md),
     ) {
-        CircularProgressIndicator()
-        label?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+        androidx.compose.material3.CircularProgressIndicator(
+            color = DroidKitTheme.colors.brandPrimary,
+        )
+        label?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = DroidKitTheme.colors.textSecondary)
+        }
     }
 }
 
@@ -46,7 +52,8 @@ fun OfflineState(modifier: Modifier = Modifier, onRetry: (() -> Unit)? = null) {
     SemanticPanel(
         title = stringResource(R.string.dk_state_offline_title),
         message = stringResource(R.string.dk_state_offline_message),
-        accent = DroidKitStatusColors.Info,
+        accent = DroidKitTheme.colors.statusInfo,
+        icon = Icons.Outlined.CloudOff,
         actionLabel = if (onRetry != null) stringResource(R.string.dk_state_offline_retry) else null,
         onAction = onRetry,
         modifier = modifier,
@@ -59,7 +66,8 @@ fun UnsupportedState(title: String, modifier: Modifier = Modifier, detail: Strin
     SemanticPanel(
         title = title,
         message = detail ?: stringResource(R.string.dk_state_unsupported_fallback),
-        accent = DroidKitStatusColors.Unsupported,
+        accent = DroidKitTheme.colors.statusUnsupported,
+        icon = Icons.Outlined.SentimentDissatisfied,
         modifier = modifier,
     )
 }
@@ -76,7 +84,8 @@ fun SetupRequiredState(
     SemanticPanel(
         title = title,
         message = instructions ?: stringResource(R.string.dk_state_setup_fallback),
-        accent = DroidKitStatusColors.SetupRequired,
+        accent = DroidKitTheme.colors.statusSetupRequired,
+        icon = Icons.Outlined.Lock,
         actionLabel = actionLabel,
         onAction = onAction,
         modifier = modifier,
@@ -93,45 +102,42 @@ fun FriendlyErrorState(
     UiProblemCard(problem = problem, onRecovery = onRecovery, modifier = modifier)
 }
 
-/** Session progress; [progress] null renders indeterminate. */
+/** Session progress (mockup `.progress-line`); [progress] null renders indeterminate. */
 @Composable
 fun DiagnosticProgress(progress: Float?, modifier: Modifier = Modifier, label: String? = null) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(DroidKitSpacing.Xs),
     ) {
-        label?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
-        if (progress == null) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        } else {
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
+        label?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.labelSmall,
+                color = DroidKitTheme.colors.textSecondary,
             )
         }
+        DroidKitProgressLine(progress)
     }
 }
 
+/** Shared restriction/gate surface — renders as the mockup `.gatecard`. */
 @Composable
 private fun SemanticPanel(
     title: String,
     message: String,
     accent: androidx.compose.ui.graphics.Color,
+    icon: ImageVector,
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth().padding(DroidKitSpacing.Xxl),
-        verticalArrangement = Arrangement.spacedBy(DroidKitSpacing.Sm),
+    GateCard(
+        title = title,
+        message = message,
+        icon = icon,
+        accent = accent,
+        modifier = modifier,
     ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.titleSmall,
-            color = accent,
-            modifier = Modifier.semantics { heading() },
-        )
-        Text(message, style = MaterialTheme.typography.bodyMedium)
         if (actionLabel != null && onAction != null) {
             TextButton(onClick = onAction) { Text(actionLabel) }
         }

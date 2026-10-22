@@ -22,12 +22,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -129,7 +129,7 @@ fun AdbScreen(
                         )
                     } else {
                         InfoRow("Connected", session!!, copyable = true)
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { viewModel.disconnect() },
                             enabled = !busy,
                             modifier = Modifier.padding(top = 8.dp),
@@ -149,7 +149,7 @@ fun AdbScreen(
                     )
                     GuidedStateText(pairingState)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = {
                                 viewModel.startPairing()
                                 if (Build.VERSION.SDK_INT >= 33) {
@@ -165,7 +165,7 @@ fun AdbScreen(
                                 },
                             )
                         }
-                        OutlinedButton(onClick = { openDevOptions(context) }) {
+                        DroidKitOutlinedButton(onClick = { openDevOptions(context) }) {
                             Text("Open Developer options")
                         }
                         if (pairingState !is AdbPairingState.Idle &&
@@ -174,14 +174,14 @@ fun AdbScreen(
                             TextButton(onClick = { viewModel.stopPairing() }) { Text("Stop") }
                         }
                     }
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = pairingCode,
                         onValueChange = { viewModel.pairingCode.value = it },
                         label = { Text("Pairing code (6 digits)") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                     )
-                    Button(
+                    DroidKitButton(
                         onClick = { viewModel.submitPairingCode() },
                         enabled = !busy && pairingState is AdbPairingState.EndpointFound,
                     ) { Text("Pair") }
@@ -202,7 +202,7 @@ fun AdbScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { viewModel.autoConnect() },
                         enabled = !busy && session == null,
                     ) {
@@ -226,11 +226,11 @@ fun AdbScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { viewModel.showQrForOtherDevice() },
                             enabled = !busy,
                         ) { Text("Show QR") }
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = {
                                 qrImagePicker.launch(
                                     PickVisualMediaRequest(
@@ -271,7 +271,7 @@ fun AdbScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = pairingHost,
                             onValueChange = { viewModel.pairingHost.value = it },
                             label = { Text("Host / IP") },
@@ -279,14 +279,14 @@ fun AdbScreen(
                             singleLine = true,
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
+                            DroidKitTextField(
                                 value = pairingPort,
                                 onValueChange = { viewModel.pairingPort.value = it },
                                 label = { Text("Pairing port") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                             )
-                            OutlinedTextField(
+                            DroidKitTextField(
                                 value = connectPort,
                                 onValueChange = { viewModel.connectPort.value = it },
                                 label = { Text("Connect port") },
@@ -294,7 +294,7 @@ fun AdbScreen(
                                 singleLine = true,
                             )
                         }
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = connectHost,
                             onValueChange = { viewModel.connectHost.value = it },
                             label = { Text("Connect host (blank = pairing host)") },
@@ -315,11 +315,11 @@ fun AdbScreen(
                             Text("TLS")
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = { viewModel.pair() },
                                 enabled = !busy,
                             ) { Text("Pair manually") }
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = { viewModel.connect() },
                                 enabled = !busy,
                             ) { Text("Connect manually") }
@@ -331,7 +331,7 @@ fun AdbScreen(
             if (session != null) {
                 item {
                     SectionCard(title = "Device properties") {
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { viewModel.loadDeviceProps() },
                             enabled = !busy,
                         ) { Text("Read device info") }
@@ -344,14 +344,14 @@ fun AdbScreen(
                 item {
                     SectionCard(title = "Logcat") {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
+                            DroidKitTextField(
                                 value = logLines,
                                 onValueChange = { viewModel.logLines.value = it },
                                 label = { Text("Lines") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                             )
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = { viewModel.readLog() },
                                 enabled = !busy,
                                 modifier = Modifier.padding(top = 8.dp),
@@ -382,7 +382,7 @@ fun AdbScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { confirmReboot = true },
                             enabled = !busy,
                         ) { Text("Reboot device") }
@@ -393,7 +393,7 @@ fun AdbScreen(
     }
 
     if (confirmReboot) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { confirmReboot = false },
             title = { Text("Reboot this device?") },
             text = { Text("The device will power off and restart immediately. Unsaved work in other apps is lost.") },

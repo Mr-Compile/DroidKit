@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -75,7 +75,7 @@ fun MotionPatternScreen(onBack: () -> Unit) {
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Pattern.entries.forEach { p ->
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = pattern == p,
                         onClick = { pattern = p },
                         label = { Text(p.label) },
@@ -84,7 +84,7 @@ fun MotionPatternScreen(onBack: () -> Unit) {
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(4000 to "Slow", 2000 to "Medium", 800 to "Fast").forEach { (ms, label) ->
-                    FilterChip(
+                    DroidKitFilterChip(
                         selected = speedMs == ms,
                         onClick = { speedMs = ms },
                         label = { Text(label) },

@@ -1,6 +1,10 @@
 package io.github.droidkit.onboarding
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,13 +15,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,12 +34,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.ui.theme.DroidKitMark
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -96,88 +111,142 @@ fun OnboardingScreen(
 
     // No topBar here — without safeDrawing the Skip row can slide under the
     // status bar (Scaffold's default insets leave the top to a topBar).
+    val c = DroidKitTheme.colors
     Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = ::finish) { Text("Skip") }
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            // mockup .obw.a/.b — radial brand washes bleeding off the corners.
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(c.brandPrimary.copy(alpha = 0.12f), Color.Transparent),
+                        center = Offset(-10f, -10f),
+                        radius = size.minDimension * 0.9f,
+                    ),
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(c.brandPrimary.copy(alpha = 0.12f), Color.Transparent),
+                        center = Offset(size.width + 10f, size.height + 10f),
+                        radius = size.minDimension * 0.9f,
+                    ),
+                )
             }
-
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.weight(1f),
-            ) { index ->
-                val page = pages[index]
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+            Column(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                 ) {
-                    Icon(
-                        page.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(Modifier.height(32.dp))
-                    Text(
-                        page.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center,
-                    )
-                    page.tagline?.let {
-                        Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = ::finish) { Text("Skip") }
+                }
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.weight(1f),
+                ) { index ->
+                    val page = pages[index]
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        // mockup .obic — 96dp gradient tile with brand hairline.
+                        Box(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(RoundedCornerShape(26.dp))
+                                .background(c.tileGradient)
+                                .border(1.dp, c.lineBrand, RoundedCornerShape(26.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                page.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(44.dp),
+                                tint = c.brandPrimary,
+                            )
+                        }
+                        page.tagline?.let {
+                            Text(
+                                it.uppercase(),
+                                style = DroidKitTheme.extraTypography.microLabel.copy(
+                                    fontSize = 10.sp,
+                                    letterSpacing = 3.sp,
+                                ),
+                                textAlign = TextAlign.Center,
+                                color = c.brandPrimary,
+                                modifier = Modifier.padding(top = 18.dp),
+                            )
+                        }
                         Text(
-                            it.uppercase(),
-                            style = MaterialTheme.typography.labelMedium,
+                            page.title,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontSize = 21.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.3).sp,
+                            ),
                             textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 2.sp,
+                            color = c.textPrimary,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                        Text(
+                            page.body,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = c.textSecondary,
+                            modifier = Modifier.padding(top = 14.dp).widthIn(max = 300.dp),
                         )
                     }
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        page.body,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
-            }
 
-            // Page dots
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                repeat(pages.size) { i ->
-                    val active = i == pagerState.currentPage
-                    Text(
-                        if (active) "●" else "○",
-                        color = if (active) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                    )
-                }
-            }
-
-            Button(
-                onClick = {
-                    if (pagerState.currentPage < pages.lastIndex) {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
-                    } else {
-                        finish()
+                // mockup .obdot — raise dots; active is gradient + glow.
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 18.dp),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    repeat(pages.size) { i ->
+                        val active = i == pagerState.currentPage
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 5.dp)
+                                .size(6.dp)
+                                .then(
+                                    if (active) {
+                                        Modifier.shadow(
+                                            elevation = 8.dp,
+                                            shape = CircleShape,
+                                            clip = false,
+                                            ambientColor = c.brandGlow,
+                                            spotColor = c.brandGlow,
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
+                                )
+                                .clip(CircleShape)
+                                .background(
+                                    if (active) c.brandGradient
+                                    else SolidColor(c.raise),
+                                ),
+                        )
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(if (pagerState.currentPage < pages.lastIndex) "Next" else "Get started")
+                }
+
+                DroidKitButton(
+                    onClick = {
+                        if (pagerState.currentPage < pages.lastIndex) {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
+                        } else {
+                            finish()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(if (pagerState.currentPage < pages.lastIndex) "Next" else "Get started")
+                }
             }
         }
     }

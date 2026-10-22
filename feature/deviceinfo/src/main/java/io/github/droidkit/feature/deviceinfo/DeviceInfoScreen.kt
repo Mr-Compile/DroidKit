@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
+import io.github.droidkit.core.ui.components.DroidKitButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -168,7 +168,7 @@ fun DeviceInfoScreen(
                         elevatedProvider == null && advanced == null ->
                             InfoRow("Elevated provider", "Not available — set up wireless ADB or root in Permission Center")
                         advanced == null && !advancedLoading ->
-                            Button(onClick = { viewModel.loadAdvancedDetail() }) {
+                            DroidKitButton(onClick = { viewModel.loadAdvancedDetail() }) {
                                 Text("Load advanced detail")
                             }
                     }
@@ -230,7 +230,7 @@ private fun ColumnScope.SimSectionBody(viewModel: DeviceInfoViewModel) {
         }
         RuntimePermissionState.DENIED_REQUESTABLE -> {
             InfoRow("SIM detail", "Permission required for carrier, number and network state")
-            Button(onClick = { phoneReq.request() }, modifier = Modifier.fillMaxWidth()) {
+            DroidKitButton(onClick = { phoneReq.request() }, modifier = Modifier.fillMaxWidth()) {
                 Text("Grant phone access")
             }
         }

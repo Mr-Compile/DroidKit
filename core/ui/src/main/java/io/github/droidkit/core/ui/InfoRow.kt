@@ -1,12 +1,14 @@
 package io.github.droidkit.core.ui
 
 import android.content.ClipData
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -16,12 +18,20 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 import kotlinx.coroutines.launch
 
+/**
+ * Key/value row (mockup `.inforow`): subdued label, right-aligned monospace
+ * technical value, bordered `.copybtn` affordance.
+ */
 @Composable
 fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
+    val c = DroidKitTheme.colors
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val shown = value ?: stringResource(R.string.dk_not_exposed)
@@ -30,23 +40,44 @@ fun InfoRow(label: String, value: String?, copyable: Boolean = true) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            label,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+            color = c.textSecondary,
+        )
         Text(
             shown,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1.2f),
+            style = DroidKitTheme.extraTypography.technicalValue.let {
+                if (value == null) it.copy(fontStyle = FontStyle.Italic) else it
+            },
+            color = if (value == null) c.faint else c.textPrimary,
             textAlign = TextAlign.End,
         )
         if (copyable && value != null) {
-            TextButton(
+            Surface(
                 onClick = {
                     scope.launch {
                         clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, "$label: $value")))
                     }
                 },
-                modifier = Modifier.semantics { contentDescription = copyDescription },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .semantics { contentDescription = copyDescription },
+                shape = RoundedCornerShape(6.dp),
+                color = androidx.compose.ui.graphics.Color.Transparent,
+                border = BorderStroke(1.dp, c.lineNeutral),
             ) {
-                Text(stringResource(R.string.dk_copy))
+                Text(
+                    stringResource(R.string.dk_copy),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    ),
+                    color = c.brandPrimary,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                )
             }
         }
     }

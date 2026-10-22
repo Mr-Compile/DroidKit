@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +56,7 @@ private fun AboutSubScreen(
 fun AboutWhatIsScreen(onBack: () -> Unit) {
     AboutSubScreen(title = "What is DroidKit?", onBack = onBack) {
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -91,7 +91,7 @@ fun AboutFeaturesScreen(
         viewModel.toolsByCategory.forEach { (category, tools) ->
             item { SectionHeader(category.label()) }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         tools.forEach { tool ->
                             Row(
@@ -140,7 +140,7 @@ private fun ToolCategory.label(): String = when (this) {
 fun AboutWhatsNewScreen(onBack: () -> Unit) {
     AboutSubScreen(title = "What's New", onBack = onBack) {
         items(ReleaseNotes.releases, key = { it.version }) { release ->
-            Card(modifier = Modifier.fillMaxWidth()) {
+            DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         "DroidKit ${release.version}",
@@ -170,7 +170,7 @@ fun AboutHelpScreen(onBack: () -> Unit) {
         HelpContent.categories.forEach { category ->
             item { SectionHeader(category.title) }
             items(category.entries, key = { it.question }) { entry ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             entry.question,
@@ -201,7 +201,7 @@ fun AboutLicensesScreen(onBack: () -> Unit) {
             )
         }
         items(OpenSourceLicenses.entries, key = { it.component }) { entry ->
-            Card(modifier = Modifier.fillMaxWidth()) {
+            DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(entry.component, style = MaterialTheme.typography.titleSmall)
                     Text(

@@ -1,7 +1,6 @@
 package io.github.droidkit.core.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -17,8 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.droidkit.core.ui.theme.DroidKitBrand
 import io.github.droidkit.core.ui.theme.DroidKitMark
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 /**
  * Brand lockup for app chrome: the hex mark beside the two-tone
@@ -29,8 +28,7 @@ fun DroidKitWordmark(
     modifier: Modifier = Modifier,
     markSize: Dp = 26.dp,
 ) {
-    val kitColor =
-        if (isSystemInDarkTheme()) DroidKitBrand.Green else DroidKitBrand.GreenOnLight
+    val c = DroidKitTheme.colors
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Image(
             imageVector = DroidKitMark,
@@ -40,10 +38,10 @@ fun DroidKitWordmark(
         Spacer(Modifier.width(8.dp))
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
+                withStyle(SpanStyle(color = c.textPrimary)) {
                     append("Droid")
                 }
-                withStyle(SpanStyle(color = kitColor)) { append("Kit") }
+                withStyle(SpanStyle(color = c.brandPrimary)) { append("Kit") }
             },
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,

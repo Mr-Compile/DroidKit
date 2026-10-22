@@ -7,18 +7,17 @@ no emulator, no device.
 ## Two files
 
 - **`index.html`** — canonical mockup. Mirrors the app's *current* UI and stays
-  synchronized with implementation per `AGENTS.md`.
-- **`improved-index.html`** — design-direction preview: the same replica
-  restyled in the "Dark Instrument" language (v5 spec: Dark Technical +
-  Minimalism + Bento + Aurora accents + restrained glass, minus the Material
-  look). Ink surfaces, green→teal gradient accents, hairline borders,
-  letterspaced micro-labels, monospace technical values, status dots — the
-  splash's identity carried through the whole app. Also demos the component
-  layer the reskin adds: `.res` verdict pills on every PASS/FAIL/state
-  surface, a shared `.gatecard` for permission/elevated-access gates,
-  per-reason dots in tool availability, card press feedback, and a real
-  loading vocabulary (`.spin` inline loaders, `.skeleton` shimmer). Dark-first,
-  light theme included (toggle in Settings). Proposal only — not yet the app.
+  synchronized with implementation per `AGENTS.md`. The app ships the "Dark
+  Instrument" reskin: ink surfaces, green→teal gradient accents, hairline
+  borders, letterspaced micro-labels, monospace technical values, status dots,
+  `.res` verdict pills, a shared `.gatecard` for permission/elevated-access
+  gates, card press feedback, and a loading vocabulary (`.spin`, `.skeleton`).
+  Dark-first, light theme included (toggle in Settings).
+- **`improved-index.html`** — the original "Dark Instrument" design-direction
+  preview that drove the reskin (v5 spec: Dark Technical + Minimalism + Bento +
+  Aurora accents + restrained glass, minus the Material look). Kept as the
+  design reference; the canonical mockup now mirrors it because the reskin
+  shipped.
 
 ## Open it
 

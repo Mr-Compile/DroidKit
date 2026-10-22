@@ -24,8 +24,8 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -33,8 +33,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -134,7 +134,7 @@ fun FilesScreen(
                         actionLabel = "Set up wireless ADB",
                         onAction = onOpenAdbSetup,
                     )
-                    OutlinedButton(onClick = { safPicker.launch(null) }) {
+                    DroidKitOutlinedButton(onClick = { safPicker.launch(null) }) {
                         Text("Browse via Storage Access Framework")
                     }
                     Text(
@@ -158,7 +158,7 @@ fun FilesScreen(
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
                             label = { Text("Search names under here") },
@@ -241,7 +241,7 @@ fun FilesScreen(
     }
 
     preview?.let { p ->
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { viewModel.clearPreview() },
             title = { Text(p.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {

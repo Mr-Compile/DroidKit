@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -125,10 +125,10 @@ fun SessionCompareScreen(
                     SessionPicker(sessions, afterId) { afterId = it }
                 }
                 item {
-                    androidx.compose.material3.Button(
+                    io.github.droidkit.core.ui.components.DroidKitButton(
                         onClick = {
-                            val b = beforeId ?: return@Button
-                            val a = afterId ?: return@Button
+                            val b = beforeId ?: return@DroidKitButton
+                            val a = afterId ?: return@DroidKitButton
                             if (b != a) viewModel.compare(b, a)
                         },
                         enabled = beforeId != null && afterId != null && beforeId != afterId,
@@ -145,7 +145,7 @@ fun SessionCompareScreen(
                         item { Text("No state changes between sessions.", style = MaterialTheme.typography.bodyMedium) }
                     }
                     items(interesting, key = { it.testId }) { t ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -201,7 +201,7 @@ fun SessionCompareScreen(
                     if (r.snapshotDiffs.isNotEmpty()) {
                         item { SectionHeader("Device changes") }
                         items(r.snapshotDiffs, key = { it.label }) { d ->
-                            Card(modifier = Modifier.fillMaxWidth()) {
+                            DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(d.label, style = MaterialTheme.typography.labelLarge)
                                     Text(
@@ -230,7 +230,7 @@ private fun SessionPicker(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         sessions.forEach { s ->
-            FilterChip(
+            DroidKitFilterChip(
                 selected = selected == s.id,
                 onClick = { onSelect(s.id) },
                 label = {

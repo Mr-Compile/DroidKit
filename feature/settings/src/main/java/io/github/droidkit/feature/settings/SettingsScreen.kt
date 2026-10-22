@@ -13,8 +13,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.AiSurfaceCard
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitCard
+import io.github.droidkit.core.ui.components.DroidKitSegmentedRow
+import io.github.droidkit.core.ui.components.StatusDot
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +42,7 @@ import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.SectionHeader
 import io.github.droidkit.core.ui.theme.DroidKitMark
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,17 +73,15 @@ fun SettingsScreen(
         ) {
             item { SectionHeader("Appearance") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        ThemeMode.entries.forEach { mode ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(
-                                    selected = theme == mode,
-                                    onClick = { viewModel.setTheme(mode) },
-                                )
-                                Text(mode.name)
-                            }
-                        }
+                        // mockup .segcard theme control
+                        DroidKitSegmentedRow(
+                            options = ThemeMode.entries,
+                            selected = theme,
+                            onSelect = { viewModel.setTheme(it) },
+                            label = { it.name.lowercase().replaceFirstChar(Char::uppercase) },
+                        )
                         val dynamicColor by viewModel.dynamicColor.collectAsState()
                         val materialYouSupported =
                             android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
@@ -112,9 +114,9 @@ fun SettingsScreen(
                 var techInput by androidx.compose.runtime.remember(technician) {
                     androidx.compose.runtime.mutableStateOf(technician)
                 }
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        androidx.compose.material3.OutlinedTextField(
+                        io.github.droidkit.core.ui.components.DroidKitTextField(
                             value = techInput,
                             onValueChange = { techInput = it },
                             label = { Text("Technician name / signature") },
@@ -134,23 +136,40 @@ fun SettingsScreen(
 
             item { SectionHeader("Advanced access") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         providerStatuses.forEach { (kind, status) ->
-                            val label = when (status) {
-                                ProviderStatus.Ready -> "Ready"
-                                is ProviderStatus.NeedsSetup -> "Setup required — ${status.instructions}"
-                                is ProviderStatus.Unavailable -> status.reason
+                            // mockup provider row: .vdot + .provk + .t-mini.sub + Grant
+                            val (dot, label) = when (status) {
+                                ProviderStatus.Ready ->
+                                    DroidKitTheme.colors.statusSuccess to "Ready"
+                                is ProviderStatus.NeedsSetup ->
+                                    DroidKitTheme.colors.statusSetupRequired to
+                                        "Setup required — ${status.instructions}"
+                                is ProviderStatus.Unavailable ->
+                                    DroidKitTheme.colors.statusUnsupported to status.reason
                             }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                             ) {
-                                Text(
-                                    "${kind.name} — $label",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f),
-                                )
+                                StatusDot(dot, modifier = Modifier.padding(top = 3.dp))
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 9.dp),
+                                ) {
+                                    Text(
+                                        kind.name.uppercase(),
+                                        style = DroidKitTheme.extraTypography.microLabel,
+                                        color = DroidKitTheme.colors.faint,
+                                    )
+                                    Text(
+                                        label,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = DroidKitTheme.colors.textSecondary,
+                                    )
+                                }
                                 if (status is ProviderStatus.NeedsSetup) {
                                     TextButton(
                                         onClick = { viewModel.requestGrant(kind) },
@@ -172,7 +191,7 @@ fun SettingsScreen(
                 val log by viewModel.elevatedLog.collectAsState()
                 if (log.isNotEmpty()) {
                     SectionHeader("Elevated action history")
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             log.take(10).forEach { entry ->
                                 val time = java.text.SimpleDateFormat(
@@ -214,8 +233,8 @@ fun SettingsScreen(
                 var keyInput by androidx.compose.runtime.remember {
                     androidx.compose.runtime.mutableStateOf("")
                 }
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                AiSurfaceCard(modifier = Modifier.fillMaxWidth()) {
+                    Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Enable AI assistant", modifier = Modifier.weight(1f))
                             androidx.compose.material3.Switch(
@@ -231,7 +250,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         if (aiEnabled) {
-                            androidx.compose.material3.OutlinedTextField(
+                            io.github.droidkit.core.ui.components.DroidKitTextField(
                                 value = keyInput,
                                 onValueChange = { keyInput = it },
                                 label = { Text(if (aiHasKey) "Replace Groq API key" else "Groq API key") },
@@ -303,7 +322,7 @@ fun SettingsScreen(
 
             item { SectionHeader("Safety") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             "High-impact actions always show their exact consequence and ask " +
@@ -317,7 +336,7 @@ fun SettingsScreen(
 
             item { SectionHeader("Support & privacy") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         SettingsNavRow(
                             title = "Permissions & Access",
@@ -351,7 +370,7 @@ fun SettingsScreen(
 
             item { SectionHeader("About") }
             item {
-                Card(onClick = onOpenAbout, modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(onClick = onOpenAbout, modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -384,7 +403,7 @@ fun SettingsScreen(
     }
 
     if (showResetDialog) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { showResetDialog = false },
             title = { Text("Reset settings?") },
             text = {

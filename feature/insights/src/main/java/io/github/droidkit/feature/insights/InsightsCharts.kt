@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.droidkit.core.database.SessionHealth
 import io.github.droidkit.core.database.StoragePoint
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -44,10 +45,11 @@ fun VerdictDonut(
     total: Int,
     modifier: Modifier = Modifier,
 ) {
-    val passColor = MaterialTheme.colorScheme.primary
-    val failColor = MaterialTheme.colorScheme.error
-    val skipColor = MaterialTheme.colorScheme.outline
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val c = DroidKitTheme.colors
+    val passColor = c.statusSuccess
+    val failColor = c.statusError
+    val skipColor = c.statusUnsupported
+    val trackColor = c.raise
     val pct = if (total == 0) 0 else (pass * 100 / total)
     Box(modifier.size(104.dp), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -79,9 +81,10 @@ fun VerdictDonut(
             }
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$pct%", style = MaterialTheme.typography.titleLarge)
-            Text("passed", style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("$pct%", style = DroidKitTheme.extraTypography.statNumber,
+                color = DroidKitTheme.colors.textPrimary)
+            Text("passed", style = DroidKitTheme.extraTypography.microLabel,
+                color = DroidKitTheme.colors.faint)
         }
     }
 }
@@ -92,9 +95,9 @@ fun PassRateBars(
     points: List<SessionHealth>,
     modifier: Modifier = Modifier,
 ) {
-    val okColor = MaterialTheme.colorScheme.primary
-    val failColor = MaterialTheme.colorScheme.error
-    val lineColor = MaterialTheme.colorScheme.outline
+    val okColor = DroidKitTheme.colors.statusSuccess
+    val failColor = DroidKitTheme.colors.statusError
+    val lineColor = DroidKitTheme.colors.lineNeutral
     Column(modifier) {
         Canvas(modifier = Modifier.fillMaxWidth().height(96.dp)) {
             val baseline = size.height - 4.dp.toPx()
@@ -139,7 +142,7 @@ fun TrendSparkline(
     points: List<StoragePoint>,
     modifier: Modifier = Modifier,
 ) {
-    val color = MaterialTheme.colorScheme.primary
+    val color = DroidKitTheme.colors.brandPrimary
     Canvas(modifier = modifier.fillMaxWidth().height(44.dp)) {
         if (points.size < 2) return@Canvas
         val min = points.minOf { it.freeBytes }
@@ -162,26 +165,6 @@ fun TrendSparkline(
     }
 }
 
-/** Small counter tile for the activity grid. */
-@Composable
-fun StatTile(
-    label: String,
-    value: Int,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text("$value", style = MaterialTheme.typography.titleLarge)
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
 /** Thin severity/usage bar. */
 @Composable
 fun UsageBar(
@@ -198,7 +181,7 @@ fun UsageBar(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(2.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = DroidKitTheme.colors.raise,
         ) {}
         Surface(
             modifier = Modifier

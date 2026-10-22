@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -138,21 +138,21 @@ fun NetworkScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = wolMac,
                         onValueChange = { wolMac = it },
                         label = { Text("Target MAC (aa:bb:cc:dd:ee:ff)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     )
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = wolPort,
                         onValueChange = { wolPort = it },
                         label = { Text("Port (blank = 9)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     )
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { viewModel.sendWol(wolMac, wolPort) },
                         enabled = wolMac.isNotBlank(),
                         modifier = Modifier.padding(top = 8.dp),
@@ -183,7 +183,7 @@ fun NetworkScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { viewModel.startLanSweep() },
                         enabled = sweep !is ToolState.Running,
                         modifier = Modifier.padding(top = 8.dp),
@@ -222,7 +222,7 @@ fun NetworkScreen(
             item {
                 SectionCard(title = "Diagnostics") {
                     layers.forEach { LayerRow(it) }
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { viewModel.runDiagnostics() },
                         modifier = Modifier.padding(top = 8.dp),
                     ) { Text("Re-run") }
@@ -297,14 +297,14 @@ fun NetworkScreen(
 
             item {
                 SectionCard(title = "Port reachability") {
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = portHost,
                         onValueChange = { portHost = it },
                         label = { Text("Host or IP") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = portList,
                         onValueChange = { portList = it },
                         label = { Text("Ports (comma or space separated)") },
@@ -313,7 +313,7 @@ fun NetworkScreen(
                             .fillMaxWidth()
                             .padding(top = 8.dp),
                     )
-                    OutlinedButton(
+                    DroidKitOutlinedButton(
                         onClick = { viewModel.probePorts(portHost, portList) },
                         enabled = portHost.isNotBlank() && portList.isNotBlank(),
                         modifier = Modifier.padding(top = 8.dp),
@@ -390,14 +390,14 @@ fun NetworkScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        OutlinedTextField(
+                        DroidKitTextField(
                             value = serviceType,
                             onValueChange = { serviceType = it },
                             label = { Text("Service type") },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                         )
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = { viewModel.discoverServices(serviceType) },
                         ) { Text("Discover") }
                     }
@@ -538,14 +538,14 @@ private fun HostInput(
     label: String,
     onRun: () -> Unit,
 ) {
-    OutlinedTextField(
+    DroidKitTextField(
         value = value,
         onValueChange = onValue,
         label = { Text(label) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
-    OutlinedButton(
+    DroidKitOutlinedButton(
         onClick = onRun,
         enabled = value.isNotBlank(),
         modifier = Modifier.padding(top = 8.dp),

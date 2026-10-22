@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -16,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.droidkit.core.ui.components.DroidKitCard
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 
 /**
@@ -57,7 +57,7 @@ fun LabIndexScreen(
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium)
             }
             items(entries, key = { it.testId }) { entry ->
-                Card(
+                DroidKitCard(
                     onClick = { onOpenTest(entry.testId) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {

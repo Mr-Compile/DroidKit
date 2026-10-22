@@ -9,10 +9,13 @@ import io.github.droidkit.core.common.ToolCategory
 /**
  * V5 semantic tokens (docs/03_design_system/uiux_v5/foundation/02_TOKENS_COMPONENTS.md).
  * Status is never conveyed by color alone — consumers pair these with a label or icon.
+ * Dark-theme values; theme-aware resolution goes through
+ * `DroidKitTheme.colors.statusXxx` (light theme ships its own ramp).
  */
 object DroidKitStatusColors {
     val Success = Color(0xFF3CE88A)
     val Warning = Color(0xFFF6C453)
+    val Error = Color(0xFFFF7A6E)
     val Info = Color(0xFF14B8CC)
     val Unsupported = Color(0xFF8B95A3)
     val SetupRequired = Color(0xFFB08CFF)

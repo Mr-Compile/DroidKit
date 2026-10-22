@@ -23,11 +23,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Nfc
-import androidx.compose.material3.AlertDialog
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -165,7 +165,7 @@ fun NfcScreen(
                                 "NFC is off — enable it in system settings to scan tags.",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     context.startActivity(Intent(Settings.ACTION_NFC_SETTINGS))
                                 },
@@ -197,7 +197,7 @@ fun NfcScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.padding(top = 8.dp),
                             ) {
-                                OutlinedButton(onClick = {
+                                DroidKitOutlinedButton(onClick = {
                                     if (scanning || armed != null) {
                                         viewModel.disarm()
                                         activity?.let { viewModel.stopScan(it) }
@@ -205,7 +205,7 @@ fun NfcScreen(
                                         activity?.let { viewModel.startScan(it) }
                                     }
                                 }) { Text(if (scanning || armed != null) "Pause" else "Resume") }
-                                OutlinedButton(onClick = onOpenWrite) { Text("Write") }
+                                DroidKitOutlinedButton(onClick = onOpenWrite) { Text("Write") }
                             }
                         }
                     }
@@ -321,26 +321,26 @@ fun NfcScreen(
                 item {
                     SectionCard(title = "Tag actions") {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = { confirmDuplicate = true },
                                 enabled = t.rawMessage != null,
                             ) { Text("Duplicate") }
                             if (t.formatable && !t.ndefCapable) {
-                                OutlinedButton(onClick = { confirmFormat = true }) {
+                                DroidKitOutlinedButton(onClick = { confirmFormat = true }) {
                                     Text("Format")
                                 }
                             }
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = { confirmErase = true },
                                 enabled = t.ndefCapable,
                             ) { Text("Erase") }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             val report = buildTagReport(t, viewModel.doctorChecks(t), techSections)
-                            OutlinedButton(onClick = {
+                            DroidKitOutlinedButton(onClick = {
                                 clipboard.setText(AnnotatedString(report))
                             }) { Text("Copy report") }
-                            OutlinedButton(onClick = {
+                            DroidKitOutlinedButton(onClick = {
                                 val send = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, report)
@@ -451,7 +451,7 @@ fun NfcScreen(
     }
 
     if (confirmErase) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { confirmErase = false },
             title = { Text("Erase tag?") },
             text = {
@@ -470,7 +470,7 @@ fun NfcScreen(
     }
 
     if (confirmFormat) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { confirmFormat = false },
             title = { Text("Format tag?") },
             text = {
@@ -489,7 +489,7 @@ fun NfcScreen(
     }
 
     if (confirmDuplicate) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { confirmDuplicate = false },
             title = { Text("Duplicate tag content?") },
             text = {

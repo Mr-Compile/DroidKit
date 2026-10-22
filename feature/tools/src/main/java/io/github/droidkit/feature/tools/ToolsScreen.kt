@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -51,6 +52,7 @@ import io.github.droidkit.core.ui.components.ToolIcons
 import io.github.droidkit.core.ui.components.ToolInfoDialog
 import io.github.droidkit.core.ui.components.UiProblemCard
 import io.github.droidkit.core.ui.components.openAppSettings
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 import io.github.droidkit.core.ui.theme.categoryAccent
 
 /** Browse order for the grouped list — same families as the product map/mockup. */
@@ -98,7 +100,7 @@ fun ToolsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                OutlinedTextField(
+                DroidKitTextField(
                     value = query,
                     onValueChange = viewModel::setQuery,
                     label = { Text("Search tools and pages") },
@@ -113,19 +115,34 @@ fun ToolsScreen(
             item {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     item {
-                        FilterChip(
+                        DroidKitFilterChip(
                             selected = category == null,
                             onClick = { viewModel.setCategory(null) },
                             label = { Text("All") },
                         )
                     }
                     items(viewModel.categories) { c ->
-                        FilterChip(
+                        DroidKitFilterChip(
                             selected = category == c,
                             onClick = { viewModel.setCategory(if (category == c) null else c) },
                             label = { Text(categoryLabel(c)) },
                         )
                     }
+                }
+            }
+            item {
+                // mockup .toolstat — catalog counters in letterspaced micro type.
+                val all = remember(providerStatuses) { viewModel.allTools() }
+                val readyCount = all.count {
+                    viewModel.resolve(it) is ToolResolution.Ready
+                }
+                Row(
+                    modifier = Modifier.padding(horizontal = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    ToolStat(count = all.size, label = "tools")
+                    ToolStat(count = readyCount, label = "ready now")
+                    ToolStat(count = all.size - readyCount, label = "need access")
                 }
             }
             val tools = viewModel.visibleTools()
@@ -231,6 +248,27 @@ fun ToolsScreen(
     }
 }
 
+/** `.toolstat` counter segment — teal number + uppercase faint label. */
+@Composable
+private fun ToolStat(count: Int, label: String) {
+    val c = DroidKitTheme.colors
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "$count",
+            style = DroidKitTheme.extraTypography.counterLabel.copy(
+                fontWeight = FontWeight.ExtraBold,
+            ),
+            color = c.brandSecondary,
+        )
+        Text(
+            label.uppercase(),
+            style = DroidKitTheme.extraTypography.counterLabel,
+            color = c.faint,
+            modifier = Modifier.padding(start = 4.dp),
+        )
+    }
+}
+
 /** Accent hue for non-tool search rows — grouping cue only, HELP stays neutral. */
 private fun SearchResultType.accentCategory(): ToolCategory? = when (this) {
     SearchResultType.PAGE -> ToolCategory.DEVICE
@@ -243,7 +281,7 @@ private fun SearchResultType.accentCategory(): ToolCategory? = when (this) {
 /** Uniform search-result row: icon, title, contextual subtitle (plan file 08). */
 @Composable
 private fun SearchResultRow(entry: SearchEntry, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    DroidKitCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,

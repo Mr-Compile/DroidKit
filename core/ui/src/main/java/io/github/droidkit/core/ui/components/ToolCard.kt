@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,11 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.droidkit.core.common.Tool
 import io.github.droidkit.core.common.ToolPhase
 import io.github.droidkit.core.privileges.BlockedReason
 import io.github.droidkit.core.privileges.ProviderStatus
 import io.github.droidkit.core.privileges.ToolResolution
+import io.github.droidkit.core.ui.theme.DroidKitTheme
 import io.github.droidkit.core.ui.theme.categoryAccent
 
 /**
@@ -39,7 +41,7 @@ fun AvailabilityBadge(resolution: ToolResolution, modifier: Modifier = Modifier)
 
 private fun availabilityPresentation(resolution: ToolResolution): Pair<StatusKind, String> =
     when (resolution) {
-        ToolResolution.Ready -> StatusKind.Info to "Ready"
+        ToolResolution.Ready -> StatusKind.Success to "Ready"
         is ToolResolution.Blocked -> when (val reason = dominantReason(resolution.reasons)) {
             is BlockedReason.NeedsProvider -> when (reason.status) {
                 is ProviderStatus.Unavailable ->
@@ -67,9 +69,10 @@ private fun dominantReason(reasons: List<BlockedReason>): BlockedReason? =
     }
 
 /**
- * Standard tool card (UI v6 plan file 05): semantic icon, name, short
- * description, category/release subtitle, one primary status badge and the
- * affordances. Detailed requirements live in [ToolInfoDialog], not the card.
+ * Standard tool card (mockup `.card` tool rows + plan file 05): `.tic` icon,
+ * title + availability badge on one row, short description, letterspaced
+ * `.toolmeta` category/release line, info + favorite affordances.
+ * Detailed requirements live in [ToolInfoDialog], not the card.
  */
 @Composable
 fun ToolCard(
@@ -80,47 +83,57 @@ fun ToolCard(
     onInfo: (() -> Unit)? = null,
     onClick: () -> Unit = {},
 ) {
+    val c = DroidKitTheme.colors
     // stateDescription lets TalkBack announce e.g. "NFC Lab, not supported"
     // (plan file 19); the visible badge label shares the same mapping.
     val availabilityLabel = availabilityPresentation(resolution).second.lowercase()
-    Card(
+    DroidKitCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .semantics { stateDescription = availabilityLabel },
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ToolIcon(ToolIcons.forTool(tool), accent = categoryAccent(tool.category))
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 10.dp),
             ) {
-                Text(tool.title, style = MaterialTheme.typography.titleMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        tool.title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.5.sp),
+                        color = c.textPrimary,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    AvailabilityBadge(
+                        resolution,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
                 Text(
                     tool.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = c.textSecondary,
+                    modifier = Modifier.padding(top = 2.dp),
                 )
                 Text(
                     buildString {
                         append(
-                            tool.category.name.lowercase()
-                                .replaceFirstChar { it.uppercase() },
+                            tool.category.name.uppercase(),
                         )
                         if (tool.phase != ToolPhase.V1) append(" · ${tool.phase.name}")
                     },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                // The badge lives inside the weighted column so it can never
-                // starve the text: it only makes the card taller, not narrower.
-                AvailabilityBadge(
-                    resolution,
-                    modifier = Modifier.padding(top = 8.dp),
+                    style = DroidKitTheme.extraTypography.microLabel,
+                    color = c.faint,
+                    modifier = Modifier.padding(top = 5.dp),
                 )
             }
             if (onInfo != null) {
@@ -128,6 +141,8 @@ fun ToolCard(
                     Icon(
                         imageVector = Icons.Outlined.Info,
                         contentDescription = "About ${tool.title}",
+                        tint = c.textSecondary,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
@@ -140,6 +155,7 @@ fun ToolCard(
                         } else {
                             "Add ${tool.title} to favorites"
                         },
+                        tint = if (isFavorite) c.statusWarning else c.raise,
                     )
                 }
             }

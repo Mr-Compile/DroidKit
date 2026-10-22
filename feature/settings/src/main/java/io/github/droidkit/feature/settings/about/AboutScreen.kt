@@ -20,8 +20,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -131,7 +131,7 @@ fun AboutScreen(
 
             item { SectionHeader("App information") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         AboutValueRow("Version", viewModel.appInfo.versionName)
                         AboutValueRow("Build number", viewModel.appInfo.versionCode.toString())
@@ -161,7 +161,7 @@ fun AboutScreen(
 
             item { SectionHeader("DroidKit") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         AboutActionRow("What is DroidKit?", onClick = onOpenWhatIs)
                         AboutActionRow("Features", onClick = onOpenFeatures)
@@ -172,7 +172,7 @@ fun AboutScreen(
 
             item { SectionHeader("Support") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         AboutActionRow("Help & FAQ", onClick = onOpenHelp)
                         AboutActionRow(
@@ -205,7 +205,7 @@ fun AboutScreen(
 
             item { SectionHeader("Legal") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         val privacy = AboutLinks.privacyPolicyUrl
                         AboutActionRow(
@@ -246,7 +246,7 @@ fun AboutScreen(
 
             item { SectionHeader("Developer") }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         AboutValueRow("Developer", AboutLinks.DEVELOPER_NAME)
                         val website = AboutLinks.websiteUrl
@@ -300,7 +300,7 @@ fun AboutScreen(
 
     val report = lastExit
     if (showExitReport && report != null) {
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { showExitReport = false },
             title = { Text(report.headline) },
             text = {

@@ -17,11 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitButton
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -137,7 +137,7 @@ fun AppDetailScreen(
 
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     val intent = pm.getLaunchIntentForPackage(packageName)
                                     if (intent == null) {
@@ -149,7 +149,7 @@ fun AppDetailScreen(
                                 },
                                 modifier = Modifier.weight(1f),
                             ) { Text("Launch") }
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     runCatching {
                                         context.startActivity(
@@ -166,7 +166,7 @@ fun AppDetailScreen(
                     }
 
                     item {
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = {
                                 scope.launch {
                                     sharing = true
@@ -210,7 +210,7 @@ fun AppDetailScreen(
 
                     item { SectionHeader("Package") }
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 InfoRow("Version", pkg.versionName ?: "Not exposed")
                                 InfoRow("Version code", pkg.longVersionCode.toString())
@@ -237,7 +237,7 @@ fun AppDetailScreen(
 
                     item { SectionHeader("Signing & install") }
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 val x = extras
                                 if (x == null) {
@@ -262,7 +262,7 @@ fun AppDetailScreen(
 
                     item { SectionHeader("APK & libraries") }
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 val x = extras
                                 if (x == null) {
@@ -306,7 +306,7 @@ fun AppDetailScreen(
 
                     item { SectionHeader("Permissions") }
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 val requested = pkg.requestedPermissions
                                 if (requested == null) {
@@ -346,7 +346,7 @@ fun AppDetailScreen(
 
                     item { SectionHeader("Components") }
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 ComponentGroup("Activities", pkg.activities?.toList())
                                 ComponentGroup("Services", pkg.services?.toList())

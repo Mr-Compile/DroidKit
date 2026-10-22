@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import io.github.droidkit.core.ui.components.DroidKitFilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,7 +64,7 @@ fun CodecListScreen(
                 )
             }
             item {
-                OutlinedTextField(
+                DroidKitTextField(
                     value = query,
                     onValueChange = { query = it },
                     label = { Text("Filter name or MIME type") },
@@ -75,7 +75,7 @@ fun CodecListScreen(
             item {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ROLE_FILTERS.forEach { (key, label) ->
-                        FilterChip(
+                        DroidKitFilterChip(
                             selected = role == key,
                             onClick = { role = key },
                             label = { Text(label) },
@@ -91,7 +91,7 @@ fun CodecListScreen(
                 )
             }
             items(shown, key = { it.name }) { codec ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),

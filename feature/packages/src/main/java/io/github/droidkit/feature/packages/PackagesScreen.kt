@@ -12,13 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import io.github.droidkit.core.ui.components.DroidKitAlertDialog
+import io.github.droidkit.core.ui.components.DroidKitCard
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import io.github.droidkit.core.ui.components.DroidKitOutlinedButton
+import io.github.droidkit.core.ui.components.DroidKitTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -98,10 +98,10 @@ fun PackagesScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = {
+                                DroidKitOutlinedButton(onClick = {
                                     scope.launch { viewModel.requestAccess() }
                                 }) { Text("Grant root access") }
-                                OutlinedButton(onClick = onOpenAdb) { Text("Wireless ADB") }
+                                DroidKitOutlinedButton(onClick = onOpenAdb) { Text("Wireless ADB") }
                             }
                         }
                     }
@@ -121,14 +121,14 @@ fun PackagesScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                         ) {
-                            OutlinedTextField(
+                            DroidKitTextField(
                                 value = restoreTarget,
                                 onValueChange = { restoreTarget = it },
                                 label = { Text("package.name") },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                             )
-                            OutlinedButton(
+                            DroidKitOutlinedButton(
                                 onClick = {
                                     viewModel.runAction(
                                         PackagesViewModel.Action.RESTORE,
@@ -142,7 +142,7 @@ fun PackagesScreen(
                 }
 
                 item {
-                    OutlinedTextField(
+                    DroidKitTextField(
                         value = query,
                         onValueChange = { viewModel.query.value = it },
                         label = { Text("Filter packages") },
@@ -162,7 +162,7 @@ fun PackagesScreen(
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        OutlinedButton(
+                        DroidKitOutlinedButton(
                             onClick = {
                                 viewModel.selectAll(filtered.map { it.packageName })
                             },
@@ -178,7 +178,7 @@ fun PackagesScreen(
 
                 if (selected.isNotEmpty()) {
                     item {
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Text(
                                     "Batch — ${selected.size} selected",
@@ -195,7 +195,7 @@ fun PackagesScreen(
                                     modifier = Modifier.padding(top = 8.dp),
                                 ) {
                                     PackagesViewModel.BatchAction.entries.forEach { ba ->
-                                        OutlinedButton(
+                                        DroidKitOutlinedButton(
                                             onClick = {
                                                 pendingBatch = ba to selected.toList()
                                             },
@@ -209,7 +209,7 @@ fun PackagesScreen(
                 }
 
                 items(filtered, key = { it.packageName }) { pkg ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    DroidKitCard(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier.padding(start = 4.dp, end = 12.dp, top = 4.dp, bottom = 12.dp),
                             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -238,7 +238,7 @@ fun PackagesScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier.padding(top = 8.dp),
                                 ) {
-                                    OutlinedButton(
+                                    DroidKitOutlinedButton(
                                         onClick = {
                                             pending = (
                                                 if (pkg.enabled) PackagesViewModel.Action.DISABLE
@@ -247,25 +247,25 @@ fun PackagesScreen(
                                         },
                                         enabled = !busy,
                                     ) { Text(if (pkg.enabled) "Disable" else "Enable") }
-                                    OutlinedButton(
+                                    DroidKitOutlinedButton(
                                         onClick = {
                                             pending = PackagesViewModel.Action.SUSPEND to pkg.packageName
                                         },
                                         enabled = !busy,
                                     ) { Text("Suspend") }
-                                    OutlinedButton(
+                                    DroidKitOutlinedButton(
                                         onClick = {
                                             pending = PackagesViewModel.Action.CLEAR_DATA to pkg.packageName
                                         },
                                         enabled = !busy,
                                     ) { Text("Clear data") }
-                                    OutlinedButton(
+                                    DroidKitOutlinedButton(
                                         onClick = {
                                             pending = PackagesViewModel.Action.UNINSTALL to pkg.packageName
                                         },
                                         enabled = !busy,
                                     ) { Text("Uninstall") }
-                                    OutlinedButton(
+                                    DroidKitOutlinedButton(
                                         onClick = {
                                             permTarget = pkg.packageName
                                             viewModel.loadPermissions(pkg.packageName)
@@ -342,7 +342,7 @@ fun PackagesScreen(
                     destructive = false,
                 )
         }
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { pending = null },
             title = { Text(title) },
             text = { Text(body) },
@@ -370,7 +370,7 @@ fun PackagesScreen(
     // Batch confirm — one dialog for the whole selection, then sequential run.
     pendingBatch?.let { (action, pkgs) ->
         val (title, body) = PackagesInfo.batchConfirm(action.label, pkgs.size)
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = { pendingBatch = null },
             title = { Text(title) },
             text = {
@@ -395,7 +395,7 @@ fun PackagesScreen(
     // Runtime permission sheet — grant/revoke goes through the elevated provider.
     permTarget?.let { pkg ->
         val perms by viewModel.perms.collectAsStateWithLifecycle()
-        AlertDialog(
+        DroidKitAlertDialog(
             onDismissRequest = {
                 permTarget = null
                 viewModel.clearPermissions()
