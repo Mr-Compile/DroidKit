@@ -4,8 +4,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.droidkit.core.ui.theme.DroidKitTheme
@@ -33,6 +36,12 @@ fun navChromeFor(widthDp: Int, heightDp: Int, tabletop: Boolean = false): NavChr
  * NavigationBar vs NavigationRail itself from the window size class. Chrome only
  * renders on top-level destinations — secondary screens keep the Up affordance,
  * matching the pre-adaptive shell's rule.
+ *
+ * The scaffold stays composed on every route and merely switches
+ * [NavigationSuiteType.None] on secondary screens: unmounting the scaffold
+ * would move [content] (the NavHost) to a different composition position and
+ * drop its SaveableStateHolder, resetting scroll/rememberSaveable state on
+ * every forward/back hop.
  */
 @Composable
 fun DroidKitNavigationSuite(
@@ -41,10 +50,6 @@ fun DroidKitNavigationSuite(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    if (currentRoute !in TOP_LEVEL_ROUTES) {
-        content()
-        return
-    }
     val c = DroidKitTheme.colors
     val itemColors = NavigationSuiteDefaults.itemColors(
         navigationBarItemColors = NavigationBarItemDefaults.colors(
@@ -73,6 +78,13 @@ fun DroidKitNavigationSuite(
                     colors = itemColors,
                 )
             }
+        },
+        layoutType = if (currentRoute in TOP_LEVEL_ROUTES) {
+            NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
+                currentWindowAdaptiveInfo(),
+            )
+        } else {
+            NavigationSuiteType.None
         },
         containerColor = c.ink,
         modifier = modifier,
