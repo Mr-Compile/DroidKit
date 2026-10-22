@@ -86,6 +86,48 @@ class DiagnosticsViewModel @Inject constructor(
     /** Re-queues the given tests for retry; their previous rows stay as history. */
     fun retryTests(testIds: List<String>) = engine.restart(testIds)
 
+    /**
+     * Loads a persisted IN_PROGRESS session back into the engine so the guided
+     * flow continues at its first unanswered test.
+     */
+    fun resumeSession(sessionId: String) {
+        // Clear synchronously so a stale done=true can't navigate while the
+        // session row is still being read.
+        engine.reset()
+        viewModelScope.launch {
+            val session = sessionDao.getById(sessionId)
+            if (session == null) {
+                _activeSessionId.value = null
+                return@launch
+            }
+            val rows = resultDao.getBySession(sessionId)
+            val results = rows.mapNotNull { row ->
+                runCatching { TestResultState.valueOf(row.state) }.getOrNull()
+                    ?.let { row.testId to it }
+            }.toMap()
+            val notes = rows.mapNotNull { row ->
+                row.userNote?.let { row.testId to it }
+            }.toMap()
+            val preset = runCatching { DiagnosticPreset.valueOf(session.preset) }
+                .getOrDefault(DiagnosticPreset.FULL)
+            engine.seed(preset.tests.map { it.id }, results, notes)
+            _activeSessionId.value = sessionId
+        }
+    }
+
+    /** Marks a session ABANDONED; its recorded results stay as history. */
+    fun abandonSession(sessionId: String) {
+        if (_activeSessionId.value == sessionId) _activeSessionId.value = null
+        viewModelScope.launch {
+            sessionDao.complete(
+                sessionId = sessionId,
+                ts = System.currentTimeMillis(),
+                status = "ABANDONED",
+                notes = null,
+            )
+        }
+    }
+
     /** Completes the active session with final notes. */
     fun finishSession(notes: String?) {
         val sessionId = _activeSessionId.value ?: return

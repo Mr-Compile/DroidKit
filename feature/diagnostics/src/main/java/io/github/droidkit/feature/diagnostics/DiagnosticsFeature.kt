@@ -4,7 +4,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import io.github.droidkit.core.common.Capability
 import io.github.droidkit.core.common.FeatureContribution
 import io.github.droidkit.core.common.SafetyLevel
@@ -18,10 +20,14 @@ import io.github.droidkit.core.ui.navigation.openRoute
 object DiagnosticsFeature : FeatureContribution {
     const val ROUTE = "diagnose"
     const val GUIDED_ROUTE = "diagnose/guided"
+    const val GUIDED_ROUTE_PATTERN = "diagnose/guided?sessionId={sessionId}"
     const val REVIEW_ROUTE = "diagnose/review"
     const val TEST_ROUTE = "diagnose/test/{testId}"
 
     fun testRoute(testId: String) = "diagnose/test/$testId"
+
+    /** Deep link that resumes a persisted IN_PROGRESS session in the guided flow. */
+    fun guidedResumeRoute(sessionId: String) = "diagnose/guided?sessionId=$sessionId"
 
     override val tools = listOf(
         Tool(
@@ -138,9 +144,19 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
             onStartGuided = { nav.navigate(DiagnosticsFeature.GUIDED_ROUTE) { launchSingleTop = true } },
             onOpenTool = { route -> nav.openRoute(route) },
             onOpenReports = { nav.openRoute("reports") },
+            onResumeSession = { id -> nav.navigate(DiagnosticsFeature.guidedResumeRoute(id)) },
         )
     }
-    composable(DiagnosticsFeature.GUIDED_ROUTE) {
+    composable(
+        route = DiagnosticsFeature.GUIDED_ROUTE_PATTERN,
+        arguments = listOf(
+            navArgument("sessionId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            },
+        ),
+    ) { backStackEntry ->
         GuidedSessionScreen(
             onFinished = {
                 nav.navigate(DiagnosticsFeature.REVIEW_ROUTE) {
@@ -149,6 +165,7 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
             },
             onBack = { nav.navigateUp() },
             viewModel = hiltViewModel(nav.sessionStoreOwner()),
+            resumeSessionId = backStackEntry.arguments?.getString("sessionId"),
         )
     }
     composable(DiagnosticsFeature.REVIEW_ROUTE) {

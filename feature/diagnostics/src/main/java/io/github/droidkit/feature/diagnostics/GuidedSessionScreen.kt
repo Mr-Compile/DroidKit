@@ -22,14 +22,16 @@ fun GuidedSessionScreen(
     onFinished: () -> Unit,
     onBack: () -> Unit,
     viewModel: DiagnosticsViewModel,
+    resumeSessionId: String? = null,
 ) {
     val sessionId by viewModel.activeSessionId.collectAsStateWithLifecycle()
     val engineState by viewModel.engine.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(resumeSessionId) {
         // done=true means a finished run is still sitting in the engine —
         // start a fresh session instead of jumping back to its stale review.
-        if (sessionId == null || engineState.done) viewModel.startGuided()
+        if (resumeSessionId != null) viewModel.resumeSession(resumeSessionId)
+        else if (sessionId == null || engineState.done) viewModel.startGuided()
     }
     LaunchedEffect(engineState.done) {
         if (engineState.done) onFinished()

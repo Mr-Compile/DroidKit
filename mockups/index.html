@@ -1285,6 +1285,15 @@ const INSTALL_TIME = new Set(["android.permission.INTERNET","android.permission.
     version:"0.1.0", preset:"Full diagnostic", customerLabel:"Walk-in #1042", deviceLabel:"Shelf A3",
     notes:"Recheck after mic flex reseat — still failing.",
     results: resB });
+  // unfinished run — demos the resume/abandon affordance on History rows
+  S.sessions.push({ id:"s-20261021-1", started: Date.parse("2026-10-21T08:12:00"), status:"IN_PROGRESS",
+    version:"0.1.0", preset:"Full diagnostic", customerLabel:"Walk-in #1057", deviceLabel:"Shelf B2",
+    notes:null,
+    results:{
+      "display.color":{state:"PASS",note:null},
+      "display.dead_pixel":{state:"FAIL",note:"bright speck, top-left"},
+      "touch.grid":{state:"PASS",note:null},
+    }});
   S.sessions.sort((a,b) => b.started - a.started);
   // storage snapshots with free space — feed the Insights sparkline
   const day = 86400000, now = Date.now();
@@ -1699,14 +1708,29 @@ function scrDiagnose(){
     ${S.sessions.length ? S.sessions.map(s => {
       const st = sessStats(s);
       const dc = s.status==="COMPLETED" ? "ok" : "warn";
-      return `<div class="card clickable" data-nav="reports/detail/${s.id}">
+      const open = s.status==="IN_PROGRESS"
+        ? `data-act="session-open" data-sid="${s.id}"`
+        : `data-nav="reports/detail/${s.id}"`;
+      return `<div class="card clickable" ${open}>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="vdot ${dc}" style="margin:0"></span>
           <div class="grow"><div class="t-small">${fmtDT(s.started)}</div>
-          <div class="t-mini sub">${[s.status.toLowerCase()+" · "+st.PASS+"/"+st.total+" passed",s.customerLabel,s.deviceLabel].filter(Boolean).join(" · ")}</div></div>
+          <div class="t-mini sub">${[(s.status==="IN_PROGRESS"?"in progress — tap to resume":s.status.toLowerCase())+" · "+st.PASS+"/"+st.total+" passed",s.customerLabel,s.deviceLabel].filter(Boolean).join(" · ")}</div></div>
           <span class="sub">›</span></div></div>`;}).join("")
       : `<div class="empty">No diagnostic sessions yet.</div>`}
   </div>`;
+}
+function sessionSheet(id){
+  const s=S.sessions.find(x=>x.id===id); if(!s)return;
+  const n=Object.keys(s.results).length;
+  const ov=$("#overlay");
+  ov.innerHTML=`<div class="scrim" data-act="dlg-close"></div>
+    <div class="dialog"><h3>Resume session?</h3>
+      <div class="dtext">This diagnostic was left in progress — ${n} result(s) recorded. Continue where it stopped, or abandon it. Recorded results stay saved either way.</div>
+      <div class="dbtns">
+        <button class="textbtn" style="color:var(--error)" data-act="session-abandon" data-sid="${id}">Abandon</button>
+        <button class="textbtn" data-act="session-resume" data-sid="${id}">Resume</button>
+      </div></div>`;
 }
 function intakeSheet(){
   const ov=$("#overlay");
@@ -4481,6 +4505,19 @@ On Android &lt; 11 this section may be absent.</pre></div>
       const sess=S.sessions.find(x=>x.id===e.sessionId);
       if(sess){ sess.status="COMPLETED"; sess.notes=$("#reviewNotes")?.value?.trim()||null; }
       S.engine=null; S.tab="diagnose"; S.stack=["diagnose"]; closeOverlay(); render(); toast("Session saved"); break; }
+    case "session-open": sessionSheet(el.dataset.sid); break;
+    case "session-resume": { const s=S.sessions.find(x=>x.id===el.dataset.sid);
+      if(s){
+        const key=Object.keys(PRESETS).find(k=>PRESETS[k].label===s.preset)||"FULL";
+        const queue=presetTests(key);
+        const idx=queue.findIndex(t=>!(t.id in s.results));
+        S.engine={ sessionId:s.id, queue, index:idx<0?queue.length:idx,
+          results:Object.fromEntries(Object.entries(s.results).map(([k,v])=>[k,v.state])),
+          notes:Object.fromEntries(Object.entries(s.results).filter(([,v])=>v.note).map(([k,v])=>[k,v.note])) };
+      }
+      closeOverlay(); nav("diagnose/guided"); break; }
+    case "session-abandon": { const s=S.sessions.find(x=>x.id===el.dataset.sid);
+      if(s)s.status="ABANDONED"; closeOverlay(); render(); toast("Session abandoned"); break; }
   }
 }
 function dlgOk(cb){

@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.database.DiagnosticSessionEntity
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
 import io.github.droidkit.core.ui.components.EmptyState
 import io.github.droidkit.core.ui.components.SectionHeader
@@ -106,11 +107,13 @@ fun DiagnosticsScreen(
     onStartGuided: () -> Unit,
     onOpenTool: (String) -> Unit,
     onOpenReports: () -> Unit,
+    onResumeSession: (String) -> Unit,
     viewModel: DiagnosticsViewModel = hiltViewModel(),
 ) {
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
     var preset by remember { mutableStateOf(DiagnosticPreset.FULL) }
     var showIntake by remember { mutableStateOf(false) }
+    var resumeCandidate by remember { mutableStateOf<DiagnosticSessionEntity?>(null) }
 
     Scaffold(topBar = { DroidKitTopAppBar("Diagnose") }) { padding ->
         LazyColumn(
@@ -203,9 +206,12 @@ fun DiagnosticsScreen(
             } else {
                 items(sessions, key = { it.id }) { session ->
                     val done = session.overallStatus.equals("COMPLETED", ignoreCase = true)
+                    val inProgress = session.overallStatus.equals("IN_PROGRESS", ignoreCase = true)
                     DroidKitCard(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = onOpenReports,
+                        onClick = {
+                            if (inProgress) resumeCandidate = session else onOpenReports()
+                        },
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -228,7 +234,8 @@ fun DiagnosticsScreen(
                                 )
                                 Text(
                                     listOfNotNull(
-                                        "${session.overallStatus.lowercase()}",
+                                        if (inProgress) "in progress — tap to resume"
+                                        else session.overallStatus.lowercase(),
                                         session.preset,
                                         session.customerLabel,
                                         session.deviceLabel,
@@ -293,6 +300,35 @@ fun DiagnosticsScreen(
                         onStartGuided()
                     },
                 ) { Text("Skip") }
+            },
+        )
+    }
+
+    resumeCandidate?.let { session ->
+        DroidKitAlertDialog(
+            onDismissRequest = { resumeCandidate = null },
+            title = { Text("Resume session?") },
+            text = {
+                Text(
+                    "This diagnostic was left in progress — continue where it " +
+                        "stopped, or abandon it. Recorded results stay saved either way.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        resumeCandidate = null
+                        onResumeSession(session.id)
+                    },
+                ) { Text("Resume") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.abandonSession(session.id)
+                        resumeCandidate = null
+                    },
+                ) { Text("Abandon") }
             },
         )
     }

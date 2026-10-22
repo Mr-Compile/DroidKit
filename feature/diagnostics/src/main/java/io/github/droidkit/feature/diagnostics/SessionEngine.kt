@@ -83,4 +83,34 @@ class SessionEngine(private val tests: List<PhoneDoctorTest>) {
             done = queue.isEmpty(),
         )
     }
+
+    /**
+     * Clears in-memory state before an async reseed — keeps done=false so a
+     * stale finished run can't trigger navigation while rows load.
+     */
+    fun reset() {
+        queue = emptyList()
+        _state.value = EngineState()
+    }
+
+    /**
+     * Resumes a persisted session: pre-fills recorded results and re-queues at
+     * the first unanswered test. done=true when nothing is left to answer.
+     */
+    fun seed(
+        testIds: List<String>,
+        results: Map<String, TestResultState>,
+        notes: Map<String, String>,
+    ) {
+        queue = tests.filter { it.id in testIds }
+        val next = queue.indexOfFirst { it.id !in results }
+        _state.value = EngineState(
+            current = next.takeIf { it >= 0 }?.let(queue::get),
+            index = if (next < 0) queue.size else next,
+            total = queue.size,
+            results = results,
+            notes = notes,
+            done = next < 0,
+        )
+    }
 }
