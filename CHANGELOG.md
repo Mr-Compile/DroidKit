@@ -23,7 +23,11 @@
   AndroidKeyStore, structured allow-listed actions) and a root `su`
   executor — routed through a shared `ElevatedOps`/`ELEVATED_SHELL`
   abstraction so features never touch provider implementations. No
-  third-party privilege app required
+  third-party privilege app required. Auto-connect (Shizuku-style
+  start-with-app): once a device has paired and connected, DroidKit
+  rediscovers `_adb-tls-connect` and reopens the session on app start and
+  lazily when an elevated action finds the session dead — toggleable on the
+  Wireless ADB screen, paused by a manual Disconnect
 - Elevated feature screens: AppOps viewer + mode controls, package
   controls (disable/clear data/uninstall-for-user with high-impact
   confirmation), and the ADB Lab (pair, connect, structured actions)

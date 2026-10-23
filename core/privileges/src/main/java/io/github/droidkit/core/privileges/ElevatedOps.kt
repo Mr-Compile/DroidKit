@@ -450,6 +450,26 @@ interface AdbSessionSetup : ProviderSetup {
     suspend fun connectDiscovered(): Result<String>
 
     /**
+     * User toggle: after the first successful pairing, keep the session
+     * connected without manual steps — auto-connect on app start and a
+     * bounded lazy reconnect when an elevated action finds the session dead.
+     * A manual [disconnect] suppresses reconnects until the next explicit
+     * connect. Defaults on.
+     */
+    val autoConnectEnabled: StateFlow<Boolean>
+
+    suspend fun setAutoConnectEnabled(enabled: Boolean)
+
+    /**
+     * Best-effort automatic connect used by app start and lazy reconnect —
+     * bounded discovery (a few seconds), silent failure: the pairing state
+     * returns to Idle rather than Failed when nothing advertises. No-op
+     * success when already connected; refuses when disabled, never-paired,
+     * or suppressed by a manual disconnect.
+     */
+    suspend fun autoConnect(): Result<String>
+
+    /**
      * QR-assisted pairing: keep discovering until a pairing service named
      * `payload.serviceName` appears, then auto-pair with `payload.secret`
      * and auto-connect. Covers both directions — a QR we display for another

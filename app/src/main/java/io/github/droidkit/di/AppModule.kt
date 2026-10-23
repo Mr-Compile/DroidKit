@@ -66,7 +66,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAdbProvider(@ApplicationContext context: Context) = WirelessAdbProvider(context)
+    fun provideAdbProvider(
+        @ApplicationContext context: Context,
+        settings: SettingsRepository,
+    ) = WirelessAdbProvider(context, settings)
 
     @Provides
     @Singleton

@@ -69,6 +69,7 @@ fun AdbScreen(
     val props by viewModel.props.collectAsStateWithLifecycle()
     val log by viewModel.log.collectAsStateWithLifecycle()
     val qrPayload by viewModel.qrPayload.collectAsStateWithLifecycle()
+    val autoConnect by viewModel.autoConnectEnabled.collectAsStateWithLifecycle()
 
     val pairingCode by viewModel.pairingCode.collectAsStateWithLifecycle()
     val pairingHost by viewModel.pairingHost.collectAsStateWithLifecycle()
@@ -148,6 +149,21 @@ fun AdbScreen(
                                 "options, then pair below — no IP or port typing needed.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
+                        if (autoConnect) {
+                            Text(
+                                when (pairingState) {
+                                    is AdbPairingState.SearchingConnect ->
+                                        "Auto-connect: finding this device…"
+                                    is AdbPairingState.Connecting ->
+                                        "Auto-connect: connecting…"
+                                    else ->
+                                        "Once paired, DroidKit reconnects on its own."
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 6.dp),
+                            )
+                        }
                     } else {
                         InfoRow("Connected", session!!, copyable = true)
                         DroidKitOutlinedButton(
@@ -155,6 +171,30 @@ fun AdbScreen(
                             enabled = !busy,
                             modifier = Modifier.padding(top = 8.dp),
                         ) { Text("Disconnect") }
+                    }
+                    Row(
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                            .selectable(
+                                selected = autoConnect,
+                                onClick = { viewModel.setAutoConnect(!autoConnect) },
+                            ),
+                    ) {
+                        androidx.compose.material3.Checkbox(
+                            checked = autoConnect,
+                            onCheckedChange = { viewModel.setAutoConnect(it) },
+                        )
+                        Column {
+                            Text("Auto-connect", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Like Shizuku's start-on-boot — reconnects when wireless " +
+                                    "debugging is on. Disconnect pauses it until you connect again.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }

@@ -730,6 +730,7 @@ const S = {
   ai: { enabled:false, hasKey:false, autoSum:false, model:"openai/gpt-oss-120b", status:null, testing:false,
         turns:[], busy:false },
   adb: { paired:false, session:null, busy:false, props:null, log:"", logLines:"200", useTls:true,
+         autoConnect:true,
          pairHost:"192.168.1.37", pairPort:"", pairCode:"", connHost:"", connPort:"",
          pairState:"idle", qr:null, manual:false },
   files: { path:"/sdcard/Android/data", copying:null, sel:new Set(), q:"", saf:false, safPath:["DCIM"] },
@@ -3836,10 +3837,13 @@ function scrAdb(){
     connected:`<div class="t-mini pri">Connected ✓</div>`,
     failed:`<div class="t-mini" style="color:var(--error)">Pairing rejected — check the 6-digit code</div>`,
   }[a.pairState]||"";
+  const autoRow=`<label class="row" style="gap:8px;margin-top:10px;align-items:flex-start"><input type="checkbox" data-act="adb-autoconnect" ${a.autoConnect?"checked":""} style="accent-color:var(--primary);margin-top:3px"><div class="grow"><div class="t-body">Auto-connect</div><div class="t-mini sub">Like Shizuku's start-on-boot — reconnects when wireless debugging is on. Disconnect pauses it until you connect again.</div></div></label>`;
   return `<div class="pad col">
-    ${sectionCard("Session", a.session
+    ${sectionCard("Session", (a.session
       ? infoRow("Connected",a.session)+`<button class="btn-outline" style="margin-top:8px" data-act="adb-disconnect">Disconnect</button>`
-      : `<div class="t-body">Not connected. Enable Wireless debugging in Developer options, then pair below — no IP or port typing needed.</div>`)}
+      : `<div class="t-body">Not connected. Enable Wireless debugging in Developer options, then pair below — no IP or port typing needed.</div>`
+        + (a.autoConnect?`<div class="t-mini pri" style="margin-top:6px">${a.pairState==="connsearch"?"Auto-connect: finding this device…":a.pairState==="connecting"?"Auto-connect: connecting…":"Once paired, DroidKit reconnects on its own."}</div>`:""))
+      + autoRow)}
     ${sectionCard("1 — Pair with code", `
       <div class="t-mini sub">Open Developer options → Wireless debugging → “Pair device with pairing code”. The pairing port is found automatically — you only enter the code.</div>
       ${stateTxt}
@@ -4326,6 +4330,12 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "mem-refresh": toast("Memory snapshot refreshed"); break;
     case "devprops": pushElevLog("getprop"); S.devProps=true; render(); break;
     case "adb-tls": S.adb.useTls=!S.adb.useTls; break;
+    case "adb-autoconnect": { const a=S.adb; a.autoConnect=!a.autoConnect; render();
+      if(a.autoConnect&&a.paired&&!a.session){ a.pairState="connsearch"; render();
+        later(()=>{ a.pairState="connected"; a.session=`${a.pairHost}:45213${a.useTls?" (TLS)":""}`;
+          PROVIDERS.ADB={status:"ready"};
+          if(cur()==="adb")render(); toast("Auto-connected — wireless debugging is on"); },1200); }
+      break; }
     case "adb-start": { const a=S.adb; a.pairState="searching"; render();
       toast("Discovery started — a pairing notification is waiting for the code");
       later(()=>{ if(a.pairState==="searching"){ a.pairState="found"; if(cur()==="adb")render(); } },1200); break; }

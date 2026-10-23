@@ -26,6 +26,10 @@ class SettingsRepository @Inject constructor(
     private val technicianKey = stringPreferencesKey("technician_name")
     private val dynamicColorKey =
         androidx.datastore.preferences.core.booleanPreferencesKey("dynamic_color")
+    private val wirelessAdbPairedKey =
+        androidx.datastore.preferences.core.booleanPreferencesKey("wireless_adb_paired")
+    private val wirelessAdbAutoConnectKey =
+        androidx.datastore.preferences.core.booleanPreferencesKey("wireless_adb_auto_connect")
 
     val onboardingCompleted: Flow<Boolean> =
         context.settingsStore.data.map { it[onboardingKey] ?: false }
@@ -55,6 +59,30 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setDynamicColor(enabled: Boolean) {
         context.settingsStore.edit { it[dynamicColorKey] = enabled }
+    }
+
+    /**
+     * True once the device's adbd has accepted our ADB key — i.e. a pairing
+     * has been followed by a successful connect. Pairing alone is not enough:
+     * the key is only proven when the TLS session authenticates.
+     */
+    val wirelessAdbPaired: Flow<Boolean> =
+        context.settingsStore.data.map { it[wirelessAdbPairedKey] ?: false }
+
+    suspend fun setWirelessAdbPaired(paired: Boolean) {
+        context.settingsStore.edit { it[wirelessAdbPairedKey] = paired }
+    }
+
+    /**
+     * Keep the wireless-ADB session connected without manual steps — the
+     * Shizuku-style "start with app" behaviour. Defaults on; only meaningful
+     * once [wirelessAdbPaired] is true.
+     */
+    val wirelessAdbAutoConnect: Flow<Boolean> =
+        context.settingsStore.data.map { it[wirelessAdbAutoConnectKey] ?: true }
+
+    suspend fun setWirelessAdbAutoConnect(enabled: Boolean) {
+        context.settingsStore.edit { it[wirelessAdbAutoConnectKey] = enabled }
     }
 
     suspend fun toggleFavorite(toolId: String) {

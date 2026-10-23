@@ -71,6 +71,10 @@ class AdbPairingService : Service() {
                             )
                     }
                     result?.onFailure { showResult(success = false, it.message) }
+                        ?: showResult(
+                            success = false,
+                            "DroidKit restarted — open the app and start pairing again",
+                        )
                 }
                 showNotification(workingNotification())
             }
@@ -166,6 +170,9 @@ class AdbPairingService : Service() {
             Notification.Action.Builder(null, "Pair", replyIntent())
                 .addRemoteInput(codeInput())
                 .build(),
+        )
+        .addAction(
+            Notification.Action.Builder(null, "Developer options", devOptionsIntent()).build(),
         )
         .addAction(
             Notification.Action.Builder(null, "Stop", stopIntent()).build(),

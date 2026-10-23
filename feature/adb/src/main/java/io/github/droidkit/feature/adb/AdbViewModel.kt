@@ -29,6 +29,13 @@ class AdbViewModel @Inject constructor(
 
     val pairingState: StateFlow<AdbPairingState> = adbSetup.pairingState
 
+    /** Shizuku-style start-with-app toggle — persists via the provider. */
+    val autoConnectEnabled: StateFlow<Boolean> = adbSetup.autoConnectEnabled
+
+    fun setAutoConnect(enabled: Boolean) {
+        viewModelScope.launch { adbSetup.setAutoConnectEnabled(enabled) }
+    }
+
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 

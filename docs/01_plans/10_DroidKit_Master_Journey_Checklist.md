@@ -619,7 +619,13 @@ self-signed cert (adbd authenticates paired clients by cert pubkey;
 self-signed DER written in-house, no BouncyCastle). Peer-search state race
 fixed; CNXN banner no longer claims shell_v2 (executor uses legacy `shell:`).
 `privilege:adb` unit tests green incl. new `AdbX509Test` DER coverage.
-Pairing/connect round-trips still not run on hardware — release items open.
+Auto-connect (2026-10-23): persisted `wireless_adb_paired` +
+`wireless_adb_auto_connect` (default on) in SettingsRepository;
+`WirelessAdbProvider` auto-connects on app start and lazily reconnects inside
+`runShell` (bounded 12s rediscovery, 30s retry cooldown, manual-Disconnect
+suppression) — exposed through `AdbSessionSetup`; toggle + status on the ADB
+screen and mockup. Pairing/connect round-trips still not run on hardware —
+release items open.
 
 ## Research
 - [x] Select ADB protocol/library strategy
@@ -642,6 +648,7 @@ Pairing/connect round-trips still not run on hardware — release items open.
 - [x] Reboot/system actions only where appropriate
 - [x] mDNS auto-discovery (no IP/port entry) + notification code entry
 - [x] QR pairing both directions (display + screenshot decode)
+- [x] Auto-connect on app start + lazy session reconnect (toggleable, default on)
 - [ ] Terminal only if explicitly approved as product scope
 
 Release:
