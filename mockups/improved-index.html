@@ -724,7 +724,7 @@ const S = {
   sensorCheck: { running:false, done:false, counts:{} },
   camExp: {},               // cameraId -> {sizes,modes} expanded state
   preset: "FULL",
-  technician: "",
+  technician: "", backupStatus: null,
   elevLog: [],
   ai: { enabled:false, hasKey:false, autoSum:false, model:"openai/gpt-oss-120b", status:null, testing:false,
         turns:[], busy:false },
@@ -2121,6 +2121,15 @@ function scrSettings(){
         <div class="t-mini sub">When on, result screens send the values they show to Groq for a plain-language summary as soon as they appear. Uses your key more often.</div>
         ${ai.status?`<div class="t-mini ${ai.status==="Connected"?"pri":"err"}" style="margin-top:4px">${ai.status}</div>`:""}
         <button class="textbtn" data-nav="settings/ai_chat">Open DroidKit Chat</button>`:""}
+    </div>
+    <div class="sec-head">Backup</div>
+    <div class="card">
+      <div class="t-mini sub">Export your preferences to a small JSON file and restore them later. Device pairing state, the AI key and onboarding are never included.</div>
+      <div class="row" style="margin-top:6px">
+        <button class="textbtn" data-act="backup-export">Export settings</button>
+        <button class="textbtn" data-act="backup-import">Import settings</button>
+      </div>
+      ${S.backupStatus?`<div class="t-mini ${S.backupStatus.includes("failed")?"err":"pri"}" style="margin-top:4px">${esc(S.backupStatus)}</div>`:""}
     </div>
     <div class="sec-head">Safety</div>
     <div class="card"><div class="t-body">High-impact actions always show their exact consequence and ask for explicit confirmation. DroidKit never performs security or credential bypass operations.</div></div>
@@ -4188,6 +4197,13 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "intake-start": { const c=$("#intakeCust")?.value.trim(), d=$("#intakeDev")?.value.trim();
       closeOverlay(); startGuided(c||null,d||null); break; }
     case "save-tech": S.technician=($("#techName")?.value||"").trim(); toast("Technician saved"); break;
+    case "backup-export": S.backupStatus="Backup exported"; render(); break;
+    case "backup-import":
+      dialog({title:"Restore settings backup?",
+        text:"Replaces the theme, technician name, favorites, recents, usage counters and the ADB auto-connect preference on this device. Device pairing state, the AI key and onboarding are not affected.",
+        confirm:"Restore",cancel:"Cancel",risk:{n:2,label:"System change",cls:"warn"},
+        onConfirm:"backup-restore"}); break;
+    case "backup-restore": S.backupStatus="Backup restored"; render(); break;
     case "grant-provider": nav("adb"); break;
     case "pkg-grant": toast("No root on this mock device — pair wireless ADB instead"); break;
     case "clear-elevlog": S.elevLog=[]; render(); break;

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
@@ -84,6 +85,53 @@ class SettingsRepository @Inject constructor(
     suspend fun setWirelessAdbAutoConnect(enabled: Boolean) {
         context.settingsStore.edit { it[wirelessAdbAutoConnectKey] = enabled }
     }
+
+    /**
+     * Serializes the exportable preferences to a versioned JSON backup.
+     * Device-bound (`wireless_adb_paired`), onboarding and AI-key state are
+     * never exported — see [SettingsSnapshot].
+     */
+    suspend fun exportJson(): String {
+        val prefs = context.settingsStore.data.first()
+        val snapshot = SettingsSnapshot(
+            themeMode = runCatching {
+                ThemeMode.valueOf(prefs[themeKey] ?: "SYSTEM")
+            }.getOrDefault(ThemeMode.SYSTEM).name,
+            dynamicColor = prefs[dynamicColorKey] ?: false,
+            technicianName = prefs[technicianKey].orEmpty(),
+            favoriteTools = prefs[favoritesKey] ?: emptySet(),
+            recentTools = prefs[recentsKey]?.split(",")?.filter { it.isNotBlank() }
+                ?: emptyList(),
+            toolUseCounts = prefs[toolUseKey].orEmpty().split(",")
+                .mapNotNull {
+                    val n = it.substringAfterLast(':').toIntOrNull()
+                        ?: return@mapNotNull null
+                    it.substringBeforeLast(':') to n
+                }
+                .toMap(),
+            wirelessAdbAutoConnect = prefs[wirelessAdbAutoConnectKey] ?: true,
+        )
+        return SettingsBackupCodec.encode(snapshot, System.currentTimeMillis())
+    }
+
+    /**
+     * Restores a backup written by [exportJson]. Every exported key is
+     * overwritten; keys absent from the snapshot type (device state, AI key)
+     * are untouched.
+     */
+    suspend fun importJson(json: String): Result<Unit> =
+        SettingsBackupCodec.decode(json).mapCatching { snapshot ->
+            context.settingsStore.edit { prefs ->
+                prefs[themeKey] = snapshot.themeMode
+                prefs[dynamicColorKey] = snapshot.dynamicColor
+                prefs[technicianKey] = snapshot.technicianName
+                prefs[favoritesKey] = snapshot.favoriteTools
+                prefs[recentsKey] = snapshot.recentTools.joinToString(",")
+                prefs[toolUseKey] = snapshot.toolUseCounts.entries
+                    .joinToString(",") { "${it.key}:${it.value}" }
+                prefs[wirelessAdbAutoConnectKey] = snapshot.wirelessAdbAutoConnect
+            }
+        }
 
     suspend fun toggleFavorite(toolId: String) {
         context.settingsStore.edit { prefs ->

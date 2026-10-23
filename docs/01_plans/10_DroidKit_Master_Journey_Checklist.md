@@ -887,7 +887,7 @@ Plan pack `01_plans/droidkit_ux_plan/` (16 docs). Execution plan + audit map:
 
 ## UX-5 IA & recovery
 - [x] Settings: Support & privacy section (Permissions, Privacy, Help, What's New) + Reset settings with confirmation
-- [ ] Settings export/import — deferred (config surface too small; documented in plan)
+- [x] Settings export/import — `SettingsBackupCodec` (versioned JSON, unknown keys ignored) + SAF export/import in Settings → Backup; device pairing state, AI key and onboarding excluded by construction
 
 ## UX-6 Accessibility & QA
 - [x] Heading semantics on SectionHeader; state-aware favorite-toggle labels; non-interactive status tags; Back labels; merged row semantics
@@ -955,7 +955,7 @@ and the technician V2 backlog (custom presets, multi-device history).
 - [x] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
 - [x] Capability Center screen (`settings/capabilities`) — megaplan Task 4
 - [x] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
-- [ ] Settings export/import via SAF JSON — megaplan Task 6
+- [x] Settings export/import via SAF JSON — megaplan Task 6
 - [ ] ADB terminal (`adb/terminal`, guarded `runRawCommand`, opt-in) — megaplan Task 7
 - [ ] Custom diagnostic presets (`technician_presets`, Room v6) — megaplan Task 8
 - [ ] Multi-device history filters on Reports — megaplan Task 9

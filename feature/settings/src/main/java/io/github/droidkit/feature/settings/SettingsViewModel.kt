@@ -150,4 +150,13 @@ class SettingsViewModel @Inject constructor(
     fun resetSettings() {
         viewModelScope.launch { settings.resetAll() }
     }
+
+    // ---- Backup ----
+
+    /** Versioned JSON snapshot of the exportable preferences. */
+    suspend fun exportSettingsJson(): String = settings.exportJson()
+
+    /** Restores an exported backup; false when the file isn't a valid backup. */
+    suspend fun importSettingsJson(json: String): Boolean =
+        settings.importJson(json).isSuccess
 }

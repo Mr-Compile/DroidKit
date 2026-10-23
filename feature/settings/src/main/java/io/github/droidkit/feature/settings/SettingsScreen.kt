@@ -14,9 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import io.github.droidkit.core.ui.components.AiSurfaceCard
+import io.github.droidkit.core.ui.components.ConfirmationSheet
 import io.github.droidkit.core.ui.components.DroidKitAlertDialog
 import io.github.droidkit.core.ui.components.DroidKitCard
 import io.github.droidkit.core.ui.components.DroidKitSegmentedRow
+import io.github.droidkit.core.ui.components.RiskLevel
 import io.github.droidkit.core.ui.components.StatusDot
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,9 +32,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.droidkit.core.datastore.ThemeMode
@@ -61,6 +68,42 @@ fun SettingsScreen(
     val providerStatuses by viewModel.providerStatuses.collectAsState()
     val grantBusy by viewModel.grantBusy.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    var backupStatus by remember { mutableStateOf<String?>(null) }
+    var pendingImport by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                backupStatus = runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use {
+                        it.write(viewModel.exportSettingsJson().toByteArray())
+                    } ?: error("could not open destination")
+                    "Backup exported"
+                }.getOrElse { "Export failed — ${it.message}" }
+            }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val text = runCatching {
+                    context.contentResolver.openInputStream(uri)?.use {
+                        it.readBytes().decodeToString()
+                    }
+                }.getOrNull()
+                if (text == null) {
+                    backupStatus = "Import failed — could not read file"
+                } else {
+                    pendingImport = text
+                }
+            }
+        }
+    }
 
     Scaffold(topBar = { DroidKitTopAppBar("Settings") }) { padding ->
         LazyColumn(
@@ -326,6 +369,45 @@ fun SettingsScreen(
                 }
             }
 
+            item { SectionHeader("Backup") }
+            item {
+                DroidKitCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "Export your preferences to a small JSON file and restore " +
+                                "them later. Device pairing state, the AI key and " +
+                                "onboarding are never included.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(top = 4.dp),
+                        ) {
+                            TextButton(
+                                onClick = { exportLauncher.launch("droidkit-settings.json") },
+                            ) { Text("Export settings") }
+                            TextButton(
+                                onClick = {
+                                    importLauncher.launch(
+                                        arrayOf("application/json", "text/*", "application/octet-stream"),
+                                    )
+                                },
+                            ) { Text("Import settings") }
+                        }
+                        backupStatus?.let {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (it.contains("failed")) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
             item { SectionHeader("Safety") }
             item {
                 DroidKitCard(modifier = Modifier.fillMaxWidth()) {
@@ -406,6 +488,28 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    pendingImport?.let { json ->
+        ConfirmationSheet(
+            title = "Restore settings backup?",
+            consequence = "Replaces the theme, technician name, favorites, recents, " +
+                "usage counters and the ADB auto-connect preference on this device. " +
+                "Device pairing state, the AI key and onboarding are not affected.",
+            confirmLabel = "Restore",
+            risk = RiskLevel.System,
+            onConfirm = {
+                scope.launch {
+                    backupStatus = if (viewModel.importSettingsJson(json)) {
+                        "Backup restored"
+                    } else {
+                        "Import failed — not a valid DroidKit backup"
+                    }
+                }
+                pendingImport = null
+            },
+            onDismiss = { pendingImport = null },
+        )
     }
 
     if (showResetDialog) {
