@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.DroidKit" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/splash_background</item>
-        <!-- API 31+ system splash: keep it on the splash's near-black green. -->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <!-- API 31+ system splash: near-black field + Candidate-9 mark. -->
         <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_background</item>
         <!-- Edge-to-edge: never letterbox below a notch/punch-hole — insets
              position content instead of the window being pushed down. -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>

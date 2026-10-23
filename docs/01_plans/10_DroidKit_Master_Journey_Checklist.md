@@ -811,10 +811,10 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 - [x] `docs/04_audits/V5_UI_AUDIT.md` — inventory, state/error gaps, per-feature file lists, conflicts logged
 
 ## V5-1 Foundation
-- [ ] Production Candidate-9 assets (adaptive + monochrome icon, splash) — plan Task 1
-- [ ] `core-splashscreen` cold-start splash, no artificial delay
+- [x] Production Candidate-9 assets (adaptive + monochrome icon, splash) — plan Task 1 (icon vectors already shipped; `ic_splash.xml` + layer-list `splash_background.xml` added)
+- [x] `core-splashscreen` cold-start splash, no artificial delay — implemented without the backport lib (owner-approved): `windowSplashScreenAnimatedIcon` on API 31+, layer-list `windowBackground` mark+bg on API 28–30
 - [x] Dark + light semantic tokens in `:core:ui` (`SemanticColors.kt`, `Spacing.kt`, `Shape.kt`, `Type.kt`) — plan Task 2
-- [ ] `J03_DESIGN_TOKENS.md` v5-name mapping appended
+- [x] `J03_DESIGN_TOKENS.md` v5-name mapping appended
 - [x] Shared primitives/badges (`StatusBadge`, `ResultBadge`, `HeroCard`/`StatTile`/`SpecTile` bento tiles, `ToolIcon`, `DroidKitProgressLine`; `CapabilityBadge`/`TechnicalValue` functions absorbed by `ToolCard` availability + `InfoRow` mono values) — plan Task 3
 - [x] Shared screen states (Loading/Empty/PermissionRequired/SetupRequired/Unsupported/Offline/FriendlyError) + semantics helpers — plan Task 4
 - [x] Risk + AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — plan Task 5 (`components/Risk.kt`; packages confirms migrated to `ConfirmationSheet` with L1–L3 badges)
@@ -954,7 +954,7 @@ and the technician V2 backlog (custom presets, multi-device history).
 - [x] Risk/AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — megaplan Task 2
 - [x] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
 - [x] Capability Center screen (`settings/capabilities`) — megaplan Task 4
-- [ ] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
+- [x] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
 - [ ] Settings export/import via SAF JSON — megaplan Task 6
 - [ ] ADB terminal (`adb/terminal`, guarded `runRawCommand`, opt-in) — megaplan Task 7
 - [ ] Custom diagnostic presets (`technician_presets`, Room v6) — megaplan Task 8

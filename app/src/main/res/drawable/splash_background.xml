@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold-start splash window background: near-black field + centered
+     Candidate-9 mark. Used as android:windowBackground so pre-31 devices get
+     the same branded splash the API-31 system splash renders from
+     windowSplashScreenBackground + windowSplashScreenAnimatedIcon. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_background" />
+    <item
+        android:drawable="@drawable/ic_splash"
+        android:gravity="center" />
+</layer-list>
