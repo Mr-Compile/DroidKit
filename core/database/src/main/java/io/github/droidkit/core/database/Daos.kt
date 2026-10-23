@@ -105,6 +105,21 @@ interface NfcTagScanDao {
 }
 
 @Dao
+interface TechnicianPresetDao {
+    @Insert
+    suspend fun insert(preset: TechnicianPresetEntity)
+
+    @Query("SELECT * FROM technician_presets ORDER BY createdAtEpochMs DESC")
+    fun observeAll(): Flow<List<TechnicianPresetEntity>>
+
+    @Query("UPDATE technician_presets SET name = :name, testIds = :testIds WHERE id = :id")
+    suspend fun update(id: String, name: String, testIds: String)
+
+    @Query("DELETE FROM technician_presets WHERE id = :id")
+    suspend fun deleteById(id: String)
+}
+
+@Dao
 interface ElevatedActionLogDao {
     @Insert
     suspend fun insert(entry: ElevatedActionLogEntity)

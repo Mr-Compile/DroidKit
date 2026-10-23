@@ -157,4 +157,33 @@ class DroidKitDatabaseDaoTest {
         db.elevatedLogDao().deleteAll()
         assertEquals(0, db.elevatedLogDao().observeCount().first())
     }
+
+    @Test
+    fun `technician preset insert, update and delete`() = runBlocking {
+        db.technicianPresetDao().insert(
+            TechnicianPresetEntity(
+                id = "p1", name = "Intake quick", createdAtEpochMs = 11,
+                testIds = "display.color,touch.grid",
+            ),
+        )
+        assertEquals("Intake quick", db.technicianPresetDao().observeAll().first().first().name)
+
+        db.technicianPresetDao().update("p1", "Intake v2", "display.color")
+        db.technicianPresetDao().observeAll().first().first().let {
+            assertEquals("Intake v2", it.name)
+            assertEquals("display.color", it.testIds)
+        }
+
+        db.technicianPresetDao().deleteById("p1")
+        assertEquals(0, db.technicianPresetDao().observeAll().first().size)
+    }
+
+    @Test
+    fun `session stores its own resolved test list`() = runBlocking {
+        db.sessionDao().insert(session().copy(testIds = "display.color,touch.grid"))
+        assertEquals(
+            "display.color,touch.grid",
+            db.sessionDao().getById("s1")?.testIds,
+        )
+    }
 }

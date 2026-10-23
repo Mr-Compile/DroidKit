@@ -23,7 +23,7 @@ system, extra labs).
 | 4 | Candidate-9 launcher icons + splash + J03 v5 token map | V5 Tasks 1–2 | Pending |
 | 5 | Settings export/import | UX-5 (deferred) | Pending |
 | 6 | ADB terminal | J19 gated item — approved 2026-10-23 | Done |
-| 7 | Custom diagnostic presets ("technician presets/checklists") | Product Bible future list | Pending |
+| 7 | Custom diagnostic presets ("technician presets/checklists") | Product Bible future list | Done |
 | 8 | Multi-device history filters | Product Bible "multi-device history" | Pending |
 
 ## Execution tasks
@@ -89,6 +89,13 @@ DAO + DB v5→v6 migration + migration test. `feature/diagnostics`:
 unknowns), preset-builder screen (name + checklist grouped by category), manage
 (rename/delete). `armSession` takes resolved tests + label; session `preset`
 stores `CUSTOM:<name>`. Preset picker shows custom presets + "New preset…".
+
+> As-built deviation (2026-10-23): instead of a `PresetRepository` and a
+> `CUSTOM:<name>` tag, sessions persist their resolved test list in a new
+> `diagnostic_sessions.testIds` column (Room v6) — resume is exact even after
+> the preset is edited or deleted. `preset` stays the human label; the
+> `TechnicianPresetDao` is injected straight into `DiagnosticsViewModel`
+> (feature→core:database is the established pattern).
 
 ### Task 9 — Multi-device history
 Reports list: filter chips from distinct `deviceLabel`/`customerLabel` in

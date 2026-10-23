@@ -22,6 +22,7 @@ object DiagnosticsFeature : FeatureContribution {
     const val GUIDED_ROUTE = "diagnose/guided"
     const val GUIDED_ROUTE_PATTERN = "diagnose/guided?sessionId={sessionId}"
     const val REVIEW_ROUTE = "diagnose/review"
+    const val PRESETS_ROUTE = "diagnose/presets"
     const val TEST_ROUTE = "diagnose/test/{testId}"
 
     fun testRoute(testId: String) = "diagnose/test/$testId"
@@ -145,6 +146,13 @@ fun NavGraphBuilder.diagnosticsGraph(nav: NavHostController) {
             onOpenTool = { route -> nav.openRoute(route) },
             onOpenReports = { nav.openRoute("reports") },
             onResumeSession = { id -> nav.navigate(DiagnosticsFeature.guidedResumeRoute(id)) },
+            onManagePresets = { nav.navigate(DiagnosticsFeature.PRESETS_ROUTE) },
+        )
+    }
+    composable(DiagnosticsFeature.PRESETS_ROUTE) {
+        PresetManagerScreen(
+            onBack = { nav.navigateUp() },
+            viewModel = hiltViewModel(nav.sessionStoreOwner()),
         )
     }
     composable(

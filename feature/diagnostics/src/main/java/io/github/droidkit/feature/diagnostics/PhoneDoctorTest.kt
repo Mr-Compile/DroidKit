@@ -235,3 +235,25 @@ enum class DiagnosticPreset(val tests: List<PhoneDoctorTest>, val label: String)
     FULL(PhoneDoctorTests.ALL, "Full diagnostic"),
     USED_PHONE(PhoneDoctorTests.USED_PHONE, "Used-phone check"),
 }
+
+/**
+ * What the picker can arm a session with — a built-in [DiagnosticPreset] or
+ * a technician-authored [TechnicianPresetEntity]. Both resolve to a flat
+ * list of catalog test ids.
+ */
+sealed interface PresetSelection {
+    val label: String
+    val testIds: List<String>
+
+    data class Builtin(val preset: DiagnosticPreset) : PresetSelection {
+        override val label: String get() = preset.label
+        override val testIds: List<String> get() = preset.tests.map { it.id }
+    }
+
+    data class Custom(val preset: io.github.droidkit.core.database.TechnicianPresetEntity) :
+        PresetSelection {
+        override val label: String get() = preset.name
+        override val testIds: List<String> get() =
+            preset.testIds.split(",").filter { it.isNotBlank() }
+    }
+}

@@ -56,7 +56,9 @@ private fun presetDescription(preset: DiagnosticPreset): String = when (preset) 
 /** mockup `.preset` — selectable card with check count, label and blurb. */
 @Composable
 private fun PresetCard(
-    preset: DiagnosticPreset,
+    checkCount: Int,
+    label: String,
+    description: String,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -76,12 +78,12 @@ private fun PresetCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                "${preset.tests.size} checks",
+                "$checkCount checks",
                 style = DroidKitTheme.extraTypography.microLabel,
                 color = c.brandSecondary,
             )
             Text(
-                preset.label,
+                label,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontSize = 14.5.sp,
                     fontWeight = FontWeight.Bold,
@@ -90,7 +92,7 @@ private fun PresetCard(
                 modifier = Modifier.padding(top = 2.dp, bottom = 4.dp),
             )
             Text(
-                presetDescription(preset),
+                description,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 11.5.sp,
                     lineHeight = 16.sp,
@@ -108,10 +110,14 @@ fun DiagnosticsScreen(
     onOpenTool: (String) -> Unit,
     onOpenReports: () -> Unit,
     onResumeSession: (String) -> Unit,
+    onManagePresets: () -> Unit,
     viewModel: DiagnosticsViewModel = hiltViewModel(),
 ) {
     val sessions by viewModel.sessions.collectAsStateWithLifecycle()
-    var preset by remember { mutableStateOf(DiagnosticPreset.FULL) }
+    val customPresets by viewModel.customPresets.collectAsStateWithLifecycle()
+    var selection by remember {
+        mutableStateOf<PresetSelection>(PresetSelection.Builtin(DiagnosticPreset.FULL))
+    }
     var showIntake by remember { mutableStateOf(false) }
     var resumeCandidate by remember { mutableStateOf<DiagnosticSessionEntity?>(null) }
 
@@ -129,18 +135,42 @@ fun DiagnosticsScreen(
                 // mockup .segrow of .preset cards — N checks + label + blurb.
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DiagnosticPreset.entries.forEach { p ->
+                        val sel = PresetSelection.Builtin(p)
                         PresetCard(
-                            preset = p,
-                            selected = preset == p,
-                            onClick = { preset = p },
+                            checkCount = p.tests.size,
+                            label = p.label,
+                            description = presetDescription(p),
+                            selected = selection == sel,
+                            onClick = { selection = sel },
                             modifier = Modifier.weight(1f),
                         )
                     }
                 }
             }
+            if (customPresets.isNotEmpty()) {
+                items(customPresets, key = { "preset-${it.id}" }) { p ->
+                    val sel = PresetSelection.Custom(p)
+                    PresetCard(
+                        checkCount = sel.testIds.size,
+                        label = p.name,
+                        description = "Your preset — " +
+                            p.testIds.split(",").filter { it.isNotBlank() }.size +
+                            " checks picked by you.",
+                        selected = selection == sel,
+                        onClick = { selection = sel },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            item {
+                DroidKitOutlinedButton(
+                    onClick = onManagePresets,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(if (customPresets.isEmpty()) "Create a custom preset" else "Manage presets") }
+            }
             item {
                 DroidKitButton(onClick = { showIntake = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Start ${preset.label}")
+                    Text("Start ${selection.label}")
                 }
             }
             item {
@@ -286,7 +316,7 @@ fun DiagnosticsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.armSession(preset, customer, device)
+                        viewModel.armSession(selection, customer, device)
                         showIntake = false
                         onStartGuided()
                     },
@@ -295,7 +325,7 @@ fun DiagnosticsScreen(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        viewModel.armSession(preset, null, null)
+                        viewModel.armSession(selection, null, null)
                         showIntake = false
                         onStartGuided()
                     },

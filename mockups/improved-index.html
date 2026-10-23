@@ -723,7 +723,7 @@ const S = {
   sensorRec: { recording:false, samples:0 },
   sensorCheck: { running:false, done:false, counts:{} },
   camExp: {},               // cameraId -> {sizes,modes} expanded state
-  preset: "FULL",
+  preset: "FULL", customPresets: [], dpreset: null,
   technician: "", backupStatus: null,
   elevLog: [],
   ai: { enabled:false, hasKey:false, autoSum:false, model:"openai/gpt-oss-120b", status:null, testing:false,
@@ -1459,6 +1459,7 @@ function render(){
     case "diagnose":
       if (parts[1]==="guided") return renderGuided();
       if (parts[1]==="review") { body = scrReview(); title="Diagnostic review"; break; }
+      if (parts[1]==="presets") { body = scrDiagPresets(); title = S.dpreset ? (S.dpreset.id?"Edit preset":"New preset") : "Custom presets"; break; }
       if (parts[1]==="test") return renderTest(parts.slice(2).join("/"));
       body = scrDiagnose(); title="Diagnose"; break;
     case "settings":
@@ -1682,6 +1683,9 @@ const PRESETS = {
 function presetTests(key){ const p=PRESETS[key]; return p.ids ? TESTS.filter(x=>p.ids.includes(x.id)) : TESTS; }
 const PDESC = { FULL:"Every check below, guided end-to-end with a saved report.",
   USED_PHONE:"Focused intake check for a second-hand device — screen, touch, cameras, radios." };
+function selCustom(){ return S.preset.startsWith("custom:") ? S.customPresets.find(x=>x.id===S.preset.slice(7)) : null; }
+function selTests(){ const cp=selCustom(); return cp ? TESTS.filter(t=>cp.ids.includes(t.id)) : presetTests(S.preset); }
+function selLabel(){ const cp=selCustom(); return cp ? cp.name : PRESETS[S.preset].label; }
 function scrDiagnose(){
   const byCat = {};
   TESTS.forEach(t => (byCat[t.cat] = byCat[t.cat]||[]).push(t));
@@ -1691,7 +1695,13 @@ function scrDiagnose(){
         <div class="pn">${presetTests(k).length} checks</div>
         <div class="pt">${p.label}</div>
         <div class="pd">${PDESC[k]||""}</div></button>`).join("")}</div>
-    <button class="btn full" data-act="start-diag">Start ${PRESETS[S.preset].label}</button>
+    ${S.customPresets.map(cp =>
+      `<button class="preset ${S.preset==="custom:"+cp.id?"sel":""}" data-cpreset="${cp.id}" style="width:100%;flex:none">
+        <div class="pn">${cp.ids.length} checks</div>
+        <div class="pt">${esc(cp.name)}</div>
+        <div class="pd">Your preset — ${cp.ids.length} checks picked by you.</div></button>`).join("")}
+    <button class="btn-outline full" data-nav="diagnose/presets" style="display:block;width:100%">${S.customPresets.length?"Manage presets":"Create a custom preset"}</button>
+    <button class="btn full" data-act="start-diag">Start ${esc(selLabel())}</button>
     <button class="btn-outline full" data-nav="reports" style="display:block;width:100%">Saved reports</button>
     <div class="sec-head">Quick tests</div>
     ${Object.entries(byCat).map(([c,ts]) =>
@@ -1729,11 +1739,43 @@ function intakeSheet(){
 }
 function startGuided(customer, device){
   const id = "s-"+Date.now();
-  const tests = presetTests(S.preset);
+  const tests = selTests();
   S.sessions.unshift({ id, started:Date.now(), status:"IN_PROGRESS", version:DEVICE.appVersion,
-    preset:PRESETS[S.preset].label, customerLabel:customer||null, deviceLabel:device||null, notes:null, results:{} });
+    preset:selLabel(), customerLabel:customer||null, deviceLabel:device||null, notes:null, results:{} });
   S.engine = { sessionId:id, queue:tests, index:0, results:{}, notes:{} };
   nav("diagnose/guided");
+}
+/* ---------- custom presets (mirrors feature/diagnostics PresetManagerScreen) ---------- */
+function scrDiagPresets(){
+  const byCat = {};
+  TESTS.forEach(t => (byCat[t.cat] = byCat[t.cat]||[]).push(t));
+  if(S.dpreset){
+    const d=S.dpreset;
+    return `<div class="pad col">
+      <div class="flabel">Preset name</div>
+      <input class="field" id="dpresetName" placeholder="e.g. Intake quick check" value="${esc(d.name)}">
+      ${Object.entries(byCat).map(([c,ts]) =>
+        `<div class="qcat">${c}</div>` +
+        `<div class="card" style="padding-top:4px;padding-bottom:4px">${ts.map(x=>`
+          <label class="trow clickable"><input type="checkbox" data-ptest="${x.id}" ${d.sel.has(x.id)?"checked":""} style="accent-color:var(--primary);margin-right:6px">
+            <span class="grow" style="font-size:13.5px">${x.title}</span></label>`).join("")}</div>`
+      ).join("")}
+      <div class="row">
+        <button class="btn-outline grow" data-act="dpreset-cancel">Cancel</button>
+        <button class="btn grow" data-act="dpreset-save">Save (<span id="dpresetN">${d.sel.size}</span>)</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="pad col">
+    <div class="t-mini sub">Your own diagnostic line-ups — pick the checks a customer device actually needs.</div>
+    ${S.customPresets.length===0?`<div class="empty">No custom presets yet.</div>`:""}
+    ${S.customPresets.map(cp=>`<div class="card trow">
+      <div class="grow"><div style="font-weight:600">${esc(cp.name)}</div><div class="t-mini sub">${cp.ids.length} checks</div></div>
+      <button class="textbtn" data-pedit="${cp.id}">Edit</button>
+      <button class="textbtn" data-pdel="${cp.id}" style="color:var(--error)">Delete</button>
+    </div>`).join("")}
+    <button class="btn full" data-act="dpreset-new">New preset</button>
+  </div>`;
 }
 /* ---------- guided session ---------- */
 function renderGuided(){
@@ -4147,6 +4189,10 @@ document.addEventListener("click", e => {
     const m=msgs[act2];
     dialog({title:m[0],text:m[1],confirm:m[2],cancel:"Cancel",danger:m[3].n>=3,risk:m[3],onConfirm:"pkg:"+act2+":"+pkg}); return; }
   const pr = e.target.closest("[data-preset]"); if(pr){ S.preset=pr.dataset.preset; render(); return; }
+  const cpr = e.target.closest("[data-cpreset]"); if(cpr){ S.preset="custom:"+cpr.dataset.cpreset; render(); return; }
+  const pedit = e.target.closest("[data-pedit]"); if(pedit){ const cp=S.customPresets.find(x=>x.id===pedit.dataset.pedit); if(cp){S.dpreset={id:cp.id,name:cp.name,sel:new Set(cp.ids)};render();} return; }
+  const pdel = e.target.closest("[data-pdel]"); if(pdel){ const cp=S.customPresets.find(x=>x.id===pdel.dataset.pdel); if(cp){ dialog({title:`Delete “${cp.name}”?`,text:"The preset is removed from the picker. Sessions already run with it keep their results.",confirm:"Delete",cancel:"Cancel",risk:{n:1,label:"Minor",cls:"setup"},onConfirm:"dpreset-del:"+cp.id}); } return; }
+  const ptest = e.target.closest("[data-ptest]"); if(ptest&&S.dpreset){ const id=ptest.dataset.ptest; if(S.dpreset.sel.has(id))S.dpreset.sel.delete(id);else S.dpreset.sel.add(id); const n=$("#dpresetN"); if(n)n.textContent=S.dpreset.sel.size; return; }
   const ir = e.target.closest("[data-irange]"); if(ir){ S.insightRange=ir.dataset.irange; render(); return; }
   const cm = e.target.closest("[data-cmp]"); if(cm){ const [w,id]=cm.dataset.cmp.split(":"); S.cmp[w]=id; S.cmp.done=false; render(); return; }
   const mpp = e.target.closest("[data-mppat]"); if(mpp){ S.motionPattern=mpp.dataset.mppat; render(); return; }
@@ -4218,6 +4264,16 @@ On Android &lt; 11 this section may be absent.</pre></div>
       later(()=>{ S.upd="none"; if(cur()==="settings/about")render(); },900); } break;
     case "dlg-ok": { const cb=$("#overlay").dataset.dlgOk||""; closeOverlay(); dlgOk(cb); break; }
     case "start-diag": intakeSheet(); break;
+    case "dpreset-new": S.dpreset={id:null,name:"",sel:new Set()}; render(); break;
+    case "dpreset-cancel": S.dpreset=null; render(); break;
+    case "dpreset-save": { const d=S.dpreset; if(!d)break;
+      d.name=($("#dpresetName")?.value||"").trim();
+      if(!d.name){ toast("Name the preset"); break; }
+      if(d.sel.size===0){ toast("Pick at least one check"); break; }
+      const ids=TESTS.map(t=>t.id).filter(id=>d.sel.has(id)); // catalog order
+      if(d.id){ const cp=S.customPresets.find(x=>x.id===d.id); if(cp){cp.name=d.name;cp.ids=ids;} }
+      else S.customPresets.unshift({id:"cp-"+Date.now(),name:d.name,ids});
+      S.dpreset=null; render(); toast("Preset saved"); break; }
     case "intake-skip": closeOverlay(); startGuided(null,null); break;
     case "intake-start": { const c=$("#intakeCust")?.value.trim(), d=$("#intakeDev")?.value.trim();
       closeOverlay(); startGuided(c||null,d||null); break; }
@@ -4607,6 +4663,10 @@ function dlgOk(cb){
       later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="NDEF message written successfully.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
     case cb==="adb-reboot": toast("Rebooting (mock)"); break;
     case cb==="term-enable": S.adb.terminal=true; render(); break;
+    case cb.startsWith("dpreset-del:"): { const id=cb.slice(12);
+      S.customPresets=S.customPresets.filter(x=>x.id!==id);
+      if(S.preset==="custom:"+id)S.preset="FULL";
+      render(); break; }
     case cb.startsWith("appop:"): { const [,op,m]=cb.split(":");
       const o=appopsFor(S.appopsSel).find(x=>x.op===op); if(o)o.mode=m;
       pushElevLog(`appops set ${S.appopsSel} ${op} ${m}`); render(); break; }

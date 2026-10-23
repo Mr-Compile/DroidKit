@@ -11,6 +11,8 @@ import io.github.droidkit.core.database.DiagnosticResultDao
 import io.github.droidkit.core.database.DiagnosticResultEntity
 import io.github.droidkit.core.database.DiagnosticSessionDao
 import io.github.droidkit.core.database.DiagnosticSessionEntity
+import io.github.droidkit.core.database.TechnicianPresetDao
+import io.github.droidkit.core.database.TechnicianPresetEntity
 import io.github.droidkit.core.system.DeviceSystemProbe
 import java.util.UUID
 import javax.inject.Inject
@@ -27,6 +29,7 @@ class DiagnosticsViewModel @Inject constructor(
     private val sessionDao: DiagnosticSessionDao,
     private val resultDao: DiagnosticResultDao,
     private val snapshotDao: DeviceSnapshotDao,
+    private val presetDao: TechnicianPresetDao,
     private val probe: DeviceSystemProbe,
     private val settings: SettingsRepository,
 ) : ViewModel() {
@@ -35,31 +38,41 @@ class DiagnosticsViewModel @Inject constructor(
         sessionDao.observeAll()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Technician-authored presets shown alongside the built-ins on the picker. */
+    val customPresets: StateFlow<List<TechnicianPresetEntity>> =
+        presetDao.observeAll()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val engine = SessionEngine(PhoneDoctorTests.ALL)
 
     private val _activeSessionId = MutableStateFlow<String?>(null)
     val activeSessionId = _activeSessionId.asStateFlow()
 
     /** Intake data armed by the picker screen before navigation to the guided flow. */
-    private var pendingPreset = DiagnosticPreset.FULL
+    private var pendingTestIds: List<String> = DiagnosticPreset.FULL.tests.map { it.id }
+    private var pendingPresetTag: String = DiagnosticPreset.FULL.name
     private var pendingCustomer: String? = null
     private var pendingDevice: String? = null
 
     /** Stages intake values for the next guided run. */
-    fun armSession(preset: DiagnosticPreset, customerLabel: String?, deviceLabel: String?) {
-        pendingPreset = preset
+    fun armSession(selection: PresetSelection, customerLabel: String?, deviceLabel: String?) {
+        pendingTestIds = selection.testIds
+        pendingPresetTag = when (selection) {
+            is PresetSelection.Builtin -> selection.preset.name
+            is PresetSelection.Custom -> selection.preset.name
+        }
         pendingCustomer = customerLabel?.ifBlank { null }
         pendingDevice = deviceLabel?.ifBlank { null }
     }
 
     /** Creates a session + device snapshot and seeds the guided engine. */
     fun startGuided() {
-        val preset = pendingPreset
+        val testIds = pendingTestIds
         // Restart synchronously so a finished run can't emit done=true while
         // the coroutine below is still persisting the new session.
-        engine.restart(preset.tests.map { it.id })
+        engine.restart(testIds)
         viewModelScope.launch {
-            _activeSessionId.value = createSession(preset)
+            _activeSessionId.value = createSession(testIds)
         }
     }
 
@@ -108,9 +121,15 @@ class DiagnosticsViewModel @Inject constructor(
             val notes = rows.mapNotNull { row ->
                 row.userNote?.let { row.testId to it }
             }.toMap()
-            val preset = runCatching { DiagnosticPreset.valueOf(session.preset) }
-                .getOrDefault(DiagnosticPreset.FULL)
-            engine.seed(preset.tests.map { it.id }, results, notes)
+            // The stored test list is authoritative (survives preset
+            // edits/deletes); rows from before v6 fall back to the preset tag.
+            val testIds = session.testIds
+                ?.split(",")
+                ?.filter { it.isNotBlank() }
+                ?: runCatching { DiagnosticPreset.valueOf(session.preset) }
+                    .getOrDefault(DiagnosticPreset.FULL)
+                    .tests.map { it.id }
+            engine.seed(testIds, results, notes)
             _activeSessionId.value = sessionId
         }
     }
@@ -141,7 +160,34 @@ class DiagnosticsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun createSession(preset: DiagnosticPreset): String {
+    // ---------- technician presets -----------------------------------------
+
+    /** Insert a new preset, or update it when [existingId] is given. */
+    fun savePreset(name: String, testIds: List<String>, existingId: String? = null) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty() || testIds.isEmpty()) return
+        viewModelScope.launch {
+            if (existingId == null) {
+                presetDao.insert(
+                    TechnicianPresetEntity(
+                        id = UUID.randomUUID().toString(),
+                        name = trimmed,
+                        createdAtEpochMs = System.currentTimeMillis(),
+                        testIds = testIds.joinToString(","),
+                    ),
+                )
+            } else {
+                presetDao.update(existingId, trimmed, testIds.joinToString(","))
+            }
+        }
+    }
+
+    /** Removing a preset never rewrites sessions recorded with it. */
+    fun deletePreset(id: String) {
+        viewModelScope.launch { presetDao.deleteById(id) }
+    }
+
+    private suspend fun createSession(testIds: List<String>): String {
         val now = System.currentTimeMillis()
         val technician = settings.technicianName.first().ifBlank { null }
         val snapshot = DeviceSnapshotEntity(
@@ -172,7 +218,8 @@ class DiagnosticsViewModel @Inject constructor(
                 overallStatus = "IN_PROGRESS",
                 notes = null,
                 appVersion = probe.appVersionName,
-                preset = preset.name,
+                preset = pendingPresetTag,
+                testIds = testIds.joinToString(","),
                 customerLabel = pendingCustomer,
                 deviceLabel = pendingDevice,
                 technicianName = technician,

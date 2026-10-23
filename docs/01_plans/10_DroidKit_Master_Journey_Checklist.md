@@ -957,7 +957,7 @@ and the technician V2 backlog (custom presets, multi-device history).
 - [x] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
 - [x] Settings export/import via SAF JSON — megaplan Task 6
 - [x] ADB terminal (`adb/terminal`, guarded `ElevatedOps.runRawCommand`, `adb_terminal_enabled` opt-in + L4 sheet, verbatim audit) — megaplan Task 7
-- [ ] Custom diagnostic presets (`technician_presets`, Room v6) — megaplan Task 8
+- [x] Custom diagnostic presets (`technician_presets`, Room v6, `diagnose/presets` builder, sessions persist resolved `testIds`) — megaplan Task 8
 - [ ] Multi-device history filters on Reports — megaplan Task 9
 
 ---

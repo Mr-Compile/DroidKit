@@ -32,10 +32,16 @@ data class DiagnosticSessionEntity(
     val overallStatus: String, // IN_PROGRESS | COMPLETED | ABANDONED
     val notes: String?,
     val appVersion: String,
-    val preset: String = "FULL", // FULL | USED_PHONE | subset label
+    val preset: String = "FULL", // FULL | USED_PHONE | custom preset label
     val customerLabel: String? = null,
     val deviceLabel: String? = null,
     val technicianName: String? = null,
+    /**
+     * Comma-separated PhoneDoctorTest ids queued at session start — the
+     * authoritative test list for resume, independent of how the preset
+     * was later edited or deleted. Null on rows written before v6.
+     */
+    val testIds: String? = null,
 )
 
 @Entity(tableName = "diagnostic_results", indices = [Index("sessionId")])
@@ -79,6 +85,20 @@ data class NfcTagScanEntity(
     val tagIdTail: String?,
     val techList: String,
     val recordSummary: String?,
+)
+
+/**
+ * A technician-authored diagnostic preset — a named subset of
+ * PhoneDoctorTest ids. [testIds] is comma-separated in catalog order;
+ * sessions store their own resolved copy, so editing or deleting a preset
+ * never rewrites history.
+ */
+@Entity(tableName = "technician_presets")
+data class TechnicianPresetEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val createdAtEpochMs: Long,
+    val testIds: String,
 )
 
 @Entity(tableName = "elevated_action_log")

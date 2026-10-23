@@ -65,6 +65,19 @@ private val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+private val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `technician_presets` (" +
+                "`id` TEXT PRIMARY KEY NOT NULL, " +
+                "`name` TEXT NOT NULL, " +
+                "`createdAtEpochMs` INTEGER NOT NULL, " +
+                "`testIds` TEXT NOT NULL)",
+        )
+        db.execSQL("ALTER TABLE `diagnostic_sessions` ADD COLUMN `testIds` TEXT")
+    }
+}
+
 @Singleton
 class RoomElevatedAudit @Inject constructor(
     private val dao: ElevatedActionLogDao,
@@ -90,7 +103,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): DroidKitDatabase =
         Room.databaseBuilder(context, DroidKitDatabase::class.java, "droidkit.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
 
     @Provides fun sessionDao(db: DroidKitDatabase) = db.sessionDao()
@@ -100,6 +113,7 @@ object DatabaseModule {
     @Provides fun elevatedLogDao(db: DroidKitDatabase) = db.elevatedLogDao()
     @Provides fun storageSnapshotDao(db: DroidKitDatabase) = db.storageSnapshotDao()
     @Provides fun nfcTagScanDao(db: DroidKitDatabase) = db.nfcTagScanDao()
+    @Provides fun technicianPresetDao(db: DroidKitDatabase) = db.technicianPresetDao()
 
     @Provides
     @IntoSet
