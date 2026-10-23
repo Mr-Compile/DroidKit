@@ -839,7 +839,7 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 - [x] Network/Bluetooth/Sensors migrated — plan Task 9
 
 ## V5-5 Advanced/AI
-- [ ] Capability Center — plan Task 10 (screen does not exist yet)
+- [x] Capability Center — plan Task 10 (`settings/capabilities`: live provider cards — status, served capabilities, limitations, grant/ADB-Lab actions; entry from Settings → Advanced access)
 - [x] Permission Center — plan Task 10 (restyled via shared primitives)
 - [x] AI insight surfaces + AI settings friendly states — plan Task 10 (`AiSurfaceCard`, `.gatecard` states, restyled chat)
 - [x] Settings grouped Material lists — plan Task 10 (grouped cards + segmented theme control)
@@ -953,7 +953,7 @@ and the technician V2 backlog (custom presets, multi-device history).
 
 - [x] Risk/AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — megaplan Task 2
 - [x] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
-- [ ] Capability Center screen (`settings/capabilities`) — megaplan Task 4
+- [x] Capability Center screen (`settings/capabilities`) — megaplan Task 4
 - [ ] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
 - [ ] Settings export/import via SAF JSON — megaplan Task 6
 - [ ] ADB terminal (`adb/terminal`, guarded `runRawCommand`, opt-in) — megaplan Task 7

@@ -52,6 +52,7 @@ fun SettingsScreen(
     onOpenAbout: () -> Unit = {},
     onOpenPermissions: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
+    onOpenCapabilities: () -> Unit = {},
     onOpenHelp: () -> Unit = {},
     onOpenWhatsNew: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -180,8 +181,13 @@ fun SettingsScreen(
                                 }
                             }
                         }
-                        TextButton(onClick = onOpenAdb) {
-                            Text("Open ADB Lab for wireless pairing")
+                        Row {
+                            TextButton(onClick = onOpenCapabilities) {
+                                Text("Manage capabilities")
+                            }
+                            TextButton(onClick = onOpenAdb) {
+                                Text("Open ADB Lab for wireless pairing")
+                            }
                         }
                     }
                 }

@@ -144,3 +144,16 @@ Owner approval required?: yes — given in session (design presented, approved "
 Files/docs updated: `docs/01_plans/2026-10-21-location-gps-fix.md` (spec), `feature/diagnostics/.../tests/LocationCheckScreen.kt` (new), `PhoneDoctorRoute.kt`, `PhoneDoctorTestScreen.kt`, `PhoneDoctorTest.kt`, `feature/diagnostics/src/main/AndroidManifest.xml`, `mockups/{index,improved-index}.html`, `CHANGELOG.md`, master checklist J09
 Migration completed? [x]
 Notes: guided-runner emit stays instant and capability-based; raw coordinates never leave the screen.
+
+## Entry
+Date: 2026-10-23
+Feature: Capability Center screen (megaplan Task 4)
+Old document/decision: `feature_plans_v2/features/23_CAPABILITY_ADVANCED_ACCESS_V2.md` — Capability Center lists four rows: Standard Android, Shizuku, Wireless ADB, Root
+Improved v2 decision: render only registered providers — Shizuku was superseded by the native wireless-ADB provider (J19); no Shizuku dependency exists or is planned
+Repository reality: `ProviderKind` enum is STANDARD/ADB/ROOT; `CapabilityManager.statuses` already drives the Settings → Advanced access rows; the new screen adds per-provider capabilities/limitations/setup actions on the same live data
+Conflict classification: spec-vs-product deviation — spec row dropped, not silently: Shizuku's spec'd role (elevated provider UX) is served by native ADB
+Decision: screen shows STANDARD/ADB/ROOT only; Shizuku row omitted by design
+Owner approval required?: yes — given in session (megaplan scope approved "spec'd gaps + V2 user features")
+Files/docs updated: `core/privileges/.../CapabilityManager.kt` (`providerCapabilities()`), `feature/settings/.../{CapabilityCenterScreen,CapabilityCenterViewModel,SettingsFeature,SettingsScreen}.kt`, `mockups/{index,improved-index}.html`, master checklist V5-5 + megaplan section
+Migration completed? [x]
+Notes: the spec file keeps the Shizuku mention for history; a J18 "Shizuku provider" journey remains possible later but is not required for the capability model.

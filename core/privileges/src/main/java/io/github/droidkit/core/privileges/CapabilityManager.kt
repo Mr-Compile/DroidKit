@@ -41,6 +41,10 @@ class CapabilityManager @Inject constructor(
     fun providerStatuses(): Map<ProviderKind, ProviderStatus> =
         providersByKind.mapValues { it.value.status }
 
+    /** Capabilities each registered provider can serve — used by Capability Center. */
+    fun providerCapabilities(): Map<ProviderKind, Set<Capability>> =
+        providersByKind.mapValues { it.value.capabilities }
+
     /** Re-read every provider's live status into the reactive surface. */
     fun refreshStatuses() {
         _statuses.value = providerStatuses()

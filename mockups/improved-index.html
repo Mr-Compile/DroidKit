@@ -990,6 +990,7 @@ const TEST_KW = {
 const PAGES = [
   {id:"page.settings",title:"Settings",subtitle:"Theme, AI assistant, elevated access",route:"settings",group:"Settings",icon:"settings",kw:["preferences","options","theme","dark mode","appearance"]},
   {id:"page.permissions",title:"Permissions & Access",subtitle:"Android permissions and elevated providers",route:"permissions",group:"Pages",icon:"security",kw:["permission","root","adb","access","elevated"]},
+  {id:"page.capabilities",title:"Capability Center",subtitle:"Provider status, capabilities and setup",route:"settings/capabilities",group:"Settings",icon:"security",kw:["capability","provider","adb","root","elevated","advanced access"]},
   {id:"page.privacy",title:"Privacy Center",subtitle:"What stays on-device and what can go online",route:"settings/privacy",group:"Settings",icon:"privacy_tip",kw:["privacy","data","local","offline"]},
   {id:"page.about",title:"About DroidKit",subtitle:"Version, support and legal information",route:"settings/about",group:"Help",icon:"info",kw:["version","about","legal","developer"]},
   {id:"page.whats_new",title:"What's New",subtitle:"Release notes for this build",route:"settings/about/whats_new",group:"Help",icon:"new_releases",kw:["changelog","release","new","version"]},
@@ -1462,6 +1463,7 @@ function render(){
     case "settings":
       if(parts[1]==="ai_chat"){ body = scrAiChat(); title="DroidKit AI"; }
       else if(parts[1]==="privacy"){ body = scrPrivacy(); title="Privacy Center"; back=true; }
+      else if(parts[1]==="capabilities"){ body = scrCapabilities(); title="Capability Center"; back=true; }
       else if(parts[1]==="about"){
         back=true;
         if(parts[2]==="what_is"){ body = scrAboutWhatIs(); title="What is DroidKit?"; }
@@ -2088,7 +2090,10 @@ function scrSettings(){
           <div class="grow"><span class="provk">${k}</span>
             <div class="t-mini sub" style="margin-top:1px">${esc(providerLabel(k))}</div></div>
           ${st==="setup"?`<button class="textbtn" data-act="grant-provider" data-prov="${k}">Grant</button>`:""}</div>`;}).join("")}
-      <button class="textbtn" data-nav="adb" style="margin-top:4px">Open ADB Lab for wireless pairing</button>
+      <div class="row">
+        <button class="textbtn" data-nav="settings/capabilities" style="margin-top:4px">Manage capabilities</button>
+        <button class="textbtn" data-nav="adb" style="margin-top:4px">Open ADB Lab for wireless pairing</button>
+      </div>
     </div>
     ${S.elevLog.length?`<div class="sec-head">Elevated action history</div>
     <div class="card">${S.elevLog.slice(0,10).map(e=>`
@@ -2139,6 +2144,37 @@ function scrSettings(){
 function privInfo(title,detail){
   return `<div style="padding:6px 0"><div class="t-body">${esc(title)}</div>
     <div class="t-mini sub">${esc(detail)}</div></div>`;
+}
+function scrCapabilities(){
+  const CAP_LABEL={STANDARD_API:"Standard Android APIs",RUNTIME_PERMISSION:"Runtime permissions",
+    ELEVATED_SHELL:"Elevated shell actions",ADB_SHELL:"ADB shell",ROOT:"Root shell"};
+  const KIND={STANDARD:{name:"Standard Android",caps:["STANDARD_API","RUNTIME_PERMISSION"],
+      lim:"Runs with no extra access — read-only device and app information. Cannot perform elevated actions."},
+    ADB:{name:"Wireless ADB",caps:["ELEVATED_SHELL","ADB_SHELL"],
+      lim:"Needs Wireless debugging enabled and a one-time pairing. Commands run as the ADB shell user — broad but not full system access."},
+    ROOT:{name:"Root",caps:["ROOT"],
+      lim:"Only on rooted devices. Broadest access; used only when a tool explicitly needs it."}};
+  const BADGE={ready:["ok","Ready"],setup:["setup","Setup required"],unavailable:["dim","Unavailable"]};
+  const a=S.adb;
+  return `<div class="pad col">
+    <div class="t-mini sub">DroidKit routes every elevated action through a capability — tools never pick a provider themselves.</div>
+    ${Object.keys(KIND).filter(k=>PROVIDERS[k]).map(k=>{
+      const st=PROVIDERS[k].status, [bcls,blab]=BADGE[st]||BADGE.unavailable;
+      return `<div class="card">
+        <div class="row"><span class="grow t-title">${KIND[k].name}</span><span class="badge ${bcls}">${blab}</span></div>
+        ${st==="setup"?`<div class="t-mini sub" style="margin-top:4px">${esc(PROVIDERS[k].instructions)}</div>`:""}
+        ${st==="unavailable"?`<div class="t-mini sub" style="margin-top:4px">${esc(PROVIDERS[k].reason)}</div>`:""}
+        <div class="sec-head" style="margin-top:10px">Can serve</div>
+        ${KIND[k].caps.map(cp=>`<div class="t-mini sub">· ${CAP_LABEL[cp]}</div>`).join("")}
+        ${k==="ADB"&&a.session?`<div class="t-mini sub" style="margin-top:6px">Session: ${esc(a.session)}</div>`:""}
+        ${k==="ADB"?`<div class="t-mini sub" style="margin-top:4px">Auto-connect ${a.autoConnect!==false?"on":"off"} — reconnects when wireless debugging is available</div>`:""}
+        <div class="t-mini sub" style="margin-top:6px">${KIND[k].lim}</div>
+        <div class="row" style="margin-top:6px">
+          ${st==="setup"?`<button class="textbtn" data-act="grant-provider" data-prov="${k}">Grant</button>`:""}
+          ${k==="ADB"?`<button class="textbtn" data-nav="adb">Open ADB Lab</button>`:""}
+        </div>
+      </div>`;}).join("")}
+  </div>`;
 }
 function scrPrivacy(){
   const ai=S.ai;

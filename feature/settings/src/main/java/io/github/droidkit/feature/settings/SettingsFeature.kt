@@ -19,6 +19,7 @@ import io.github.droidkit.feature.settings.about.PrivacyCenterScreen
 
 object SettingsFeature : FeatureContribution {
     const val ROUTE = "settings"
+    const val CAPABILITIES_ROUTE = "settings/capabilities"
     const val AI_CHAT_ROUTE = "settings/ai_chat"
     const val PRIVACY_ROUTE = "settings/privacy"
     const val ABOUT_ROUTE = "settings/about"
@@ -48,8 +49,17 @@ fun NavGraphBuilder.settingsGraph(nav: NavHostController) {
             onOpenAbout = { nav.navigate(SettingsFeature.ABOUT_ROUTE) { launchSingleTop = true } },
             onOpenPermissions = { nav.navigate("permissions") { launchSingleTop = true } },
             onOpenPrivacy = { nav.navigate(SettingsFeature.PRIVACY_ROUTE) { launchSingleTop = true } },
+            onOpenCapabilities = {
+                nav.navigate(SettingsFeature.CAPABILITIES_ROUTE) { launchSingleTop = true }
+            },
             onOpenHelp = { nav.navigate(SettingsFeature.ABOUT_HELP_ROUTE) { launchSingleTop = true } },
             onOpenWhatsNew = { nav.navigate(SettingsFeature.ABOUT_WHATS_NEW_ROUTE) { launchSingleTop = true } },
+        )
+    }
+    composable(SettingsFeature.CAPABILITIES_ROUTE) {
+        CapabilityCenterScreen(
+            onBack = { nav.navigateUp() },
+            onOpenAdb = { nav.navigate("adb") { launchSingleTop = true } },
         )
     }
     composable(SettingsFeature.AI_CHAT_ROUTE) {
