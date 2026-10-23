@@ -704,7 +704,7 @@ const S = {
   insightRange: "30d",
   toolsQuery: "", toolsCategory: null,
   appsQuery: "", appsFilter: "ALL",
-  reportsFilter: "ALL",
+  reportsFilter: "ALL", reportsDevice: null, reportsCustomer: null, reportsMenu: null,
   sessions: [], sessionResults: {},
   batt: { measured: false, measuring: false, samples: 7, estMah: 4820, designMah: null },
   engine: null,           // guided run state
@@ -3343,16 +3343,31 @@ function propsListHtml(){
 /* ---------- reports ---------- */
 function scrReports(){
   const filters=[["ALL","All"],["IN_PROGRESS","In progress"],["COMPLETED","Completed"],["ABANDONED","Abandoned"]];
-  const rows=S.sessions.filter(s=>S.reportsFilter==="ALL"||s.status===S.reportsFilter);
+  const devLabels=[...new Set(S.sessions.map(s=>s.deviceLabel).filter(Boolean))].sort();
+  const custLabels=[...new Set(S.sessions.map(s=>s.customerLabel).filter(Boolean))].sort();
+  const rows=S.sessions.filter(s=>(S.reportsFilter==="ALL"||s.status===S.reportsFilter)
+    &&(!S.reportsDevice||s.deviceLabel===S.reportsDevice)
+    &&(!S.reportsCustomer||s.customerLabel===S.reportsCustomer));
+  const menu=S.reportsMenu, opts=menu==="device"?devLabels:menu==="cust"?custLabels:[],
+    cur=menu==="device"?S.reportsDevice:S.reportsCustomer;
   return `<div class="pad col" style="padding-top:4px">
     <div class="chiprow" style="padding:2px 0 6px">${filters.map(([v,l])=>
       `<button class="fchip ${S.reportsFilter===v?"sel":""}" data-repfilter="${v}">${l}</button>`).join("")}</div>
+    ${(devLabels.length||custLabels.length)?`<div class="chiprow" style="padding:0 0 6px">
+      ${devLabels.length?`<button class="fchip ${S.reportsDevice?"sel":""}" data-lfilter="device">Device · ${S.reportsDevice?esc(S.reportsDevice):"All"}</button>`:""}
+      ${custLabels.length?`<button class="fchip ${S.reportsCustomer?"sel":""}" data-lfilter="cust">Customer · ${S.reportsCustomer?esc(S.reportsCustomer):"All"}</button>`:""}
+    </div>`:""}
+    ${menu?`<div class="card" style="padding:4px 0;margin-bottom:6px">
+      <div class="trow clickable" data-lsel="${menu}" data-lv=""><span class="grow t-body">All</span>${!cur?`<span class="pri">✓</span>`:""}</div>
+      ${opts.map(l=>`<div class="trow clickable" data-lsel="${menu}" data-lv="${esc(l)}"><span class="grow t-body">${esc(l)}</span>${cur===l?`<span class="pri">✓</span>`:""}</div>`).join("")}
+    </div>`:""}
     ${rows.length?rows.map(s=>{
       const counts={};Object.values(s.results).forEach(r=>counts[r.state]=(counts[r.state]||0)+1);
       const cstr=Object.keys(counts).length?Object.entries(counts).map(([k,v])=>`${k}: ${v}`).join(", "):"No test results recorded";
       return `<div class="card clickable" data-nav="reports/detail/${s.id}">
         <div class="t-small">${fmtDT(s.started)}</div>
         <div class="t-mini">${s.status} — app v${s.version}</div>
+        ${(s.customerLabel||s.deviceLabel)?`<div class="t-mini">${[s.customerLabel,s.deviceLabel].filter(Boolean).map(esc).join(" · ")}</div>`:""}
         <div class="t-mini sub">${cstr}</div></div>`;}).join("")
     :`<div class="empty">${S.reportsFilter==="ALL"?"No saved reports. Run a diagnostic first.":"No "+S.reportsFilter.toLowerCase().replace(/_/g," ")+" reports."}</div>`}
   </div>`;
@@ -4187,6 +4202,8 @@ document.addEventListener("click", e => {
   const cat = e.target.closest("[data-cat]"); if(cat){ S.toolsCategory = cat.dataset.cat==="All"?null:cat.dataset.cat; render(); return; }
   const af = e.target.closest("[data-appfilter]"); if(af){ S.appsFilter=af.dataset.appfilter; render(); return; }
   const rf = e.target.closest("[data-repfilter]"); if(rf){ S.reportsFilter=rf.dataset.repfilter; render(); return; }
+  const lf = e.target.closest("[data-lfilter]"); if(lf){ S.reportsMenu=S.reportsMenu===lf.dataset.lfilter?null:lf.dataset.lfilter; render(); return; }
+  const ls = e.target.closest("[data-lsel]"); if(ls){ const v=ls.dataset.lv||null; if(ls.dataset.lsel==="device")S.reportsDevice=v;else S.reportsCustomer=v; S.reportsMenu=null; render(); return; }
   const cp = e.target.closest("[data-copy]"); if(cp){ e.stopPropagation(); navigator.clipboard?.writeText(cp.dataset.copy).catch(()=>{}); toast("Copied"); return; }
   const bd = e.target.closest("[data-bledev]"); if(bd){
     if(S.perms[P.BTC]){ S.ble.scanning=false; nav("bluetooth/gatt/"+encodeURIComponent(bd.dataset.bledev)); }

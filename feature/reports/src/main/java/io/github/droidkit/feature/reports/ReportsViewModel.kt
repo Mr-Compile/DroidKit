@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -61,14 +62,33 @@ class ReportsViewModel @Inject constructor(
 
     val statusFilter = MutableStateFlow(StatusFilter.ALL)
 
+    /** Multi-device history — null means "every device/customer". */
+    val deviceFilter = MutableStateFlow<String?>(null)
+    val customerFilter = MutableStateFlow<String?>(null)
+
+    /** Distinct intake labels present in history, for the filter dropdowns. */
+    val deviceLabels: StateFlow<List<String>> =
+        sessionDao.observeAll()
+            .map { list -> list.mapNotNull { it.deviceLabel }.distinct().sorted() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val customerLabels: StateFlow<List<String>> =
+        sessionDao.observeAll()
+            .map { list -> list.mapNotNull { it.customerLabel }.distinct().sorted() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val rows: StateFlow<List<ReportRow>> =
         combine(
             sessionDao.observeAll(),
             resultDao.observeAll(),
             statusFilter,
-        ) { sessions, results, filter ->
+            deviceFilter,
+            customerFilter,
+        ) { sessions, results, filter, device, customer ->
             sessions
                 .filter { filter == StatusFilter.ALL || it.overallStatus == filter.name }
+                .filter { device == null || it.deviceLabel == device }
+                .filter { customer == null || it.customerLabel == customer }
                 .map { s -> ReportRow(s, results.filter { it.sessionId == s.id }) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

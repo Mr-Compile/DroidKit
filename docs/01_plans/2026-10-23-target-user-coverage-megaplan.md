@@ -24,7 +24,7 @@ system, extra labs).
 | 5 | Settings export/import | UX-5 (deferred) | Pending |
 | 6 | ADB terminal | J19 gated item — approved 2026-10-23 | Done |
 | 7 | Custom diagnostic presets ("technician presets/checklists") | Product Bible future list | Done |
-| 8 | Multi-device history filters | Product Bible "multi-device history" | Pending |
+| 8 | Multi-device history filters | Product Bible "multi-device history" | Done |
 
 ## Execution tasks
 

@@ -45,6 +45,10 @@ fun ReportsScreen(
 ) {
     val rows by viewModel.rows.collectAsStateWithLifecycle()
     val filter by viewModel.statusFilter.collectAsStateWithLifecycle()
+    val deviceFilter by viewModel.deviceFilter.collectAsStateWithLifecycle()
+    val customerFilter by viewModel.customerFilter.collectAsStateWithLifecycle()
+    val deviceLabels by viewModel.deviceLabels.collectAsStateWithLifecycle()
+    val customerLabels by viewModel.customerLabels.collectAsStateWithLifecycle()
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
     val windowInfo = rememberDroidKitWindowInfo()
@@ -82,6 +86,12 @@ fun ReportsScreen(
                         filter = filter,
                         rows = rows,
                         onFilter = { viewModel.statusFilter.value = it },
+                        deviceFilter = deviceFilter,
+                        customerFilter = customerFilter,
+                        deviceLabels = deviceLabels,
+                        customerLabels = customerLabels,
+                        onDeviceFilter = { viewModel.deviceFilter.value = it },
+                        onCustomerFilter = { viewModel.customerFilter.value = it },
                         onCompare = onCompare,
                         onSelect = onSelect,
                     )
@@ -101,6 +111,12 @@ fun ReportsScreen(
                 filter = filter,
                 rows = rows,
                 onFilter = { viewModel.statusFilter.value = it },
+                deviceFilter = deviceFilter,
+                customerFilter = customerFilter,
+                deviceLabels = deviceLabels,
+                customerLabels = customerLabels,
+                onDeviceFilter = { viewModel.deviceFilter.value = it },
+                onCustomerFilter = { viewModel.customerFilter.value = it },
                 onCompare = onCompare,
                 onSelect = onOpenDetail,
                 modifier = Modifier.padding(padding),
@@ -133,6 +149,12 @@ private fun ReportsListContent(
     filter: StatusFilter,
     rows: List<ReportRow>,
     onFilter: (StatusFilter) -> Unit,
+    deviceFilter: String?,
+    customerFilter: String?,
+    deviceLabels: List<String>,
+    customerLabels: List<String>,
+    onDeviceFilter: (String?) -> Unit,
+    onCustomerFilter: (String?) -> Unit,
     onCompare: () -> Unit,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -154,6 +176,31 @@ private fun ReportsListContent(
                 onClick = onCompare,
                 label = { Text("Compare") },
             )
+        }
+        if (deviceLabels.isNotEmpty() || customerLabels.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (deviceLabels.isNotEmpty()) {
+                    LabelFilterChip(
+                        title = "Device",
+                        options = deviceLabels,
+                        selected = deviceFilter,
+                        onSelect = onDeviceFilter,
+                    )
+                }
+                if (customerLabels.isNotEmpty()) {
+                    LabelFilterChip(
+                        title = "Customer",
+                        options = customerLabels,
+                        selected = customerFilter,
+                        onSelect = onCustomerFilter,
+                    )
+                }
+            }
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -184,6 +231,15 @@ private fun ReportsListContent(
                             "${row.session.overallStatus} — app v${row.session.appVersion}",
                             style = MaterialTheme.typography.bodySmall,
                         )
+                        listOfNotNull(
+                            row.session.customerLabel,
+                            row.session.deviceLabel,
+                        ).takeIf { it.isNotEmpty() }?.let {
+                            Text(
+                                it.joinToString(" · "),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                         val counts = row.results.groupingBy { it.state }.eachCount()
                         Text(
                             if (counts.isEmpty()) "No test results recorded"
@@ -193,6 +249,40 @@ private fun ReportsListContent(
                     }
                 }
             }
+        }
+    }
+}
+
+/** "Device · Shelf A3" chip that opens a dropdown of distinct intake labels. */
+@Composable
+private fun LabelFilterChip(
+    title: String,
+    options: List<String>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    DroidKitFilterChip(
+        selected = selected != null,
+        onClick = { open = true },
+        label = { Text("$title · ${selected ?: "All"}") },
+    )
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        DropdownMenuItem(
+            text = { Text("All") },
+            onClick = {
+                onSelect(null)
+                open = false
+            },
+        )
+        options.forEach { label ->
+            DropdownMenuItem(
+                text = { Text(label) },
+                onClick = {
+                    onSelect(label)
+                    open = false
+                },
+            )
         }
     }
 }
