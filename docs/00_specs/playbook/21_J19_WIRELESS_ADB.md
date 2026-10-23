@@ -48,7 +48,7 @@ User action -> validated parameters -> known command/action -> result parser -> 
 - [x] Foreground pairing service + notification RemoteInput (`AdbPairingService`)
 - [x] QR pairing — display for other device + screenshot decode (`AdbQrPayload`, ZXing)
 - [x] Auto-connect on app start + lazy session reconnect (`AdbSessionSetup.autoConnect`, toggleable, default on)
-- [ ] Optional terminal only after separate approval
+- [x] Optional terminal — separately approved; `ElevatedOps.runRawCommand` (not an `ElevatedAction`), `adb_terminal_enabled` opt-in with L4 confirmation, single-line ≤512 chars, every command audit-logged verbatim
 
 ## Gate
 - [ ] Invalid pairing and disconnect tested

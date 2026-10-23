@@ -81,7 +81,7 @@ Only after validation:
 - Do not assume OEM behavior.
 - Do not add root/Shizuku/ADB shortcuts to bypass the capability architecture.
 - Do not implement FRP bypass, credential bypass, lock-screen bypass, stealth/persistence, unauthorized surveillance, or destructive security-bypass tooling.
-- Do not expose arbitrary shell execution as the default UX.
+- Do not expose arbitrary shell execution as the default UX. Sole approved exception: the opt-in ADB terminal, which routes owner-typed commands through `ElevatedOps.runRawCommand` (single-line, length-capped, fully audit-logged) — never through an `ElevatedAction`, and never enabled by default.
 - Do not store secrets, ADB keys, tokens, or sensitive exports insecurely.
 - Do not request all Android permissions at startup.
 

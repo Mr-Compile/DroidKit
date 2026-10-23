@@ -45,7 +45,7 @@ AUDIT -> PLAN -> IMPLEMENT -> TARGETED VALIDATION -> SELF-REVIEW -> UPDATE CHECK
 - No direct feature dependency on ADB/root — features never import `privilege.*` implementation modules.
 - Standard Android provider must remain first-class.
 - Elevated work goes through `core:privileges` `ElevatedOps` only: features construct typed `ElevatedAction`s (never raw shell strings), tools declare `Capability.ELEVATED_SHELL`, and provider selection (ROOT → ADB) stays inside the core layer.
-- The shell allow-list lives exclusively in `ElevatedAction` — new actions must validate every parameter at construction; no `ElevatedAction` may accept free-form text that reaches a command line.
+- The shell allow-list lives exclusively in `ElevatedAction` — new actions must validate every parameter at construction; no `ElevatedAction` may accept free-form text that reaches a command line. The only sanctioned raw-command path is `ElevatedOps.runRawCommand` behind the opt-in, audit-logged ADB terminal; features must not call it.
 - Provider setup/grant flows are surfaced through `ProviderSetup`/`AdbSessionSetup` interfaces, not provider classes.
 - AI lives in `core:ai` behind `AIProvider`/`AiUseCase`; only the Groq provider is implemented — BYOK, opt-in, off by default.
 - Room for structured persistent app data; DataStore for preferences.

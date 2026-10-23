@@ -31,6 +31,8 @@ class SettingsRepository @Inject constructor(
         androidx.datastore.preferences.core.booleanPreferencesKey("wireless_adb_paired")
     private val wirelessAdbAutoConnectKey =
         androidx.datastore.preferences.core.booleanPreferencesKey("wireless_adb_auto_connect")
+    private val adbTerminalEnabledKey =
+        androidx.datastore.preferences.core.booleanPreferencesKey("adb_terminal_enabled")
 
     val onboardingCompleted: Flow<Boolean> =
         context.settingsStore.data.map { it[onboardingKey] ?: false }
@@ -84,6 +86,19 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setWirelessAdbAutoConnect(enabled: Boolean) {
         context.settingsStore.edit { it[wirelessAdbAutoConnectKey] = enabled }
+    }
+
+    /**
+     * Opt-in gate for the raw ADB terminal — off by default. Enabling is a
+     * level-4 decision confirmed in the UI; this flag is what the terminal
+     * entry point checks. Every command still goes through
+     * `ElevatedOps.runRawCommand` and the audit log.
+     */
+    val adbTerminalEnabled: Flow<Boolean> =
+        context.settingsStore.data.map { it[adbTerminalEnabledKey] ?: false }
+
+    suspend fun setAdbTerminalEnabled(enabled: Boolean) {
+        context.settingsStore.edit { it[adbTerminalEnabledKey] = enabled }
     }
 
     /**

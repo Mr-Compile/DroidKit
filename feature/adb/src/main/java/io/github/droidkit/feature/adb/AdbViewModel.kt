@@ -3,6 +3,7 @@ package io.github.droidkit.feature.adb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.droidkit.core.datastore.SettingsRepository
 import io.github.droidkit.core.privileges.AdbPairingState
 import io.github.droidkit.core.privileges.AdbQrPayload
 import io.github.droidkit.core.privileges.AdbSessionSetup
@@ -10,14 +11,17 @@ import io.github.droidkit.core.privileges.ElevatedAction
 import io.github.droidkit.core.privileges.ElevatedOps
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AdbViewModel @Inject constructor(
     private val adbSetup: AdbSessionSetup,
     private val elevatedOps: ElevatedOps,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     sealed interface Event {
@@ -34,6 +38,15 @@ class AdbViewModel @Inject constructor(
 
     fun setAutoConnect(enabled: Boolean) {
         viewModelScope.launch { adbSetup.setAutoConnectEnabled(enabled) }
+    }
+
+    /** Opt-in gate for the raw terminal screen — off until the owner enables it. */
+    val terminalEnabled: StateFlow<Boolean> =
+        settingsRepository.adbTerminalEnabled
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun setTerminalEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setAdbTerminalEnabled(enabled) }
     }
 
     private val _busy = MutableStateFlow(false)

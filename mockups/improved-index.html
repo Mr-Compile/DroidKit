@@ -729,6 +729,7 @@ const S = {
   ai: { enabled:false, hasKey:false, autoSum:false, model:"openai/gpt-oss-120b", status:null, testing:false,
         turns:[], busy:false },
   adb: { paired:false, session:null, busy:false, props:null, log:"", logLines:"200", useTls:true,
+         terminal:false, termEntries:[],
          pairHost:"192.168.1.37", pairPort:"", pairCode:"", connHost:"", connPort:"",
          pairState:"idle", qr:null, manual:false },
   files: { path:"/sdcard/Android/data", copying:null, sel:new Set(), q:"", saf:false, safPath:["DCIM"] },
@@ -1546,7 +1547,10 @@ function render(){
       else { body = scrPermCenter(); title="Permission Center"; } back=true; break;
     case "appops": body = scrAppOps(); title = S.appopsSel || "AppOps"; back=true; break;
     case "packages": body = scrPackages(); title="Package Controls"; back=true; break;
-    case "adb": body = scrAdb(); title="Wireless ADB"; back=true; break;
+    case "adb":
+      if(parts[1]==="terminal"){ body=scrAdbTerminal(); title="ADB terminal"; }
+      else { body = scrAdb(); title="Wireless ADB"; }
+      back=true; break;
     case "files": body = scrFiles(); title="Storage browser"; back=true; break;
     case "developer": body = scrDeveloper(); title="Developer Lab"; back=true; break;
     case "reports":
@@ -3847,10 +3851,12 @@ function scrAdb(){
     connected:`<div class="t-mini pri">Connected ✓</div>`,
     failed:`<div class="t-mini" style="color:var(--error)">Pairing rejected — check the 6-digit code</div>`,
   }[a.pairState]||"";
+  const termRow=a.session?`<label class="row" style="gap:8px;margin-top:10px;align-items:flex-start"><input type="checkbox" data-act="adb-terminal" ${a.terminal?"checked":""} style="accent-color:var(--primary);margin-top:3px"><div class="grow"><div class="t-body">Terminal</div><div class="t-mini sub">Opt-in raw shell — every command is logged. Structured actions stay the default.</div></div></label>`:"";
   return `<div class="pad col">
-    ${sectionCard("Session", a.session
-      ? infoRow("Connected",a.session)+`<button class="btn-outline" style="margin-top:8px" data-act="adb-disconnect">Disconnect</button>`
-      : `<div class="t-body">Not connected. Enable Wireless debugging in Developer options, then pair below — no IP or port typing needed.</div>`)}
+    ${sectionCard("Session", (a.session
+      ? infoRow("Connected",a.session)+`<div class="row" style="margin-top:8px"><button class="btn-outline" data-act="adb-disconnect">Disconnect</button>${a.terminal?`<button class="btn-outline" data-nav="adb/terminal">Open terminal</button>`:""}</div>`
+      : `<div class="t-body">Not connected. Enable Wireless debugging in Developer options, then pair below — no IP or port typing needed.</div>`)
+      + termRow)}
     ${sectionCard("1 — Pair with code", `
       <div class="t-mini sub">Open Developer options → Wireless debugging → “Pair device with pairing code”. The pairing port is found automatically — you only enter the code.</div>
       ${stateTxt}
@@ -3896,6 +3902,25 @@ function scrAdb(){
         ${a.log?`<div class="t-mini mono" style="margin-top:8px;max-height:240px;overflow:auto">${a.log}</div>`:""}`)}
       ${sectionCard("Power", `<div class="t-mini sub">Reboots the device immediately.</div>
         <button class="btn-outline" style="margin-top:8px" data-act="adb-reboot">Reboot device</button>`)}`:""}
+  </div>`;
+}
+/* ---------------- ADB terminal (opt-in raw shell) ---------------- */
+function scrAdbTerminal(){
+  const a=S.adb;
+  const entries=a.termEntries.map(e=>`<div style="margin-bottom:10px">
+      <div class="t-body mono" style="color:var(--primary)">$ ${esc(e.cmd)}</div>
+      ${e.out?`<div class="t-mini mono">${e.out}</div>`:""}
+      ${e.err?`<div class="t-mini mono" style="color:var(--error)">${e.err}</div>`:""}
+      <div class="t-mini faint">adb · exit ${e.exit}</div></div>`).join("");
+  return `<div class="pad col" style="min-height:100%">
+    <div><span class="badge blocked">L4 · Advanced</span>
+      <div class="t-mini sub" style="margin-top:6px">Commands run as the ADB shell user on this device. DroidKit does not inspect what you type — every command is recorded in the audit log.</div></div>
+    <div id="termLog" class="grow" style="margin-top:8px">${entries||`<div class="t-mini sub">No commands yet.</div>`}</div>
+    <div class="row" style="margin-top:10px">
+      <input class="field grow mono" id="adbTermInput" placeholder="command…">
+      <button class="btn" data-act="adb-term-run">Run</button>
+    </div>
+    <button class="textbtn" data-act="adb-term-clear" ${a.termEntries.length?"":"disabled"}>Clear scrollback</button>
   </div>`;
 }
 /* ---------------- Storage browser (mirrors feature/files) ---------------- */
@@ -4386,6 +4411,25 @@ On Android &lt; 11 this section may be absent.</pre></div>
     case "adb-disconnect": S.adb.session=null; S.adb.pairState="idle";
       PROVIDERS.ADB={status:"setup",instructions:"enable wireless debugging in Developer options, then pair"};
       render(); toast("Disconnected"); break;
+    case "adb-terminal": { const a=S.adb;
+      if(a.terminal){ a.terminal=false; render(); break; }
+      dialog({title:"Enable ADB terminal?",
+        text:"The terminal runs free-form commands as the ADB shell user on this device.<br><br>• DroidKit does not inspect or restrict what you type.<br>• Every command is recorded in the elevated-action audit log.<br>• You can turn it off again at any time from the session card.",
+        confirm:"Enable terminal",cancel:"Cancel",danger:true,
+        risk:{n:4,label:"Advanced",cls:"blocked"},onConfirm:"term-enable"}); break; }
+    case "adb-term-run": { const cmd=($("#adbTermInput")?.value||"").trim(); if(!cmd)break;
+      const canned={
+        "id":"uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),3003(inet) context=u:r:shell:s0",
+        "whoami":"shell",
+        "getprop ro.product.model":"Pixel 8 Pro",
+      };
+      const failed=cmd.startsWith("fail");
+      S.adb.termEntries.push({cmd,
+        out:failed?"":(canned[cmd]||"(mock output)"),
+        err:failed?"sh: "+esc(cmd)+": mock failure":"",exit:failed?1:0});
+      pushElevLog(cmd,failed?1:0); render();
+      const tl=$("#termLog"); if(tl)tl.scrollTop=tl.scrollHeight; break; }
+    case "adb-term-clear": S.adb.termEntries=[]; render(); break;
     case "adb-props": S.adb.props=[["ro.product.model","Pixel 8 Pro"],["ro.build.version.release","15"],
       ["ro.build.version.sdk","35"],["ro.serialno","3A181JEHN08842"],
       ["ro.build.fingerprint","google/husky/husky:15/AP4A.250905.014/14070145:user/release-keys"]];
@@ -4562,6 +4606,7 @@ function dlgOk(cb){
     case cb==="nfc-arm-write": S.nfc.armed="write";
       later(()=>{ if(S.nfc.armed){S.nfc.armed=null;S.nfc.result="NDEF message written successfully.";if(cur().startsWith("nfc"))render();} },2200); render(); break;
     case cb==="adb-reboot": toast("Rebooting (mock)"); break;
+    case cb==="term-enable": S.adb.terminal=true; render(); break;
     case cb.startsWith("appop:"): { const [,op,m]=cb.split(":");
       const o=appopsFor(S.appopsSel).find(x=>x.op===op); if(o)o.mode=m;
       pushElevLog(`appops set ${S.appopsSel} ${op} ${m}`); render(); break; }

@@ -529,21 +529,50 @@ class ElevatedOps @Inject constructor(
             else return ElevatedResult(pinned, -1, "", "requires ${pinned.name} provider — not available")
         }
         val command = action.command()
-        return executorsByKind.getValue(kind).runShell(command, timeoutMs).also { result ->
-            auditSinks.forEach { sink ->
-                runCatching {
-                    sink.record(
-                        ElevatedAuditEntry(
-                            epochMs = System.currentTimeMillis(),
-                            provider = kind,
-                            command = command,
-                            exitCode = result.exitCode,
-                            stderrSummary = result.stderr.lineSequence()
-                                .firstOrNull { it.isNotBlank() }
-                                ?.take(200),
-                        ),
-                    )
-                }
+        return executorsByKind.getValue(kind).runShell(command, timeoutMs)
+            .also { result -> audit(kind, command, result) }
+    }
+
+    /**
+     * Run a raw, user-typed command line through the preferred provider.
+     *
+     * This is the single, separately-gated exception to the [ElevatedAction]
+     * allow-list: it exists only for the opt-in ADB terminal. Validation is
+     * deliberately minimal — one line, length-capped — because the command is
+     * authored by the device's owner, not by a feature. The protection is the
+     * UI gate (terminal opt-in) plus this audit trail: every invocation is
+     * logged verbatim, exactly like [execute].
+     */
+    suspend fun runRawCommand(command: String, timeoutMs: Long = 30_000): ElevatedResult {
+        val trimmed = command.trim()
+        if (trimmed.isEmpty() || trimmed.length > MAX_RAW_LENGTH ||
+            trimmed.any { it == '\n' || it == '\r' }
+        ) {
+            return ElevatedResult(
+                ProviderKind.STANDARD, -1, "",
+                "Rejected: single line, at most $MAX_RAW_LENGTH characters",
+            )
+        }
+        val kind = activeProvider()
+            ?: return ElevatedResult(ProviderKind.STANDARD, -1, "", "no elevated provider available")
+        return executorsByKind.getValue(kind).runShell(trimmed, timeoutMs)
+            .also { result -> audit(kind, trimmed, result) }
+    }
+
+    private suspend fun audit(kind: ProviderKind, command: String, result: ElevatedResult) {
+        auditSinks.forEach { sink ->
+            runCatching {
+                sink.record(
+                    ElevatedAuditEntry(
+                        epochMs = System.currentTimeMillis(),
+                        provider = kind,
+                        command = command,
+                        exitCode = result.exitCode,
+                        stderrSummary = result.stderr.lineSequence()
+                            .firstOrNull { it.isNotBlank() }
+                            ?.take(200),
+                    ),
+                )
             }
         }
     }
@@ -553,4 +582,8 @@ class ElevatedOps @Inject constructor(
         (setupsByKind[kind]?.requestGrant() ?: false).also {
             ProviderStatusBus.notifyChanged()
         }
+
+    companion object {
+        const val MAX_RAW_LENGTH = 512
+    }
 }

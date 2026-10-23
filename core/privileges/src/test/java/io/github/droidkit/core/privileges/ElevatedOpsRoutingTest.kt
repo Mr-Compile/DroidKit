@@ -68,4 +68,35 @@ class ElevatedOpsRoutingTest {
         assertEquals(ProviderKind.STANDARD, result.provider)
         assertEquals(-1, result.exitCode)
     }
+
+    @Test
+    fun `raw command runs verbatim on the preferred provider`() = runBlocking {
+        val adb = FakeExecutor(ProviderKind.ADB)
+        val result = ops(adb).runRawCommand("  dumpsys battery  ")
+        assertEquals(ProviderKind.ADB, result.provider)
+        assertEquals(listOf("dumpsys battery"), adb.ran)
+    }
+
+    @Test
+    fun `raw command rejects blank multiline and oversized input`() = runBlocking {
+        val adb = FakeExecutor(ProviderKind.ADB)
+        val ops = ops(adb)
+        listOf(
+            "   ",
+            "id\npm list packages",
+            "id\r\nls",
+            "x".repeat(ElevatedOps.MAX_RAW_LENGTH + 1),
+        ).forEach { bad ->
+            val r = ops.runRawCommand(bad)
+            assertEquals(-1, r.exitCode)
+        }
+        assertTrue(adb.ran.isEmpty())
+    }
+
+    @Test
+    fun `raw command needs a live provider`() = runBlocking {
+        val result = ops().runRawCommand("id")
+        assertEquals(ProviderKind.STANDARD, result.provider)
+        assertEquals(-1, result.exitCode)
+    }
 }

@@ -53,12 +53,15 @@ import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
 import io.github.droidkit.core.ui.adaptive.contentWidthCap
 import io.github.droidkit.core.ui.formatSectionsForCopy
+import io.github.droidkit.core.ui.components.ConfirmationSheet
 import io.github.droidkit.core.ui.components.DroidKitTopAppBar
+import io.github.droidkit.core.ui.components.RiskLevel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AdbScreen(
     onBack: () -> Unit,
+    onOpenTerminal: () -> Unit = {},
     viewModel: AdbViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -70,6 +73,7 @@ fun AdbScreen(
     val log by viewModel.log.collectAsStateWithLifecycle()
     val qrPayload by viewModel.qrPayload.collectAsStateWithLifecycle()
     val autoConnect by viewModel.autoConnectEnabled.collectAsStateWithLifecycle()
+    val terminalEnabled by viewModel.terminalEnabled.collectAsStateWithLifecycle()
 
     val pairingCode by viewModel.pairingCode.collectAsStateWithLifecycle()
     val pairingHost by viewModel.pairingHost.collectAsStateWithLifecycle()
@@ -80,6 +84,7 @@ fun AdbScreen(
     val useTls by viewModel.useTls.collectAsStateWithLifecycle()
 
     var confirmReboot by remember { mutableStateOf(false) }
+    var confirmTerminal by remember { mutableStateOf(false) }
     var showManual by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
 
@@ -166,11 +171,20 @@ fun AdbScreen(
                         }
                     } else {
                         InfoRow("Connected", session!!, copyable = true)
-                        DroidKitOutlinedButton(
-                            onClick = { viewModel.disconnect() },
-                            enabled = !busy,
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.padding(top = 8.dp),
-                        ) { Text("Disconnect") }
+                        ) {
+                            DroidKitOutlinedButton(
+                                onClick = { viewModel.disconnect() },
+                                enabled = !busy,
+                            ) { Text("Disconnect") }
+                            if (terminalEnabled) {
+                                DroidKitOutlinedButton(onClick = onOpenTerminal) {
+                                    Text("Open terminal")
+                                }
+                            }
+                        }
                     }
                     Row(
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -194,6 +208,41 @@ fun AdbScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                        }
+                    }
+                    if (session != null) {
+                        Row(
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .selectable(
+                                    selected = terminalEnabled,
+                                    onClick = {
+                                        if (terminalEnabled) {
+                                            viewModel.setTerminalEnabled(false)
+                                        } else {
+                                            confirmTerminal = true
+                                        }
+                                    },
+                                ),
+                        ) {
+                            androidx.compose.material3.Checkbox(
+                                checked = terminalEnabled,
+                                onCheckedChange = { checked ->
+                                    if (checked) confirmTerminal = true
+                                    else viewModel.setTerminalEnabled(false)
+                                },
+                            )
+                            Column {
+                                Text("Terminal", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "Opt-in raw shell — every command is logged. " +
+                                        "Structured actions stay the default.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -453,6 +502,25 @@ fun AdbScreen(
                 }
             }
         }
+    }
+
+    if (confirmTerminal) {
+        ConfirmationSheet(
+            title = "Enable ADB terminal?",
+            consequence = "The terminal runs free-form commands as the ADB shell user on this device.",
+            risk = RiskLevel.Advanced,
+            bullets = listOf(
+                "DroidKit does not inspect or restrict what you type.",
+                "Every command is recorded in the elevated-action audit log.",
+                "You can turn it off again at any time from the session card.",
+            ),
+            confirmLabel = "Enable terminal",
+            onConfirm = {
+                viewModel.setTerminalEnabled(true)
+                confirmTerminal = false
+            },
+            onDismiss = { confirmTerminal = false },
+        )
     }
 
     if (confirmReboot) {

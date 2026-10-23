@@ -14,6 +14,7 @@ import io.github.droidkit.core.privileges.ToolResolution
 
 object AdbFeature : FeatureContribution {
     const val ROUTE = "adb"
+    const val ROUTE_TERMINAL = "adb/terminal"
 
     override val tools = listOf(
         Tool(
@@ -45,6 +46,12 @@ object AdbFeature : FeatureContribution {
 
 fun NavGraphBuilder.adbGraph(nav: NavHostController, resolve: (Tool) -> ToolResolution) {
     composable(AdbFeature.ROUTE) {
-        AdbScreen(onBack = { nav.navigateUp() })
+        AdbScreen(
+            onBack = { nav.navigateUp() },
+            onOpenTerminal = { nav.navigate(AdbFeature.ROUTE_TERMINAL) },
+        )
+    }
+    composable(AdbFeature.ROUTE_TERMINAL) {
+        AdbTerminalScreen(onBack = { nav.navigateUp() })
     }
 }

@@ -22,7 +22,7 @@ system, extra labs).
 | 3 | Capability Center screen | V5 Task 10 / spec 23 | Pending |
 | 4 | Candidate-9 launcher icons + splash + J03 v5 token map | V5 Tasks 1–2 | Pending |
 | 5 | Settings export/import | UX-5 (deferred) | Pending |
-| 6 | ADB terminal | J19 gated item — approved 2026-10-23 | Pending |
+| 6 | ADB terminal | J19 gated item — approved 2026-10-23 | Done |
 | 7 | Custom diagnostic presets ("technician presets/checklists") | Product Bible future list | Pending |
 | 8 | Multi-device history filters | Product Bible "multi-device history" | Pending |
 
