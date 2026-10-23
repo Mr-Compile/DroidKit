@@ -33,9 +33,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import io.github.droidkit.core.ui.components.ConfirmationSheet
+import io.github.droidkit.core.ui.components.RiskLevel
 import io.github.droidkit.core.ui.CopyAllAction
 import io.github.droidkit.core.ui.InfoRow
 import io.github.droidkit.core.ui.SectionCard
@@ -308,22 +309,23 @@ fun PackagesScreen(
 
     // Every mutating action previews its consequence before running; the
     // confirm button names the action itself — no vague "Confirm"/"OK".
+    // playbook/24 risk levels drive the badge + destructive styling.
     pending?.let { (action, pkg) ->
-        val (title, body, label, destructive) = when (action) {
+        val (title, body, label, risk) = when (action) {
             PackagesViewModel.Action.DISABLE ->
                 ConfirmSpec(
                     "Disable $pkg?",
                     "The app will stop running and disappear from launchers. " +
                         "Reversible — re-enable it later from its App Info page.",
                     "Disable",
-                    destructive = false,
+                    RiskLevel.System,
                 )
             PackagesViewModel.Action.ENABLE ->
                 ConfirmSpec(
                     "Enable $pkg?",
                     "The app becomes runnable and appears in launchers again.",
                     "Enable",
-                    destructive = false,
+                    RiskLevel.Minor,
                 )
             PackagesViewModel.Action.SUSPEND ->
                 ConfirmSpec(
@@ -332,14 +334,14 @@ fun PackagesScreen(
                         "hidden and its icon is greyed — until unsuspended. " +
                         "Reversible. (Android 10+)",
                     "Suspend",
-                    destructive = false,
+                    RiskLevel.System,
                 )
             PackagesViewModel.Action.UNSUSPEND ->
                 ConfirmSpec(
                     "Unsuspend $pkg?",
                     "The app runs and notifies normally again.",
                     "Unsuspend",
-                    destructive = false,
+                    RiskLevel.Minor,
                 )
             PackagesViewModel.Action.CLEAR_DATA ->
                 ConfirmSpec(
@@ -347,7 +349,7 @@ fun PackagesScreen(
                     "Permanently wipes all of the app's data: accounts, settings, " +
                         "files, databases. This cannot be undone.",
                     "Clear data",
-                    destructive = true,
+                    RiskLevel.High,
                 )
             PackagesViewModel.Action.UNINSTALL ->
                 ConfirmSpec(
@@ -356,7 +358,7 @@ fun PackagesScreen(
                         "For preinstalled apps it can be restored with " +
                         "'pm install-existing'.",
                     "Uninstall",
-                    destructive = true,
+                    RiskLevel.High,
                 )
             PackagesViewModel.Action.RESTORE ->
                 ConfirmSpec(
@@ -364,31 +366,20 @@ fun PackagesScreen(
                     "Reinstalls the preinstalled package for the current user " +
                         "profile ('pm install-existing').",
                     "Restore",
-                    destructive = false,
+                    RiskLevel.Minor,
                 )
         }
-        DroidKitAlertDialog(
-            onDismissRequest = { pending = null },
-            title = { Text(title) },
-            text = { Text(body) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.runAction(action, pkg)
-                        pending = null
-                    },
-                    enabled = !busy,
-                ) {
-                    Text(
-                        label,
-                        color = if (destructive) MaterialTheme.colorScheme.error
-                        else Color.Unspecified,
-                    )
-                }
+        ConfirmationSheet(
+            title = title,
+            consequence = body,
+            confirmLabel = label,
+            risk = risk,
+            confirmEnabled = !busy,
+            onConfirm = {
+                viewModel.runAction(action, pkg)
+                pending = null
             },
-            dismissButton = {
-                TextButton(onClick = { pending = null }) { Text("Cancel") }
-            },
+            onDismiss = { pending = null },
         )
     }
 
@@ -462,10 +453,10 @@ fun PackagesScreen(
     }
 }
 
-/** Title, consequence copy, explicit confirm label and destructive styling for a package action. */
+/** Title, consequence copy, explicit confirm label and playbook/24 risk level for a package action. */
 private data class ConfirmSpec(
     val title: String,
     val body: String,
     val label: String,
-    val destructive: Boolean,
+    val risk: RiskLevel,
 )

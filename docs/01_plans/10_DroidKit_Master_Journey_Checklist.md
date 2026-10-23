@@ -817,7 +817,7 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 - [ ] `J03_DESIGN_TOKENS.md` v5-name mapping appended
 - [x] Shared primitives/badges (`StatusBadge`, `ResultBadge`, `HeroCard`/`StatTile`/`SpecTile` bento tiles, `ToolIcon`, `DroidKitProgressLine`; `CapabilityBadge`/`TechnicalValue` functions absorbed by `ToolCard` availability + `InfoRow` mono values) — plan Task 3
 - [x] Shared screen states (Loading/Empty/PermissionRequired/SetupRequired/Unsupported/Offline/FriendlyError) + semantics helpers — plan Task 4
-- [ ] Risk + AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — plan Task 5 (partial: `AiSurfaceCard` covers AI insight surfaces)
+- [x] Risk + AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — plan Task 5 (`components/Risk.kt`; packages confirms migrated to `ConfirmationSheet` with L1–L3 badges)
 
 ## V5-2 Semantic UX
 - [x] `ToolAvailability` model mapped from `ToolResolution`/`BlockedReason` — plan Task 6 (`availabilityPresentation` → `AvailabilityBadge`/`ToolCard` badges)
@@ -951,7 +951,7 @@ Plan `01_plans/2026-10-23-target-user-coverage-megaplan.md` — closes the remai
 spec'd surfaces, the approved gated items (ADB terminal, settings export/import)
 and the technician V2 backlog (custom presets, multi-device history).
 
-- [ ] Risk/AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — megaplan Task 2
+- [x] Risk/AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — megaplan Task 2
 - [ ] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
 - [ ] Capability Center screen (`settings/capabilities`) — megaplan Task 4
 - [ ] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5

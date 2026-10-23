@@ -1376,10 +1376,11 @@ function testResultBar(opts={}){
       <button class="btn grow" data-result="PASS" ${opts.passEnabled===false?"disabled":""} id="passbtn">Pass</button>
     </div></div>`;
 }
-function dialog({title, text, confirm="OK", cancel=null, onConfirm, danger=false}){
+function dialog({title, text, confirm="OK", cancel=null, onConfirm, danger=false, risk=null}){
   const ov = $("#overlay");
+  const riskHtml = risk ? `<div style="margin-top:8px"><span class="badge ${risk.cls}">L${risk.n} · ${esc(risk.label)}</span></div>` : "";
   ov.innerHTML = `<div class="scrim" data-act="dlg-close"></div>
-    <div class="dialog${danger?" danger":""}"><h3>${esc(title)}</h3><div class="dtext">${text}</div>
+    <div class="dialog${danger?" danger":""}"><h3>${esc(title)}</h3>${riskHtml}<div class="dtext">${text}</div>
       <div class="dbtns">
         ${cancel?`<button class="textbtn" data-act="dlg-close">${esc(cancel)}</button>`:""}
         <button class="textbtn" style="${danger?"color:var(--error)":""}" data-act="dlg-ok">${esc(confirm)}</button>
@@ -4067,13 +4068,14 @@ document.addEventListener("click", e => {
       confirm:b[0].toUpperCase()+b.slice(1),cancel:"Cancel",onConfirm:"pkgbatch:"+b}); return; }
   const pa = e.target.closest("[data-pkgact]"); if(pa){ const [act2,pkg]=pa.dataset.pkgact.split(":");
     if(act2==="perms"){ pkgPermSheet(pkg); return; }
-    const msgs={disable:[`Disable ${pkg}?`,"The app will stop running and disappear from launchers. Reversible — re-enable it later from its App Info page."],
-      enable:[`Enable ${pkg}?`,"The app becomes runnable and appears in launchers again."],
-      suspend:[`Suspend ${pkg}?`,"The app cannot start activities, its notifications are hidden and its icon is greyed — until unsuspended. Reversible. (Android 10+)"],
-      unsuspend:[`Unsuspend ${pkg}?`,"The app runs and notifies normally again."],
-      clear:[`Clear data for ${pkg}?`,"Permanently wipes all of the app's data: accounts, settings, files, databases. This cannot be undone."],
-      uninstall:[`Uninstall ${pkg} for this user?`,"Removed for the current user profile only; other users keep it. For preinstalled apps it can be restored with 'pm install-existing'."]};
-    dialog({title:msgs[act2][0],text:msgs[act2][1],confirm:"Confirm",cancel:"Cancel",danger:true,onConfirm:"pkg:"+act2+":"+pkg}); return; }
+    const msgs={disable:[`Disable ${pkg}?`,"The app will stop running and disappear from launchers. Reversible — re-enable it later from its App Info page.","Disable",{n:2,label:"System change",cls:"warn"}],
+      enable:[`Enable ${pkg}?`,"The app becomes runnable and appears in launchers again.","Enable",{n:1,label:"Minor",cls:"setup"}],
+      suspend:[`Suspend ${pkg}?`,"The app cannot start activities, its notifications are hidden and its icon is greyed — until unsuspended. Reversible. (Android 10+)","Suspend",{n:2,label:"System change",cls:"warn"}],
+      unsuspend:[`Unsuspend ${pkg}?`,"The app runs and notifies normally again.","Unsuspend",{n:1,label:"Minor",cls:"setup"}],
+      clear:[`Clear data for ${pkg}?`,"Permanently wipes all of the app's data: accounts, settings, files, databases. This cannot be undone.","Clear data",{n:3,label:"High impact",cls:"blocked"}],
+      uninstall:[`Uninstall ${pkg} for this user?`,"Removed for the current user profile only; other users keep it. For preinstalled apps it can be restored with 'pm install-existing'.","Uninstall",{n:3,label:"High impact",cls:"blocked"}]};
+    const m=msgs[act2];
+    dialog({title:m[0],text:m[1],confirm:m[2],cancel:"Cancel",danger:m[3].n>=3,risk:m[3],onConfirm:"pkg:"+act2+":"+pkg}); return; }
   const pr = e.target.closest("[data-preset]"); if(pr){ S.preset=pr.dataset.preset; render(); return; }
   const ir = e.target.closest("[data-irange]"); if(ir){ S.insightRange=ir.dataset.irange; render(); return; }
   const cm = e.target.closest("[data-cmp]"); if(cm){ const [w,id]=cm.dataset.cmp.split(":"); S.cmp[w]=id; S.cmp.done=false; render(); return; }
