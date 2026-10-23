@@ -945,6 +945,23 @@ Important: `versionCode` only needs to monotonically increase. Do not depend on 
 
 ---
 
+# Target-User Coverage Megaplan
+
+Plan `01_plans/2026-10-23-target-user-coverage-megaplan.md` — closes the remaining
+spec'd surfaces, the approved gated items (ADB terminal, settings export/import)
+and the technician V2 backlog (custom presets, multi-device history).
+
+- [ ] Risk/AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — megaplan Task 2
+- [ ] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
+- [ ] Capability Center screen (`settings/capabilities`) — megaplan Task 4
+- [ ] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
+- [ ] Settings export/import via SAF JSON — megaplan Task 6
+- [ ] ADB terminal (`adb/terminal`, guarded `runRawCommand`, opt-in) — megaplan Task 7
+- [ ] Custom diagnostic presets (`technician_presets`, Room v6) — megaplan Task 8
+- [ ] Multi-device history filters on Reports — megaplan Task 9
+
+---
+
 # Definition of Done - Feature
 
 A feature is DONE only when:
