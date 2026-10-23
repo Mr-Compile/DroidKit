@@ -821,7 +821,7 @@ Queue item Q16b — plan `01_plans/2026-10-19-ui-ux-v5-design-system.md`. Canoni
 
 ## V5-2 Semantic UX
 - [x] `ToolAvailability` model mapped from `ToolResolution`/`BlockedReason` — plan Task 6 (`availabilityPresentation` → `AvailabilityBadge`/`ToolCard` badges)
-- [ ] `FriendlyError` + mapper + `strings_errors.xml` (error catalog strings) — plan Task 6
+- [x] `FriendlyError` + mapper + `strings_errors.xml` (error catalog strings) — plan Task 6 (`UiProblem.catalogKey`/`catalogArgs` + `FriendlyError.kt` resolver; `UiProblemCard` prefers catalog copy, baked strings stay as fallback)
 - [x] Progressive sanitized technical details on error surfaces (`UiProblemCard` detailId + mono details)
 
 ## V5-3 Shell
@@ -952,7 +952,7 @@ spec'd surfaces, the approved gated items (ADB terminal, settings export/import)
 and the technician V2 backlog (custom presets, multi-device history).
 
 - [x] Risk/AI components (`RiskBadge`, `ConsequencePanel`, `ConfirmationSheet`, `AIInsightCard`) — megaplan Task 2
-- [ ] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
+- [x] Error catalog (`strings_errors.xml`) + `FriendlyErrorMapper` — megaplan Task 3
 - [ ] Capability Center screen (`settings/capabilities`) — megaplan Task 4
 - [ ] Candidate-9 icons + splash + J03 v5 token map — megaplan Task 5
 - [ ] Settings export/import via SAF JSON — megaplan Task 6

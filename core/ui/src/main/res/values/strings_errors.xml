@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Friendly-error catalog (V5 Task 6). Keyed by UiProblem.catalogKey —
+         mappers set the key + args, UiProblemCard resolves the copy here so
+         user-facing error text lives in one place. -->
+
+    <!-- BlockedReason.MissingPermission -->
+    <string name="err_permission_title">Permission required</string>
+    <string name="err_permission_message">This tool needs the %1$s permission to work.</string>
+
+    <!-- BlockedReason.MissingHardware -->
+    <string name="err_hardware_title">Not supported on this device</string>
+    <string name="err_hardware_message">The required hardware (%1$s) is not present on this device.</string>
+
+    <!-- BlockedReason.RequiresApi -->
+    <string name="err_api_title">Android version too old</string>
+    <string name="err_api_message">This tool needs Android API %1$s or newer.</string>
+
+    <!-- BlockedReason.NeedsProvider — %1$s provider kind, %2$s detail -->
+    <string name="err_provider_title">Elevated access needed</string>
+    <string name="err_provider_ready_message">Provider %1$s is ready.</string>
+    <string name="err_provider_setup_message">%1$s: %2$s</string>
+    <string name="err_provider_unavailable_message">%1$s: %2$s</string>
+
+    <!-- ToolResolution.Blocked with no reasons -->
+    <string name="err_unavailable_title">Unavailable</string>
+    <string name="err_unavailable_message">This tool is currently unavailable.</string>
+
+    <!-- UiProblem.unexpected -->
+    <string name="err_unexpected_title">Operation failed</string>
+    <string name="err_unexpected_message">The action did not complete. Expand details for the technical cause.</string>
+
+    <!-- AiError — DISABLED/NO_KEY share the setup title. -->
+    <string name="err_ai_setup_title">DroidKit Intelligence not set up</string>
+    <string name="err_ai_request_title">AI request failed</string>
+    <string name="err_ai_disabled_message">AI is disabled — enable it in Settings.</string>
+    <string name="err_ai_no_key_message">No API key stored — add one in Settings.</string>
+    <string name="err_ai_offline_message">Device is offline.</string>
+    <string name="err_ai_auth_error_message">Authentication failed — check the key.</string>
+    <string name="err_ai_rate_limited_message">Rate limited — try again later.</string>
+    <string name="err_ai_provider_error_message">Provider error.</string>
+    <string name="err_ai_malformed_response_message">Unexpected response shape.</string>
+</resources>

@@ -12,16 +12,22 @@ fun BlockedReason.toUiProblem(): UiProblem = when (this) {
             RecoveryAction.RequestPermission(permission),
             RecoveryAction.Dismiss,
         ),
+        catalogKey = "permission",
+        catalogArgs = listOf(permission),
     )
     is BlockedReason.MissingHardware -> UiProblem(
         title = "Not supported on this device",
         message = "The required hardware ($feature) is not present on this device.",
         severity = UiProblem.Severity.INFO,
+        catalogKey = "hardware",
+        catalogArgs = listOf(feature),
     )
     is BlockedReason.RequiresApi -> UiProblem(
         title = "Android version too old",
         message = "This tool needs Android API $minSdk or newer.",
         severity = UiProblem.Severity.INFO,
+        catalogKey = "api",
+        catalogArgs = listOf(minSdk.toString()),
     )
     is BlockedReason.NeedsProvider -> UiProblem(
         title = "Elevated access needed",
@@ -33,6 +39,19 @@ fun BlockedReason.toUiProblem(): UiProblem = when (this) {
         recoveries = listOf(
             RecoveryAction.RequestElevatedAccess,
             RecoveryAction.Dismiss,
+        ),
+        catalogKey = when (status) {
+            ProviderStatus.Ready -> "provider_ready"
+            is ProviderStatus.NeedsSetup -> "provider_setup"
+            is ProviderStatus.Unavailable -> "provider_unavailable"
+        },
+        catalogArgs = listOf(
+            kind.name,
+            when (val s = status) {
+                ProviderStatus.Ready -> ""
+                is ProviderStatus.NeedsSetup -> s.instructions
+                is ProviderStatus.Unavailable -> s.reason
+            },
         ),
     )
 }
@@ -46,4 +65,8 @@ fun ToolResolution.Blocked.toUiProblem(): UiProblem =
             else -> 1
         }
     }?.toUiProblem()
-        ?: UiProblem(title = "Unavailable", message = "This tool is currently unavailable.")
+        ?: UiProblem(
+            title = "Unavailable",
+            message = "This tool is currently unavailable.",
+            catalogKey = "unavailable",
+        )

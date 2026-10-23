@@ -32,4 +32,5 @@ fun AiError.toUiProblem(technicalDetails: String? = null): UiProblem = UiProblem
             listOf(RecoveryAction.Retry, RecoveryAction.Dismiss)
         else -> listOf(RecoveryAction.Dismiss)
     },
+    catalogKey = "ai_" + name.lowercase(),
 )

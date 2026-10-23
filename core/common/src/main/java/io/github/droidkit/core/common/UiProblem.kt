@@ -12,6 +12,14 @@ data class UiProblem(
     /** Raw/technical detail (stderr, exception type) shown behind an expand toggle. */
     val technicalDetails: String? = null,
     val recoveries: List<RecoveryAction> = listOf(RecoveryAction.Dismiss),
+    /**
+     * Stable key into the `strings_errors.xml` friendly-error catalog. When
+     * non-null the UI resolves title/message from the catalog (baked
+     * [title]/[message] stay as fallback for non-catalog consumers and tests).
+     */
+    val catalogKey: String? = null,
+    /** Substitution args for the catalog message, in order. */
+    val catalogArgs: List<String> = emptyList(),
 ) {
     enum class Severity { INFO, WARNING, ERROR }
 
@@ -23,6 +31,7 @@ data class UiProblem(
             severity = Severity.ERROR,
             technicalDetails = "${t::class.qualifiedName}: ${t.message}",
             recoveries = listOf(RecoveryAction.Retry, RecoveryAction.Dismiss),
+            catalogKey = "unexpected",
         )
     }
 }

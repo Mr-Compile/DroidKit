@@ -57,8 +57,18 @@ fun UiProblemCard(
         border = BorderStroke(1.dp, accent.copy(alpha = 0.3f)),
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(problem.title, style = MaterialTheme.typography.titleSmall, color = accent)
-            Text(problem.message, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
+            // Catalog strings (strings_errors.xml) win over baked copy.
+            val friendly = problem.friendlyCatalog()
+            Text(
+                friendly?.first ?: problem.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = accent,
+            )
+            Text(
+                friendly?.second ?: problem.message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = c.textSecondary,
+            )
             problem.technicalDetails?.let { details ->
                 var expanded by remember { mutableStateOf(false) }
                 TextButton(onClick = { expanded = !expanded }) {
