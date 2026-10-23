@@ -1,5 +1,8 @@
 # Target-User Coverage Megaplan — 2026-10-23
 
+**Status: COMPLETE (2026-10-23)** — all 8 gaps closed; mockups synced per task;
+CHANGELOG + migration log updated in the final sweep.
+
 ## Context
 
 Audit question: does every committed feature for the five Product Bible §2 target
@@ -17,11 +20,11 @@ system, extra labs).
 
 | # | Gap | Source | Status |
 |---|---|---|---|
-| 1 | `RiskBadge`/`ConsequencePanel`/`ConfirmationSheet`/`AIInsightCard` | V5 Task 5 (partial) | Pending |
-| 2 | `FriendlyError` + `strings_errors.xml` catalog | V5 Task 6 | Pending |
-| 3 | Capability Center screen | V5 Task 10 / spec 23 | Pending |
-| 4 | Candidate-9 launcher icons + splash + J03 v5 token map | V5 Tasks 1–2 | Pending |
-| 5 | Settings export/import | UX-5 (deferred) | Pending |
+| 1 | `RiskBadge`/`ConsequencePanel`/`ConfirmationSheet`/`AIInsightCard` | V5 Task 5 (partial) | Done |
+| 2 | `FriendlyError` + `strings_errors.xml` catalog | V5 Task 6 | Done |
+| 3 | Capability Center screen | V5 Task 10 / spec 23 | Done |
+| 4 | Candidate-9 launcher icons + splash + J03 v5 token map | V5 Tasks 1–2 | Done |
+| 5 | Settings export/import | UX-5 (deferred) | Done |
 | 6 | ADB terminal | J19 gated item — approved 2026-10-23 | Done |
 | 7 | Custom diagnostic presets ("technician presets/checklists") | Product Bible future list | Done |
 | 8 | Multi-device history filters | Product Bible "multi-device history" | Done |

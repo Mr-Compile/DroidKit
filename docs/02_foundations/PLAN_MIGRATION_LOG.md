@@ -157,3 +157,42 @@ Owner approval required?: yes — given in session (megaplan scope approved "spe
 Files/docs updated: `core/privileges/.../CapabilityManager.kt` (`providerCapabilities()`), `feature/settings/.../{CapabilityCenterScreen,CapabilityCenterViewModel,SettingsFeature,SettingsScreen}.kt`, `mockups/{index,improved-index}.html`, master checklist V5-5 + megaplan section
 Migration completed? [x]
 Notes: the spec file keeps the Shizuku mention for history; a J18 "Shizuku provider" journey remains possible later but is not required for the capability model.
+
+## Entry
+Date: 2026-10-23
+Feature: ADB terminal (megaplan Task 7, J19 gated item)
+Old document/decision: `AGENTS.md` + `01_AI_OPERATING_CONTRACT.md` — "features construct typed ElevatedActions (never raw shell strings)"; "Do not expose arbitrary shell execution as the default UX"; J19 lists "Optional terminal only after separate approval"
+Improved v2 decision: owner approved the terminal in megaplan scope; ship it as the single sanctioned raw-command path
+Repository reality: `ElevatedOps` is the only feature-facing executor router; `ElevatedAction` subclasses validate every parameter; audit sink already records every executed command
+Conflict classification: contract exception — a raw command line is deliberately not an `ElevatedAction`; the allow-list invariant is preserved by routing raw input through a separate, narrower API
+Decision: `ElevatedOps.runRawCommand` — single-line, ≤512 chars, preferred-provider routing, verbatim audit; gated by `adb_terminal_enabled` (default off) + L4 `ConfirmationSheet`; contract docs amended in the same commit so the exception is written, not silent
+Owner approval required?: yes — given in session (megaplan scope included "gated/deferred items including ADB terminal")
+Files/docs updated: `core/privileges/.../ElevatedOps.kt`, `core/datastore/.../SettingsRepository.kt`, `feature/adb/.../{AdbTerminalScreen,AdbTerminalViewModel,AdbScreen,AdbViewModel,AdbFeature}.kt`, `AGENTS.md`, `01_AI_OPERATING_CONTRACT.md`, `playbook/21`, `mockups/{index,improved-index}.html`, master checklist
+Migration completed? [x]
+Notes: safety prohibitions unchanged — no credential extraction, FRP/lock bypass, stealth, or exploit tooling; the audit log records every command verbatim and is visible in Settings.
+
+## Entry
+Date: 2026-10-23
+Feature: Custom diagnostic presets (megaplan Task 8)
+Old document/decision: megaplan Task 8 spec — `PresetRepository` resolves ids; session `preset` stores `CUSTOM:<name>`
+Improved v2 decision: sessions persist the resolved test list itself; the preset tag is display-only
+Repository reality: `diagnostic_sessions.preset` is a free-text column ("FULL | USED_PHONE | subset label" per its comment); `resumeSession` previously re-resolved the tag against the enum, which breaks for edited/deleted custom presets
+Conflict classification: plan-vs-implementation deviation — same goal (exact resume), better mechanism (no name resolution, no repository layer)
+Decision: Room v6 adds `technician_presets(id, name, createdAtEpochMs, testIds)` plus `diagnostic_sessions.testIds` (nullable; rows from before v6 fall back to enum resolution); `TechnicianPresetDao` injects straight into `DiagnosticsViewModel` (feature→core:database is the established pattern); deviation annotated in the megaplan file
+Owner approval required?: no — deviation recorded in plan doc per rules
+Files/docs updated: `core/database/.../{Entities,Daos,DroidKitDatabase,DatabaseModule}.kt`, schema `6.json`, `feature/diagnostics/.../{PresetManagerScreen,DiagnosticsScreen,DiagnosticsViewModel,DiagnosticsFeature,PhoneDoctorTest}.kt`, `mockups/{index,improved-index}.html`, master checklist, megaplan
+Migration completed? [x]
+Notes: deleting a preset never rewrites recorded sessions; pre-v6 sessions resume exactly as before.
+
+## Entry
+Date: 2026-10-23
+Feature: Settings export/import (megaplan Task 6, deferred UX-5 item)
+Old document/decision: UX-5 marked "deferred — config surface too small"
+Improved v2 decision: approved in megaplan scope; export the preference surface that exists
+Repository reality: settings live in one DataStore; AI key is held separately in `core:ai` encrypted storage; `wireless_adb_paired` is device-bound truth, not a preference
+Conflict classification: scope refinement — exportable set is defined by exclusion of secrets and device-bound state
+Decision: `SettingsBackupCodec` writes a versioned JSON snapshot (schema field checked, unknown keys ignored); export covers theme, dynamic color, favorites, recents, usage counts, technician name, auto-connect toggle; `wireless_adb_paired`, onboarding and AI key are unexportable by construction (absent from the snapshot type); import runs through `ConfirmationSheet` before overwriting
+Owner approval required?: yes — given in session (megaplan scope)
+Files/docs updated: `core/datastore/.../{SettingsBackup,SettingsRepository}.kt`, `feature/settings/.../{SettingsScreen,SettingsViewModel}.kt`, `mockups/{index,improved-index}.html`, master checklist
+Migration completed? [x]
+Notes: restoring a backup on a different device cannot transplant pairing trust — pairing stays per-device by design.

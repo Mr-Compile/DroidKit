@@ -102,6 +102,39 @@
   standard permission gate (ACCESS_COARSE_LOCATION), so denial records
   PERMISSION_REQUIRED; raw coordinates stay on screen and never enter notes,
   reports or AI fields
+- Shared risk surface (V5): `RiskBadge`, `ConsequencePanel`,
+  `ConfirmationSheet` (L0–L4 levels, action-named confirm buttons) and
+  `AIInsightCard` in `core:ui`; the package-controls mutation dialog
+  migrated to it
+- Friendly error catalog: `strings_errors.xml` copy resolved through
+  `UiProblem.catalogKey` — permission, hardware, API, provider and AI
+  failures render friendly title/message while technical details stay
+  verbatim underneath
+- Capability Center (Settings → Advanced access): live provider status
+  for Standard Android / wireless ADB / Root with capability lists,
+  limitations and setup/recovery actions — the spec'd Shizuku row is
+  omitted because the native ADB provider superseded it (migration log
+  2026-10-23)
+- Candidate-9 branding applied: layered splash window background plus
+  Android 12+ system-splash attributes (no artificial delay); J03 token
+  doc gained the v5 semantic-name mapping
+- Settings backup: SAF export/import of preferences as versioned JSON —
+  theme, dynamic color, favorites, recents, usage counts, technician
+  name and the auto-connect toggle; device pairing state, onboarding
+  and AI keys are structurally unexportable, and import confirms before
+  overwriting
+- ADB terminal (separately approved J19 item): `adb/terminal` behind the
+  `adb_terminal_enabled` opt-in and an L4 confirmation — commands run
+  through `ElevatedOps.runRawCommand` (single line, ≤512 chars) and are
+  logged verbatim to the elevated-action audit. Not an `ElevatedAction`;
+  the allow-list invariant stands
+- Technician presets (Room v6): custom diagnostic presets — name plus a
+  test checklist grouped by category, edit/delete, selectable on the
+  Diagnose picker; sessions persist their resolved test list
+  (`diagnostic_sessions.testIds`) so resume stays exact after the preset
+  is edited or deleted
+- Multi-device history: Device/Customer dropdown filters on Reports fed
+  by distinct intake labels; report cards show the intake labels
 
 ### Fixed
 - Phone Doctor flash test could leave the LED dark on devices where CameraX
